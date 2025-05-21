@@ -1,11 +1,21 @@
 manifestVersion: 1
 id: "bitsperity-mongodb"
 name: "MongoDB"
-version: "1.0.0"
-releaseNotes: "Initiale Version: Stellt einen MongoDB-Container bereit."
+tagline: "Stellt eine saubere MongoDB-Datenbank bereit, die von anderen Apps genutzt werden kann."
 icon: "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/mongodb.svg"
+category: "Development"
+version: "1.0.0"
+port: 27017 
 description: "Stellt eine saubere MongoDB-Datenbank bereit, die von anderen Apps genutzt werden kann."
 developer: "Bitsperity"
+website: https://bitsperity.dev
+submitter: "Bitsperity"
+submission: "https://github.com/bitsperity/bitsperity-mongodb"
+repo: "https://github.com/bitsperity/bitsperity-mongodb"
+support: "https://github.com/bitsperity/bitsperity-mongodb/issues"
+gallery:
+  - "https://raw.githubusercontent.com/bitsperity/bitsperity-mongodb/main/screenshot.png"
+
+releaseNotes: "Initiale Version: Stellt einen MongoDB-Container bereit."
 website: "https://www.mongodb.com/"
 dependencies: []
-port: 27017 
