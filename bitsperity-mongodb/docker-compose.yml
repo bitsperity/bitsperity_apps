@@ -6,7 +6,7 @@ services:
     environment:
       # We don't need a proxy for MongoDB as it's not a web application
       APP_HOST: bitsperity-mongodb
-      APP_PORT: 27019
+      APP_PORT: 27017
     
   # MongoDB database server
   mongodb:
@@ -26,7 +26,7 @@ services:
       start_period: 20s
     # Port mapping for MongoDB
     ports:
-      - "27019:27017"
+      - "27017:27017"
     # Data persistence
     volumes:
       - mongodb-data:/data/db
