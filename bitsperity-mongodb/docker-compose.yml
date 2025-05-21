@@ -1,0 +1,17 @@
+version: "3.7"
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: bitsperity-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: umbrel
+      MONGO_INITDB_ROOT_PASSWORD: umbrel
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb-data:/data/db
+
+volumes:
+  mongodb-data: 

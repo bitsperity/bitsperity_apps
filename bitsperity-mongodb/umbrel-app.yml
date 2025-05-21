@@ -1,0 +1,10 @@
+id: "bitsperity-mongodb"
+name: "MongoDB"
+version: "1.0.0"
+releaseNotes: "Initiale Version: Stellt einen MongoDB-Container bereit."
+icon: "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/mongodb.svg"
+description: "Stellt eine saubere MongoDB-Datenbank bereit, die von anderen Apps genutzt werden kann."
+developer: "Bitsperity"
+website: "https://www.mongodb.com/"
+dependencies: []
+port: 27017 
