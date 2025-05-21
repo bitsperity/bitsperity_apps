@@ -13,7 +13,7 @@ A ready-to-use MongoDB database server for your Umbrel. This app provides a clea
 
 - **Username**: `umbrel`
 - **Password**: `umbrel`
-- **Port**: `27018` (mapped to MongoDB's default 27017 internally)
+- **Port**: `27019` (mapped to MongoDB's default 27017 internally)
 - **Host**: `bitsperity-mongodb` (within Umbrel network)
 
 ## How to Connect
@@ -25,7 +25,7 @@ Other apps on your Umbrel can connect using:
 mongodb://umbrel:umbrel@bitsperity-mongodb:27017/
 ```
 
-Note: When connecting from within the Docker network, use port 27017. The 27018 port is only for connections from outside the Docker network.
+Note: When connecting from within the Docker network, use port 27017. The 27019 port is only for connections from outside the Docker network.
 
 ### Creating a Database
 
@@ -41,7 +41,7 @@ All data is stored in a Docker volume and persists across app restarts and updat
 
 ## Security Notice
 
-This MongoDB instance is only accessible within the Umbrel Docker network by default. The external port 27018 can be used for connections from your local network.
+This MongoDB instance is only accessible within the Umbrel Docker network by default. The external port 27019 can be used for connections from your local network.
 
 ## Support
 
