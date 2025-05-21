@@ -1,6 +1,14 @@
 version: "3.7"
 
 services:
+  # App proxy for Umbrel - not used for MongoDB since it's not a web application
+  app_proxy:
+    environment:
+      # We don't need a proxy for MongoDB as it's not a web application
+      APP_HOST: bitsperity-mongodb
+      APP_PORT: 27017
+    
+  # MongoDB database server
   mongodb:
     image: mongo:7.0
     container_name: bitsperity-mongodb
@@ -8,10 +16,30 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: umbrel
       MONGO_INITDB_ROOT_PASSWORD: umbrel
+      # Add additional MongoDB configuration
+      MONGO_INITDB_DATABASE: admin
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    # Port mapping for MongoDB
     ports:
       - "27017:27017"
+    # Data persistence
     volumes:
       - mongodb-data:/data/db
+      - mongodb-config:/data/configdb
+    # Resource limits to ensure stability
+    deploy:
+      resources:
+        limits:
+          memory: 1G
 
+# Named volumes for data persistence
 volumes:
-  mongodb-data: 
+  mongodb-data:
+    driver: local
+  mongodb-config:
+    driver: local 

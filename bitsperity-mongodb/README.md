@@ -1,18 +1,51 @@
-# MongoDB für Umbrel
+# MongoDB for Umbrel
 
-Diese App stellt eine saubere MongoDB-Datenbank bereit, die von anderen Apps im Umbrel-Ökosystem genutzt werden kann.
+A ready-to-use MongoDB database server for your Umbrel. This app provides a clean MongoDB instance that can be used by other apps in your Umbrel ecosystem.
 
-## Zugangsdaten
-- Benutzer: `umbrel`
-- Passwort: `umbrel`
-- Port: `27017`
+## Features
 
-## Verbindung
-Andere Apps können sich mit folgendem URI verbinden:
+- MongoDB 7.0
+- Persistent data storage
+- Pre-configured with secure defaults
+- Ready to use in your app development
+
+## Connection Details
+
+- **Username**: `umbrel`
+- **Password**: `umbrel`
+- **Port**: `27017`
+- **Host**: `bitsperity-mongodb` (within Umbrel network)
+
+## How to Connect
+
+### Connection URI
+Other apps on your Umbrel can connect using:
 
 ```
 mongodb://umbrel:umbrel@bitsperity-mongodb:27017/
 ```
 
-## Datenpersistenz
-Die Datenbankdaten werden im Volume `mongodb-data` gespeichert und bleiben bei Updates erhalten. 
+### Creating a Database
+
+To create and use a specific database:
+
+```
+mongodb://umbrel:umbrel@bitsperity-mongodb:27017/your_database_name
+```
+
+## Data Persistence
+
+All data is stored in a Docker volume and persists across app restarts and updates.
+
+## Security Notice
+
+This MongoDB instance is only accessible within the Umbrel Docker network. It is not exposed to the internet.
+
+## Support
+
+If you encounter any issues or have questions, please open an issue at:
+[https://github.com/bitsperity/bitsperity_apps/issues](https://github.com/bitsperity/bitsperity_apps/issues)
+
+## Developed by
+
+[Bitsperity](https://bitsperity.dev) 

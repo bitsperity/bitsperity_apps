@@ -1,25 +1,29 @@
 manifestVersion: 1
 id: "bitsperity-mongodb"
 name: "MongoDB"
-tagline: "Stellt eine saubere MongoDB-Datenbank bereit, die von anderen Apps genutzt werden kann."
+tagline: "A clean MongoDB database for your Umbrel apps"
 icon: "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/mongodb.svg"
 category: "Development"
 version: "1.0.0"
 port: 27017 
-description: "Stellt eine saubere MongoDB-Datenbank bereit, die von anderen Apps genutzt werden kann."
+description: >-
+  MongoDB is a document database designed for ease of application development and scaling.
+  
+  This app provides a clean MongoDB instance that can be used by other apps on your Umbrel.
+  Perfect for developers who need a reliable database for their applications.
 developer: "Bitsperity"
 website: https://bitsperity.dev
 submitter: "Bitsperity"
 submission: "https://github.com/bitsperity/bitsperity_apps"
 repo: "https://github.com/bitsperity/bitsperity_apps"
-support: "https://github.com/bitsperity/bitsperity-mongodb/issues"
+support: "https://github.com/bitsperity/bitsperity_apps/issues"
 gallery:
   - https://i.imgur.com/yyVG0Jb.jpeg
   - https://i.imgur.com/yyVG0Jb.jpeg
   - https://i.imgur.com/yyVG0Jb.jpeg
 
-releaseNotes: "Initiale Version: Stellt einen MongoDB-Container bereit."
+releaseNotes: "Initial release: MongoDB database server ready for your applications."
 dependencies: []
 path: ""
-defaultUsername: ""
-defaultPassword: ""
+defaultUsername: "umbrel"
+defaultPassword: "umbrel"
