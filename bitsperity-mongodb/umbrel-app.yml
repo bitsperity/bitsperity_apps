@@ -10,14 +10,15 @@ description: "Stellt eine saubere MongoDB-Datenbank bereit, die von anderen Apps
 developer: "Bitsperity"
 website: https://bitsperity.dev
 submitter: "Bitsperity"
-submission: "https://github.com/bitsperity/bitsperity-mongodb"
-repo: "https://github.com/bitsperity/bitsperity-mongodb"
+submission: "https://github.com/bitsperity/bitsperity_apps"
+repo: "https://github.com/bitsperity/bitsperity_apps"
 support: "https://github.com/bitsperity/bitsperity-mongodb/issues"
 gallery:
-  - "https://raw.githubusercontent.com/bitsperity/bitsperity-mongodb/main/screenshot.png"
+  - https://i.imgur.com/yyVG0Jb.jpeg
+  - https://i.imgur.com/yyVG0Jb.jpeg
+  - https://i.imgur.com/yyVG0Jb.jpeg
 
 releaseNotes: "Initiale Version: Stellt einen MongoDB-Container bereit."
-website: "https://www.mongodb.com/"
 dependencies: []
 path: ""
 defaultUsername: ""
