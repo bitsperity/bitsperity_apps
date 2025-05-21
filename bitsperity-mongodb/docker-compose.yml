@@ -1,13 +1,6 @@
 version: "3.7"
 
 services:
-  # App proxy for Umbrel - not used for MongoDB since it's not a web application
-  app_proxy:
-    environment:
-      # We don't need a proxy for MongoDB as it's not a web application
-      APP_HOST: bitsperity-mongodb
-      APP_PORT: 27017
-    
   # MongoDB database server
   mongodb:
     image: mongo:7.0
