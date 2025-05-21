@@ -1,3 +1,4 @@
+manifestVersion: 1
 id: "bitsperity-mongodb"
 name: "MongoDB"
 version: "1.0.0"
