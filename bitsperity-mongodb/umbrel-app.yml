@@ -19,3 +19,6 @@ gallery:
 releaseNotes: "Initiale Version: Stellt einen MongoDB-Container bereit."
 website: "https://www.mongodb.com/"
 dependencies: []
+path: ""
+defaultUsername: ""
+defaultPassword: ""
