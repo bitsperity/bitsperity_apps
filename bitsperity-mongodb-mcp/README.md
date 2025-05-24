@@ -1,273 +1,342 @@
 # MongoDB MCP Server
 
-Ein moderner MongoDB Model Context Protocol (MCP) Server für nahtlose Integration zwischen LLM-Anwendungen wie Cursor und MongoDB-Datenbanken.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://www.docker.com/)
 
-## 🚀 Schnellstart
+A modern **MongoDB Model Context Protocol (MCP) Server** that enables seamless integration between AI assistants (like Cursor IDE) and MongoDB databases. Chat with your database using natural language!
 
-### 1. Server bauen
-```bash
-./build.sh
-```
+## 🎯 What is this?
 
-### 2. In Cursor installieren
-```bash
-./install-cursor.sh
-```
+This MCP server allows AI assistants to interact with MongoDB databases through a standardized protocol. Instead of writing complex queries, you can simply ask:
 
-### 3. Web-Server starten (optional)
-```bash
-./run.sh
-```
+- *"Show me all users from Germany"*
+- *"What's the schema of my products collection?"*
+- *"Find orders from the last 30 days"*
+- *"Create an aggregation for top customers by revenue"*
 
-### 4. Cursor verwenden
-1. **Cursor neu starten**
-2. **Neuen Chat öffnen**
-3. **Verbindung herstellen**: 
-   ```
-   Verbinde dich mit mongodb://user:pass@host:port/database
-   ```
+## ✨ Features
 
-## 📋 Voraussetzungen
+- 🤖 **Natural Language Database Queries** - Chat with your MongoDB
+- 🔌 **Cursor IDE Integration** - Seamless setup with popular AI coding assistant
+- 🔒 **Secure Session Management** - No persistent credential storage
+- 📊 **Automatic Schema Analysis** - Understand your data structure instantly
+- 🚀 **10 Powerful Tools** - From basic queries to complex aggregations
+- 🐳 **Docker Ready** - Easy deployment and development
+- 🔄 **Multi-Database Support** - Handle multiple connections simultaneously
+
+## 🚀 Quick Start
+
+### Prerequisites
 
 - **Python 3.11+**
-- **Cursor IDE** (mit MCP-Unterstützung)
-- **Docker & Docker Compose** (nur für Web-Interface)
-
-## 🔧 Verfügbare Scripts
-
-### `build.sh`
-- Baut das Docker Image
-- Erstellt notwendige Verzeichnisse
-- Setzt Umgebungsvariablen
-
-### `install-cursor.sh` ⭐
-- **Installiert den MCP Server in Cursor**
-- Erstellt automatisch Virtual Environment
-- Installiert Python Dependencies
-- Konfiguriert Cursor automatisch
-- **Hauptinstallationsscript für Cursor-Integration**
-
-### `run.sh`
-- Startet den Web-Server in Docker
-- Optional für Monitoring und Status
-- Nicht erforderlich für Cursor-Funktionalität
-
-### `dev.sh`
-- Startet den Server direkt mit Python
-- Ideal für Entwicklung und Debugging
-
-## 🌐 Zugriff
-
-- **Cursor Integration**: Automatisch nach Installation
-- **Web Interface**: http://localhost:8080 (falls `run.sh` gestartet)
-
-## 📖 Verwendung mit Cursor
+- **Docker & Docker Compose** (recommended)
+- **Cursor IDE** (for AI integration)
 
 ### Installation
+
+#### Option 1: Docker (Recommended)
+
 ```bash
-# Einmalige Installation
-./build.sh
-./install-cursor.sh
+# Clone the repository
+git clone <your-repo-url>
+cd mongodb-mcp-server
 
-# Cursor neu starten
+# Start the MCP server
+docker-compose up -d
+
+# Configure Cursor IDE (see below)
 ```
 
-### Verwendung
+#### Option 2: Local Development
+
 ```bash
-# In Cursor Chat schreiben:
-"Verbinde dich mit mongodb://localhost:27017/myapp"
-"Zeige mir alle Datenbanken"
-"Welche Collections gibt es in der Datenbank 'users'?"
-"Analysiere das Schema der Collection 'products'"
-"Finde alle Benutzer wo status = 'active'"
-"Erstelle eine Aggregation für die Top 10 Kunden nach Umsatz"
+# Clone and setup
+git clone <your-repo-url>
+cd mongodb-mcp-server
+
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate  # or `venv\Scripts\activate` on Windows
+
+# Install dependencies
+pip install -r src/requirements.txt
+
+# Run the server
+python src/simple_mcp_server.py
 ```
 
-### Unterstützte Befehle
+### Cursor IDE Setup
 
-| Befehl | Beschreibung | Beispiel |
-|--------|--------------|----------|
-| **Verbindung herstellen** | MongoDB-Verbindung aufbauen | `Verbinde dich mit mongodb://user:pass@cluster.net/db` |
-| **Datenbanken auflisten** | Alle verfügbaren DBs anzeigen | `Zeige mir alle Datenbanken` |
-| **Collections auflisten** | Collections einer DB anzeigen | `Welche Collections gibt es in myapp?` |
-| **Schema analysieren** | Struktur einer Collection | `Analysiere das Schema von users` |
-| **Dokumente abfragen** | Daten suchen und filtern | `Finde alle wo status = 'active'` |
-| **Aggregationen** | Komplexe Datenanalyse | `Gruppiere Bestellungen nach Monat` |
-| **Sample Daten** | Beispieldokumente anzeigen | `Zeige mir ein paar Beispiele aus orders` |
-
-## 🏗️ Projektstruktur
-
-```
-bitsperity-mongodb-mcp/
-├── src/                     # Python Quellcode
-│   ├── server.py           # Web-Server (optional)
-│   ├── mcp_stdio_server.py # MCP Server für Cursor ⭐
-│   ├── connection_manager.py # Verbindungsmanagement
-│   ├── schema_analyzer.py  # Schema-Analyse
-│   ├── mongodb_tools.py    # MCP Tools
-│   └── requirements.txt    # Python Dependencies
-├── web/                    # Web Interface (optional)
-├── build.sh               # Build Script
-├── install-cursor.sh      # Cursor Installation ⭐
-├── run.sh                # Web-Server (optional)
-├── dev.sh               # Development Script
-└── cursor-config.json   # Cursor Konfiguration
-```
-
-## ⚙️ Konfiguration
-
-### Umgebungsvariablen
-
-| Variable | Default | Beschreibung |
-|----------|---------|--------------|
-| `SESSION_TTL` | 3600 | Session-Timeout in Sekunden |
-| `MAX_CONNECTIONS` | 10 | Maximale gleichzeitige Verbindungen |
-| `LOG_LEVEL` | INFO | Log-Level (DEBUG, INFO, WARNING, ERROR) |
-| `DATA_DIR` | ./data | Datenverzeichnis für Logs |
-
-### Cursor-spezifische Konfiguration
-
-Die Installation erfolgt automatisch über `install-cursor.sh`. Manuelle Konfiguration:
+1. **Open Cursor IDE Settings** (`Cmd/Ctrl + ,`)
+2. **Search for "MCP"** in settings
+3. **Add this configuration**:
 
 ```json
 {
   "mcpServers": {
     "mongodb": {
-      "command": "python3",
-      "args": ["/pfad/zu/bitsperity-mongodb-mcp/src/mcp_stdio_server.py"],
-      "env": {
-        "SESSION_TTL": "3600",
-        "MAX_CONNECTIONS": "10",
-        "LOG_LEVEL": "INFO",
-        "DATA_DIR": "/pfad/zu/data"
-      }
+      "command": "docker",
+      "args": [
+        "exec", "-i", 
+        "mongodb-mcp-server-mcp-server-1",
+        "python", "src/simple_mcp_server.py"
+      ]
     }
   }
 }
 ```
 
-## 🔧 Features
+4. **Restart Cursor IDE**
+5. **Start a new chat** and try: *"Connect to mongodb://localhost:27017"*
 
-- ✅ **Cursor Integration** - Nahtlose Integration in Cursor IDE
-- ✅ **Dynamische Verbindungen** - Keine hardcodierten Connection Strings
-- ✅ **Session-basierte Sicherheit** - Verschlüsselte, temporäre Verbindungen
-- ✅ **Schema-Analyse** - Automatische Erkennung von Datenstrukturen
-- ✅ **Multi-Database Support** - Mehrere Verbindungen gleichzeitig
-- ✅ **Natürlichsprachliche Queries** - Sprechen Sie mit Ihrer Datenbank
-- ✅ **Intelligente Tool-Auswahl** - Cursor wählt automatisch die richtigen Tools
-- ✅ **Real-time Logging** - Vollständige Nachverfolgung aller Operationen
+## 🛠️ Available Tools
 
-## 🛠️ Entwicklung
+| Tool | Description | Example Usage |
+|------|-------------|---------------|
+| `establish_connection` | Connect to MongoDB | *"Connect to mongodb://user:pass@host:port/db"* |
+| `list_databases` | Show all databases | *"Show me all databases"* |
+| `list_collections` | Show collections in a database | *"What collections are in myapp?"* |
+| `get_sample_documents` | Get example documents | *"Show me some examples from users"* |
+| `get_collection_schema` | Analyze document structure | *"What's the schema of products?"* |
+| `query_collection` | Find documents with filters | *"Find all active users"* |
+| `aggregate_collection` | Run aggregation pipelines | *"Group orders by month"* |
+| `list_active_connections` | Show current sessions | *"What connections are active?"* |
+| `test_connection` | Check connection health | *"Test my database connection"* |
+| `close_connection` | End a database session | *"Close the connection"* |
 
-### Lokale Entwicklung ohne Docker
+## 💬 Usage Examples
 
-```bash
-# Development Server starten
-./dev.sh
+### Basic Exploration
 
-# Logs anzeigen
-tail -f data/logs/mcp-cursor.log
+```
+You: "Connect to mongodb://localhost:27017/ecommerce"
+Assistant: ✅ Connected successfully! Session ID: abc123
+
+You: "What databases are available?"
+Assistant: 📊 Found 3 databases:
+- ecommerce (15.2 MB, 5 collections)
+- analytics (8.1 MB, 3 collections)  
+- logs (125.8 MB, 2 collections)
+
+You: "Show me the collections in ecommerce"
+Assistant: 📋 Collections in ecommerce:
+- users (12,450 documents)
+- products (8,932 documents)
+- orders (45,123 documents)
+- reviews (23,891 documents)
+- categories (156 documents)
 ```
 
-### Mit Docker (für Web-Interface)
+### Data Analysis
 
-```bash
-# Image neu bauen
-./build.sh
+```
+You: "Analyze the schema of the users collection"
+Assistant: 🔍 Schema Analysis for users:
+- _id: ObjectId (100% present)
+- email: string (100% present, appears unique)
+- name: string (98% present)
+- status: string (95% present, values: active, inactive, pending)
+- createdAt: date (100% present)
+- lastLogin: date (78% present)
 
-# Web-Server starten
-LOG_LEVEL=DEBUG ./run.sh
+You: "Find all active users from the last month"
+Assistant: 🔎 Query: {status: "active", createdAt: {$gte: "2024-04-24"}}
+Found 1,247 active users created in the last month.
+
+You: "Group orders by month and show revenue"
+Assistant: 📊 Revenue by month:
+- 2024-05: $45,230
+- 2024-04: $38,910
+- 2024-03: $52,100
 ```
 
-## 📝 Logs
+## 🏗️ Project Structure
 
-Logs werden gespeichert unter:
-- **Cursor MCP**: `./data/logs/mcp-cursor.log`
-- **Web-Server**: `./data/logs/mongodb-mcp.log`
-
-## 🔒 Sicherheit
-
-- Connection Strings werden **niemals persistent gespeichert**
-- Verbindungen laufen automatisch nach `SESSION_TTL` ab
-- Verschlüsselung aller sensiblen Daten im Speicher
-- Isolierte Session-basierte Verbindungen
-- Keine Cross-Session Datenlecks
-
-## 🆘 Troubleshooting
-
-### "MCP Server nicht gefunden in Cursor"
-```bash
-# Neu installieren
-./install-cursor.sh
-
-# Cursor komplett neu starten
+```
+mongodb-mcp-server/
+├── src/
+│   ├── simple_mcp_server.py    # Main MCP server (10 tools)
+│   ├── mcp_stdio_server.py     # Alternative server implementation
+│   ├── connection_manager.py   # Database connection handling
+│   ├── mongodb_tools.py        # Core MongoDB operations
+│   ├── schema_analyzer.py      # Document schema analysis
+│   └── requirements.txt        # Python dependencies
+├── docker-compose.yml          # Docker configuration
+├── Dockerfile                  # Container definition
+├── start-mcp.sh               # Server startup script
+└── README.md                  # This file
 ```
 
-### "Python Modul nicht gefunden"
-```bash
-# Dependencies neu installieren
-rm -rf venv
-./install-cursor.sh
+## ⚙️ Configuration
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SESSION_TTL` | 3600 | Session timeout in seconds |
+| `MAX_CONNECTIONS` | 10 | Maximum concurrent connections |
+| `CONNECTION_TIMEOUT` | 300 | Connection timeout in seconds |
+| `LOG_LEVEL` | INFO | Logging level (DEBUG, INFO, WARNING, ERROR) |
+| `DATA_DIR` | /app/data | Directory for logs and temporary data |
+
+### Docker Compose
+
+```yaml
+version: '3.8'
+services:
+  mcp-server:
+    build: .
+    restart: unless-stopped
+    network_mode: host  # Required for localhost MongoDB access
+    environment:
+      SESSION_TTL: 3600
+      MAX_CONNECTIONS: 10
+      LOG_LEVEL: INFO
 ```
 
-### "Verbindung zu MongoDB fehlgeschlagen"
-- Überprüfen Sie den Connection String
-- Prüfen Sie Netzwerkverbindung
-- Testen Sie mit MongoDB Compass
+## 🔒 Security
 
-### "Permission denied"
-```bash
-sudo chown -R $USER:$USER ./data
-chmod +x install-cursor.sh
-```
+- **No Persistent Credentials** - Connection strings are never stored
+- **Session-Based Authentication** - Connections expire automatically
+- **Encrypted Memory Storage** - Sensitive data encrypted in memory
+- **Isolated Sessions** - No cross-session data leaks
+- **Connection Limits** - Configurable maximum connections
 
-### Cursor-spezifische Probleme
-1. **Cursor neu starten** nach Installation
-2. Überprüfen Sie die MCP-Konfiguration in Cursor Settings
-3. Prüfen Sie die Logs: `tail -f data/logs/mcp-cursor.log`
+## 🧪 Development
 
-## 🎯 Beispiel-Session
+### Running Tests
 
 ```bash
-# 1. Installation (einmalig)
-./build.sh
-./install-cursor.sh
+# Start the development server
+docker-compose up -d
 
-# 2. Cursor neu starten
+# Test all tools
+python test_all_tools.py
 
-# 3. In Cursor Chat:
-User: "Verbinde dich mit mongodb://localhost:27017/ecommerce"
-Cursor: ✅ Verbindung hergestellt! Session: abc123
-
-User: "Zeige mir alle Datenbanken"
-Cursor: 📊 Gefundene Datenbanken:
-- ecommerce (15.2 MB, 5 Collections)
-- analytics (8.1 MB, 3 Collections)
-- logs (125.8 MB, 2 Collections)
-
-User: "Analysiere das Schema der users Collection"
-Cursor: 🔍 Schema-Analyse für users:
-- _id: ObjectId (100% der Dokumente)
-- email: string (100%, unique)
-- name: string (98%)
-- createdAt: date (100%)
-- status: string (95%, Werte: active, inactive, pending)
-...
-
-User: "Finde alle aktive Benutzer aus Deutschland"
-Cursor: 🔎 Gefunden: 142 aktive Benutzer aus Deutschland
-[Zeigt Ergebnisse...]
+# View logs
+docker-compose logs -f mcp-server
 ```
 
-## 📄 Lizenz
+### Local Development
 
-MIT License - siehe LICENSE Datei für Details.
+```bash
+# Run without Docker
+source venv/bin/activate
+python src/simple_mcp_server.py
 
-## 🤝 Beiträge
+# Monitor logs
+tail -f data/logs/simple-mcp.log
+```
 
-Beiträge sind willkommen! Bitte erstellen Sie Issues oder Pull Requests.
+## 🔍 Troubleshooting
+
+### Cursor IDE Issues
+
+**Problem:** "No MCP tools available"
+```bash
+# Solution:
+1. Restart Cursor IDE completely
+2. Check MCP configuration in settings
+3. Verify Docker container is running: docker ps
+4. Check container logs: docker-compose logs mcp-server
+```
+
+**Problem:** "Tool call failed"
+```bash
+# Solution:
+1. Verify MongoDB is accessible: docker ps | grep mongo
+2. Test connection manually: docker exec -it <container> mongo
+3. Check network mode in docker-compose.yml
+```
+
+### MongoDB Connection Issues
+
+**Problem:** "Connection refused"
+```bash
+# For Docker MongoDB:
+docker run -d -p 27017:27017 --name mongodb mongo:latest
+
+# For local MongoDB:
+brew services start mongodb-community  # macOS
+sudo systemctl start mongod           # Linux
+```
+
+**Problem:** "Authentication failed"
+```bash
+# Use correct connection string format:
+mongodb://username:password@host:port/database
+mongodb://localhost:27017  # For no auth
+```
+
+### Docker Issues
+
+**Problem:** "Container not starting"
+```bash
+# Rebuild and restart:
+docker-compose down
+docker-compose build --no-cache
+docker-compose up -d
+
+# Check logs:
+docker-compose logs mcp-server
+```
+
+## 📚 API Reference
+
+### Connection Management
+- `establish_connection(connection_string)` - Create database connection
+- `test_connection(session_id)` - Verify connection health
+- `close_connection(session_id)` - End session
+- `list_active_connections()` - Show all active sessions
+
+### Database Operations
+- `list_databases(session_id)` - Get all databases
+- `list_collections(session_id, database_name)` - Get collections
+
+### Data Exploration
+- `get_sample_documents(session_id, database, collection, limit=5)` - Sample docs
+- `get_collection_schema(session_id, database, collection)` - Schema analysis
+- `query_collection(session_id, database, collection, query, limit=10)` - Find documents
+- `aggregate_collection(session_id, database, collection, pipeline)` - Aggregations
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md).
+
+### Development Setup
+
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
+3. **Make your changes**
+4. **Add tests** if applicable
+5. **Commit your changes**: `git commit -m 'Add amazing feature'`
+6. **Push to the branch**: `git push origin feature/amazing-feature`
+7. **Open a Pull Request**
+
+### Code Style
+
+- Follow PEP 8 for Python code
+- Use type hints where possible
+- Add docstrings for all functions
+- Keep functions focused and small
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [Model Context Protocol](https://modelcontextprotocol.io) - For the amazing MCP specification
+- [Cursor IDE](https://cursor.sh) - For excellent AI coding assistant integration
+- [MongoDB](https://mongodb.com) - For the powerful database platform
 
 ## 📞 Support
 
-- GitHub Issues: [Repository Issues](https://github.com/bitsperity/umbrel-apps/issues)
-- Diskussionen: [GitHub Discussions](https://github.com/bitsperity/umbrel-apps/discussions) 
+- **Issues**: [GitHub Issues](https://github.com/yourusername/mongodb-mcp-server/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/yourusername/mongodb-mcp-server/discussions)
+- **Documentation**: [Wiki](https://github.com/yourusername/mongodb-mcp-server/wiki)
+
+---
+
+**Made with ❤️ for the AI and Database community** 
