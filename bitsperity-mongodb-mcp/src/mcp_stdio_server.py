@@ -57,14 +57,14 @@ class MongoMCPStdioServer:
         """Register MCP tools with proper error handling."""
         
         @self.server.list_tools()
-        async def list_tools() -> ListToolsResult:
+        async def list_tools():
             """List available MongoDB tools."""
             try:
                 tools = [
-                    Tool(
-                        name="establish_connection",
-                        description="Establish a connection to a MongoDB instance",
-                        inputSchema={
+                    {
+                        "name": "establish_connection",
+                        "description": "Establish a connection to a MongoDB instance",
+                        "inputSchema": {
                             "type": "object",
                             "properties": {
                                 "connection_string": {
@@ -74,11 +74,11 @@ class MongoMCPStdioServer:
                             },
                             "required": ["connection_string"]
                         }
-                    ),
-                    Tool(
-                        name="list_databases", 
-                        description="List all databases for a connection session",
-                        inputSchema={
+                    },
+                    {
+                        "name": "list_databases", 
+                        "description": "List all databases for a connection session",
+                        "inputSchema": {
                             "type": "object",
                             "properties": {
                                 "session_id": {
@@ -88,11 +88,11 @@ class MongoMCPStdioServer:
                             },
                             "required": ["session_id"]
                         }
-                    ),
-                    Tool(
-                        name="list_collections",
-                        description="List all collections in a database", 
-                        inputSchema={
+                    },
+                    {
+                        "name": "list_collections",
+                        "description": "List all collections in a database", 
+                        "inputSchema": {
                             "type": "object",
                             "properties": {
                                 "session_id": {
@@ -106,11 +106,11 @@ class MongoMCPStdioServer:
                             },
                             "required": ["session_id", "database_name"]
                         }
-                    ),
-                    Tool(
-                        name="get_collection_schema",
-                        description="Analyze and return the schema of a collection",
-                        inputSchema={
+                    },
+                    {
+                        "name": "get_collection_schema",
+                        "description": "Analyze and return the schema of a collection",
+                        "inputSchema": {
                             "type": "object",
                             "properties": {
                                 "session_id": {
@@ -128,11 +128,11 @@ class MongoMCPStdioServer:
                             },
                             "required": ["session_id", "database_name", "collection_name"]
                         }
-                    ),
-                    Tool(
-                        name="query_collection",
-                        description="Query a collection with find operation",
-                        inputSchema={
+                    },
+                    {
+                        "name": "query_collection",
+                        "description": "Query a collection with find operation",
+                        "inputSchema": {
                             "type": "object",
                             "properties": {
                                 "session_id": {
@@ -169,11 +169,11 @@ class MongoMCPStdioServer:
                             },
                             "required": ["session_id", "database_name", "collection_name"]
                         }
-                    ),
-                    Tool(
-                        name="aggregate_collection",
-                        description="Run an aggregation pipeline on a collection",
-                        inputSchema={
+                    },
+                    {
+                        "name": "aggregate_collection",
+                        "description": "Run an aggregation pipeline on a collection",
+                        "inputSchema": {
                             "type": "object",
                             "properties": {
                                 "session_id": {
@@ -203,11 +203,11 @@ class MongoMCPStdioServer:
                             },
                             "required": ["session_id", "database_name", "collection_name", "pipeline"]
                         }
-                    ),
-                    Tool(
-                        name="get_sample_documents",
-                        description="Get sample documents from a collection",
-                        inputSchema={
+                    },
+                    {
+                        "name": "get_sample_documents",
+                        "description": "Get sample documents from a collection",
+                        "inputSchema": {
                             "type": "object",
                             "properties": {
                                 "session_id": {
@@ -232,20 +232,20 @@ class MongoMCPStdioServer:
                             },
                             "required": ["session_id", "database_name", "collection_name"]
                         }
-                    ),
-                    Tool(
-                        name="list_active_connections",
-                        description="List all active database connections",
-                        inputSchema={
+                    },
+                    {
+                        "name": "list_active_connections",
+                        "description": "List all active database connections",
+                        "inputSchema": {
                             "type": "object",
                             "properties": {},
                             "required": []
                         }
-                    ),
-                    Tool(
-                        name="close_connection",
-                        description="Close a database connection",
-                        inputSchema={
+                    },
+                    {
+                        "name": "close_connection",
+                        "description": "Close a database connection",
+                        "inputSchema": {
                             "type": "object",
                             "properties": {
                                 "session_id": {
@@ -255,11 +255,11 @@ class MongoMCPStdioServer:
                             },
                             "required": ["session_id"]
                         }
-                    ),
-                    Tool(
-                        name="test_connection",
-                        description="Test if a connection is still working",
-                        inputSchema={
+                    },
+                    {
+                        "name": "test_connection",
+                        "description": "Test if a connection is still working",
+                        "inputSchema": {
                             "type": "object",
                             "properties": {
                                 "session_id": {
@@ -269,19 +269,19 @@ class MongoMCPStdioServer:
                             },
                             "required": ["session_id"]
                         }
-                    )
+                    }
                 ]
                 
                 logger.info(f"Listed {len(tools)} MongoDB tools")
-                return ListToolsResult(tools=tools)
+                return tools
                 
             except Exception as e:
                 logger.error(f"Error listing tools: {e}")
                 # Return empty tools list on error
-                return ListToolsResult(tools=[])
+                return []
         
         @self.server.call_tool()
-        async def call_tool(name: str, arguments: dict) -> CallToolResult:
+        async def call_tool(name: str, arguments: dict):
             """Handle tool calls with comprehensive error handling."""
             try:
                 logger.info(f"Calling tool: {name} with arguments: {arguments}")
@@ -348,9 +348,14 @@ class MongoMCPStdioServer:
                 
                 logger.info(f"Tool {name} completed with success: {result.get('success', False)}")
                 
-                return CallToolResult(
-                    content=[TextContent(type="text", text=json.dumps(result, indent=2))]
-                )
+                return {
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": json.dumps(result, indent=2)
+                        }
+                    ]
+                }
                 
             except Exception as e:
                 error_msg = f"Error calling tool {name}: {str(e)}"
@@ -363,9 +368,14 @@ class MongoMCPStdioServer:
                     "arguments": arguments
                 }
                 
-                return CallToolResult(
-                    content=[TextContent(type="text", text=json.dumps(error_result, indent=2))]
-                )
+                return {
+                    "content": [
+                        {
+                            "type": "text", 
+                            "text": json.dumps(error_result, indent=2)
+                        }
+                    ]
+                }
     
     async def run(self):
         """Run the MCP server in STDIO mode."""

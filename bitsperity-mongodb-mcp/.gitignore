@@ -1,0 +1,92 @@
+# Logs and temporary data
+logs/
+*.log
+data/
+!data/.gitkeep
+
+# MongoDB MCP specific
+*.pyc
+__pycache__/
+.pytest_cache/
+
+# Docker volumes and data
+docker-data/
+mongodb-data/
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Development and testing files
+test_*.py
+quick_query.py
+test_mcp.py
+test_mongodb.py
+test_simple_mcp.py
+test_all_tools.py
+
+# Python
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+.coverage
+htmlcov/
+.tox/
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# MongoDB dumps
+dump/
+*.dump
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Session and connection files
+sessions/
+connections/ 

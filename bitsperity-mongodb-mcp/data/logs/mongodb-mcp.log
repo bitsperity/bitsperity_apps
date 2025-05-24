@@ -1,9 +1,0 @@
-2025-05-24 15:13:14,152 - __main__ - INFO - Starting MongoDB MCP Server in web mode
-2025-05-24 15:13:21,899 - __main__ - INFO - Shutting down MongoDB MCP Server...
-2025-05-24 15:13:21,899 - connection_manager - INFO - Connection manager shut down
-2025-05-24 15:13:42,014 - __main__ - INFO - Starting MongoDB MCP Server in web mode
-2025-05-24 15:14:05,962 - __main__ - INFO - Shutting down MongoDB MCP Server...
-2025-05-24 15:14:05,962 - connection_manager - INFO - Connection manager shut down
-2025-05-24 15:18:36,074 - __main__ - INFO - Starting MongoDB MCP Server in web mode
-2025-05-24 15:20:17,926 - __main__ - INFO - Shutting down MongoDB MCP Server...
-2025-05-24 15:20:17,926 - connection_manager - INFO - Connection manager shut down

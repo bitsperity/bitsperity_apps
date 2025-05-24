@@ -31,12 +31,12 @@ RUN adduser -D -u 1000 appuser && \
     chown -R appuser:appuser /app
 USER appuser
 
-# Health check
+# Health check for MCP server
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD ./scripts/health_check.sh || exit 1
+    CMD ps aux | grep -v grep | grep "mcp_stdio_server.py" || exit 1
 
-# Expose ports
-EXPOSE 8080 3001
+# Expose STDIO (no ports needed for MCP STDIO)
+# MCP communication happens over stdin/stdout
 
-# Start the application
-CMD ["python", "src/server.py"] 
+# Start the Simple MCP server
+CMD ["python", "src/simple_mcp_server.py"] 
