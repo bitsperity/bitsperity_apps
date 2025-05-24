@@ -6,7 +6,7 @@ services:
     stop_grace_period: 30s
     stdin_open: true  # Enable STDIN for MCP communication
     tty: true         # Enable TTY for MCP communication
-    network_mode: host  # Use host network to access MongoDB on localhost:27017
+    # network_mode: host  # Removed to allow external network access
     volumes:
       - ${APP_DATA_DIR:-./data}/data:/app/data
       - ${APP_DATA_DIR:-./data}/logs:/app/logs

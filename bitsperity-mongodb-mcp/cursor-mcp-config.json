@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "mongodb-remote": {
+      "command": "curl",
+      "args": [
+        "-s", "-X", "POST",
+        "http://umbrel.local:8090/mcp-proxy",
+        "-H", "Content-Type: application/json",
+        "-d", "@-"
+      ]
+    }
+  }
+} 
