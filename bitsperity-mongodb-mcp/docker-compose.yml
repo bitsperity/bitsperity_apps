@@ -1,7 +1,7 @@
 services:
   # MongoDB MCP Server (STDIO mode)
   mcp-server:
-    image: 192.168.178.57:5001/bitsperity-mongodb-mcp:latest
+    image: ghcr.io/bitsperity/bitsperity_apps/mongodb-mcp:latest
     restart: unless-stopped
     stop_grace_period: 30s
     stdin_open: true  # Enable STDIN for MCP communication
@@ -42,7 +42,7 @@ services:
 
   # Optional: Web Interface for monitoring (separate service)
   web:
-    image: 192.168.178.57:5001/bitsperity-mongodb-mcp:latest
+    image: ghcr.io/bitsperity/bitsperity_apps/mongodb-mcp:latest
     restart: unless-stopped
     stop_grace_period: 1m
     ports:
