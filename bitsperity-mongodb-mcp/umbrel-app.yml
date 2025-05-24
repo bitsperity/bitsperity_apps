@@ -2,6 +2,7 @@ manifestVersion: 1
 id: bitsperity-mongodb-mcp
 category: developer-tools
 name: MongoDB MCP Server
+icon: applogo.svg
 version: "1.0.0"
 tagline: Chat with your MongoDB using natural language through AI assistants
 description: >-
