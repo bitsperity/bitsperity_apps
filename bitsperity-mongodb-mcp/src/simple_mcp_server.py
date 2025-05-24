@@ -8,6 +8,8 @@ import json
 import logging
 import os
 import sys
+import time
+import aiohttp
 from pathlib import Path
 
 from connection_manager import ConnectionManager
@@ -34,6 +36,31 @@ except (PermissionError, OSError) as e:
     )
 
 logger = logging.getLogger(__name__)
+
+# Web API logging
+WEB_API_URL = os.getenv('WEB_API_URL', 'http://web:8080')
+
+async def log_to_web_api(method: str, params: dict, success: bool, duration: float, result=None, error=None):
+    """Log MCP call to the web API for frontend display."""
+    try:
+        call_data = {
+            "method": method,
+            "params": params,
+            "success": success,
+            "duration": duration,
+            "result": result,
+            "error": error
+        }
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.post(f"{WEB_API_URL}/api/log-call", json=call_data, timeout=1) as response:
+                if response.status == 200:
+                    logger.debug(f"Logged call {method} to web API")
+                else:
+                    logger.warning(f"Failed to log to web API: {response.status}")
+    except Exception as e:
+        logger.debug(f"Could not log to web API: {e}")
+        # Don't fail MCP operations if web logging fails
 
 class SimpleMCPServer:
     """Simple MCP Server with direct JSON-RPC communication."""
@@ -213,63 +240,88 @@ class SimpleMCPServer:
                 name = params.get("name")
                 arguments = params.get("arguments", {})
                 
-                # Call the appropriate MongoDB tool
-                if name == "establish_connection":
-                    result = await self.mongodb_tools.establish_connection(
-                        arguments["connection_string"]
-                    )
-                elif name == "list_databases":
-                    result = self.mongodb_tools.list_databases(
-                        arguments["session_id"]
-                    )
-                elif name == "list_collections":
-                    result = self.mongodb_tools.list_collections(
-                        arguments["session_id"],
-                        arguments["database_name"]
-                    )
-                elif name == "query_collection":
-                    result = self.mongodb_tools.query_collection(
-                        arguments["session_id"],
-                        arguments["database_name"],
-                        arguments["collection_name"],
-                        arguments.get("query"),
-                        arguments.get("limit", 10),
-                        arguments.get("projection"),
-                        arguments.get("sort")
-                    )
-                elif name == "get_sample_documents":
-                    result = self.mongodb_tools.get_sample_documents(
-                        arguments["session_id"],
-                        arguments["database_name"],
-                        arguments["collection_name"],
-                        arguments.get("limit", 5)
-                    )
-                elif name == "get_collection_schema":
-                    result = self.mongodb_tools.get_collection_schema(
-                        arguments["session_id"],
-                        arguments["database_name"],
-                        arguments["collection_name"]
-                    )
-                elif name == "aggregate_collection":
-                    result = self.mongodb_tools.aggregate_collection(
-                        arguments["session_id"],
-                        arguments["database_name"],
-                        arguments["collection_name"],
-                        arguments["pipeline"],
-                        arguments.get("limit", 10)
-                    )
-                elif name == "list_active_connections":
-                    result = self.mongodb_tools.list_active_connections()
-                elif name == "close_connection":
-                    result = await self.mongodb_tools.close_connection(
-                        arguments["session_id"]
-                    )
-                elif name == "test_connection":
-                    result = await self.mongodb_tools.test_connection(
-                        arguments["session_id"]
-                    )
-                else:
-                    result = {"success": False, "error": f"Unknown tool: {name}"}
+                start_time = time.time()
+                result = None
+                error = None
+                success = False
+                
+                try:
+                    # Call the appropriate MongoDB tool
+                    if name == "establish_connection":
+                        result = await self.mongodb_tools.establish_connection(
+                            arguments["connection_string"]
+                        )
+                    elif name == "list_databases":
+                        result = self.mongodb_tools.list_databases(
+                            arguments["session_id"]
+                        )
+                    elif name == "list_collections":
+                        result = self.mongodb_tools.list_collections(
+                            arguments["session_id"],
+                            arguments["database_name"]
+                        )
+                    elif name == "query_collection":
+                        result = self.mongodb_tools.query_collection(
+                            arguments["session_id"],
+                            arguments["database_name"],
+                            arguments["collection_name"],
+                            arguments.get("query"),
+                            arguments.get("limit", 10),
+                            arguments.get("projection"),
+                            arguments.get("sort")
+                        )
+                    elif name == "get_sample_documents":
+                        result = self.mongodb_tools.get_sample_documents(
+                            arguments["session_id"],
+                            arguments["database_name"],
+                            arguments["collection_name"],
+                            arguments.get("limit", 5)
+                        )
+                    elif name == "get_collection_schema":
+                        result = self.mongodb_tools.get_collection_schema(
+                            arguments["session_id"],
+                            arguments["database_name"],
+                            arguments["collection_name"]
+                        )
+                    elif name == "aggregate_collection":
+                        result = self.mongodb_tools.aggregate_collection(
+                            arguments["session_id"],
+                            arguments["database_name"],
+                            arguments["collection_name"],
+                            arguments["pipeline"],
+                            arguments.get("limit", 10)
+                        )
+                    elif name == "list_active_connections":
+                        result = self.mongodb_tools.list_active_connections()
+                    elif name == "close_connection":
+                        result = await self.mongodb_tools.close_connection(
+                            arguments["session_id"]
+                        )
+                    elif name == "test_connection":
+                        result = await self.mongodb_tools.test_connection(
+                            arguments["session_id"]
+                        )
+                    else:
+                        result = {"success": False, "error": f"Unknown tool: {name}"}
+                        error = f"Unknown tool: {name}"
+                    
+                    success = True
+                except Exception as e:
+                    error = str(e)
+                    result = {"success": False, "error": error}
+                    success = False
+                
+                duration = time.time() - start_time
+                
+                # Log to web API (async, don't block on failure)
+                asyncio.create_task(log_to_web_api(
+                    method=name,
+                    params=arguments,
+                    success=success,
+                    duration=duration,
+                    result=result,
+                    error=error
+                ))
                 
                 return {
                     "jsonrpc": "2.0",

@@ -241,8 +241,8 @@
                     <h4>Get Container ID</h4>
                     <p>Find your MCP server container ID:</p>
                     <div class="docker-command">docker ps | grep mongodb-mcp</div>
-                </div>
-            </div>
+                    </div>
+                    </div>
             <div class="step">
                 <div class="step-number">2</div>
                 <div class="step-content">
@@ -255,10 +255,10 @@
                 <div class="step-content">
                     <h4>Start Using</h4>
                     <p>Restart Cursor and start asking questions about your MongoDB databases!</p>
-                </div>
-            </div>
         </div>
-        
+        </div>
+    </div>
+
         <div class="grid">
             <div class="card">
                 <h3>📖 What is MCP?</h3>
@@ -273,7 +273,7 @@
                     <div class="feature-item">
                         <strong>🔍 Query</strong><br>
                         Query collections and analyze data
-                    </div>
+                </div>
                     <div class="feature-item">
                         <strong>📊 Explore</strong><br>
                         Explore database schemas
@@ -322,6 +322,14 @@
                     </li>
                 </ul>
             </div>
+            
+            <div class="card">
+                <h3>📝 Recent MCP Calls</h3>
+                <button class="refresh-btn" onclick="loadRecentCalls()">🔄 Refresh Activity</button>
+                <div id="recent-calls" class="logs">
+                    <div class="log-entry">Loading recent MCP calls...</div>
+                </div>
+            </div>
         </div>
         
         <div class="example-section">
@@ -335,7 +343,7 @@
                 <div class="feature-item">
                     <strong>"Show me all databases"</strong><br>
                     <small>Lists available databases</small>
-                </div>
+            </div>
                 <div class="feature-item">
                     <strong>"What collections are in the users database?"</strong><br>
                     <small>Lists collections in specific database</small>
@@ -365,11 +373,11 @@
                 <div class="feature-item">
                     <strong>Database:</strong> MongoDB<br>
                     <small>Supports MongoDB 4.0+</small>
-                </div>
+                    </div>
                 <div class="feature-item">
                     <strong>Security:</strong> Connection strings<br>
                     <small>Secure authentication support</small>
-                </div>
+                    </div>
                 <div class="feature-item">
                     <strong>Runtime:</strong> Docker Container<br>
                     <small>Isolated and portable</small>
@@ -380,15 +388,23 @@
         <div class="status-card">
             <h3>🌟 Benefits</h3>
             <p>This MongoDB MCP Server bridges the gap between AI assistants and your database, enabling natural language database interactions, automated data analysis, and intelligent query generation - all while maintaining security and control over your data access.</p>
+    </div>
+
+        <div class="example-section">
+            <h3>📊 Tool Usage Statistics</h3>
+            <div id="tool-stats" class="feature-grid">
+                <div class="feature-item">Loading tool statistics...</div>
+            </div>
         </div>
     </div>
-    
+
     <script>
         // Add some interactivity
         document.addEventListener('DOMContentLoaded', function() {
-            // Update timestamp in examples
-            const now = new Date();
-            const timestamp = now.toLocaleString();
+            // Initialize
+            loadContainerInfo();
+            loadRecentCalls();
+            loadToolStats();
             
             // Simple animation for status indicator
             const indicator = document.querySelector('.status-indicator');
@@ -398,8 +414,110 @@
                 }, 1000);
             }
             
-            console.log('MongoDB MCP Server Web Interface loaded at', timestamp);
+            // Auto-refresh every 30 seconds
+            setInterval(() => {
+                loadContainerInfo();
+                loadRecentCalls();
+                loadToolStats();
+            }, 30000);
+            
+            console.log('MongoDB MCP Server Web Interface loaded');
         });
+        
+        async function loadContainerInfo() {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+                
+                const infoHtml = `
+                    <p><strong>Container ID:</strong> ${data.container_id}</p>
+                    <p><strong>Uptime:</strong> ${data.uptime_hours}</p>
+                    <p><strong>Total Calls:</strong> ${data.total_calls}</p>
+                    <p><strong>Success Rate:</strong> ${data.success_rate}</p>
+                `;
+                
+                // Update connection code with actual container ID
+                const connectionCode = document.querySelector('.connection-code');
+                if (connectionCode && data.container_id !== 'unknown') {
+                    connectionCode.innerHTML = connectionCode.innerHTML.replace('CONTAINER_ID', data.container_id);
+                }
+                
+                // Update stats if container exists
+                const containerInfo = document.getElementById('container-info');
+                if (containerInfo) {
+                    containerInfo.innerHTML = infoHtml;
+                }
+            } catch (error) {
+                console.error('Failed to load container info:', error);
+            }
+        }
+        
+        async function loadRecentCalls() {
+            try {
+                const response = await fetch('/api/calls');
+                const data = await response.json();
+                
+                const callsContainer = document.getElementById('recent-calls');
+                if (!callsContainer) return;
+                
+                if (data.calls && data.calls.length > 0) {
+                    const callsHtml = data.calls.map(call => {
+                        const timestamp = new Date(call.timestamp).toLocaleTimeString();
+                        const statusIcon = call.success ? '✅' : '❌';
+                        const duration = call.duration_ms;
+                        
+                        return `
+                            <div class="log-entry">
+                                <strong>${timestamp}</strong> ${statusIcon} 
+                                <span style="color: #667eea;">${call.method}</span>
+                                <span style="color: #666; font-size: 0.9em;">(${duration}ms)</span>
+                                ${call.error ? `<br><span style="color: #e74c3c; font-size: 0.8em;">Error: ${call.error}</span>` : ''}
+                            </div>
+                        `;
+                    }).join('');
+                    
+                    callsContainer.innerHTML = callsHtml;
+                } else {
+                    callsContainer.innerHTML = '<div class="log-entry">No MCP calls yet. Start using Cursor with this MCP server!</div>';
+                }
+            } catch (error) {
+                const callsContainer = document.getElementById('recent-calls');
+                if (callsContainer) {
+                    callsContainer.innerHTML = '<div class="log-entry">Unable to load recent calls</div>';
+                }
+                console.error('Failed to load recent calls:', error);
+            }
+        }
+        
+        async function loadToolStats() {
+            try {
+                const response = await fetch('/api/tools');
+                const data = await response.json();
+                
+                const statsContainer = document.getElementById('tool-stats');
+                if (!statsContainer) return;
+                
+                if (data.tools && data.tools.length > 0) {
+                    const statsHtml = data.tools.map(tool => `
+                        <div class="feature-item">
+                            <strong>${tool.name}</strong><br>
+                            <small>Used ${tool.usage_count} times</small><br>
+                            <span style="font-size: 0.8em; color: #666;">${tool.description}</span>
+                        </div>
+                    `).join('');
+                    
+                    statsContainer.innerHTML = statsHtml;
+                } else {
+                    statsContainer.innerHTML = '<div class="feature-item">No tool usage data available</div>';
+                }
+            } catch (error) {
+                const statsContainer = document.getElementById('tool-stats');
+                if (statsContainer) {
+                    statsContainer.innerHTML = '<div class="feature-item">Unable to load tool statistics</div>';
+                }
+                console.error('Failed to load tool stats:', error);
+            }
+        }
     </script>
 </body>
 </html> 

@@ -22,6 +22,9 @@ services:
       # Data Directory
       DATA_DIR: /app/data
       
+      # Web API URL for logging
+      WEB_API_URL: http://localhost:8080
+      
     deploy:
       resources:
         limits:
@@ -39,9 +42,7 @@ services:
 
   # Optional: Web Interface for monitoring (separate service)
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile.web
+    build: .
     restart: unless-stopped
     stop_grace_period: 1m
     ports:
@@ -49,14 +50,17 @@ services:
     environment:
       # App Configuration
       APP_ENV: ${APP_ENV:-development}
+      WEB_HOST: 0.0.0.0
+      WEB_PORT: 8080
       
+    command: ["python", "src/simple_web_api.py"]  # Use the new Python API
     deploy:
       resources:
         limits:
-          memory: 64M
-          cpus: '0.2'
+          memory: 128M
+          cpus: '0.3'
         reservations:
-          memory: 32M
+          memory: 64M
           cpus: '0.1'
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
