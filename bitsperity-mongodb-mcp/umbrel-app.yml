@@ -1,0 +1,47 @@
+manifestVersion: 1
+id: bitsperity-mongodb-mcp
+category: developer-tools
+name: MongoDB MCP Server
+version: "1.0.0"
+tagline: Dynamic MongoDB integration for LLM applications
+description: >-
+  Ein moderner MongoDB Model Context Protocol (MCP) Server, der nahtlose Integration 
+  zwischen LLM-Anwendungen wie Cursor und MongoDB-Datenbanken ermöglicht.
+  
+  Mit diesem MCP Server können Sie:
+  - Dynamisch Verbindungen zu verschiedenen MongoDB-Instanzen herstellen
+  - Datenbanken und Collections erkunden
+  - Schemas automatisch analysieren lassen
+  - Intelligente Queries ausführen
+  - Mehrere Verbindungen gleichzeitig verwalten
+  
+  Die App bietet eine benutzerfreundliche Web-Oberfläche zur Überwachung aktiver
+  Verbindungen und unterstützt sowohl MongoDB Atlas als auch lokale Instanzen.
+  
+  Sicherheit steht an erster Stelle: Connection-Strings werden niemals persistent
+  gespeichert und Verbindungen laufen automatisch nach Inaktivität ab.
+
+releaseNotes: >-
+  Erste Version des MongoDB MCP Servers mit folgenden Features:
+  - Dynamic Connection Management
+  - Multi-Database Support  
+  - Schema Analysis Engine
+  - Mobile-First Web Interface
+  - Session-based Security
+  - Real-time Connection Monitoring
+
+developer: Bitsperity
+website: https://bitsperity.com
+dependencies: []
+repo: https://github.com/bitsperity/umbrel-apps
+support: https://github.com/bitsperity/umbrel-apps/discussions
+port: 8080
+gallery:
+  - 1.jpg
+  - 2.jpg
+  - 3.jpg
+path: ""
+defaultUsername: ""
+defaultPassword: ""
+submitter: Bitsperity
+submission: https://github.com/getumbrel/umbrel-apps 

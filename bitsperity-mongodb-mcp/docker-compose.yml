@@ -1,0 +1,56 @@
+services:
+  # Umbrel App Proxy (only needed when running in Umbrel)
+  app_proxy:
+    image: nginx:alpine
+    restart: unless-stopped
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    environment:
+      APP_HOST: ${COMPOSE_PROJECT_NAME:-bitsperity-mongodb-mcp}_web_1
+      APP_PORT: 8080
+    depends_on:
+      - web
+    profiles:
+      - umbrel
+
+  web:
+    build: .
+    restart: unless-stopped
+    stop_grace_period: 1m
+    ports:
+      - "8080:8080"  # Web Interface only
+    volumes:
+      - ${APP_DATA_DIR:-./data}/data:/app/data
+      - ${APP_DATA_DIR:-./data}/logs:/app/logs
+    environment:
+      # App Configuration
+      APP_ENV: ${APP_ENV:-development}
+      WEB_HOST: 0.0.0.0
+      WEB_PORT: 8080
+      
+      # Security Settings
+      SESSION_TTL: ${SESSION_TTL:-3600}  # 1 hour
+      MAX_CONNECTIONS: ${MAX_CONNECTIONS:-10}
+      CONNECTION_TIMEOUT: ${CONNECTION_TIMEOUT:-300}  # 5 minutes
+      
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      LOG_FILE: /app/logs/mongodb-mcp.log
+      
+      # Data Directory
+      DATA_DIR: /app/data
+      
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+          cpus: '0.25'
+    healthcheck:
+      test: ["CMD", "./scripts/health_check.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s 

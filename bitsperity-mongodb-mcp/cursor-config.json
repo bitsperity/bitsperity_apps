@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "mongodb": {
+      "command": "docker",
+      "args": [
+        "run", 
+        "--rm", 
+        "-i",
+        "--network", "host",
+        "-v", "/home/sascha-laptop/bitsperity_apps/bitsperity-mongodb-mcp/data:/app/data",
+        "-e", "MCP_MODE=stdio",
+        "bitsperity-mongodb-mcp-web:latest"
+      ],
+      "env": {
+        "SESSION_TTL": "3600",
+        "MAX_CONNECTIONS": "10",
+        "LOG_LEVEL": "INFO"
+      }
+    }
+  }
+} 

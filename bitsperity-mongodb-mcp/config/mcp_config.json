@@ -1,0 +1,51 @@
+{
+    "server": {
+        "name": "mongodb-mcp",
+        "version": "1.0.0",
+        "description": "MongoDB Model Context Protocol Server"
+    },
+    "connection": {
+        "session_ttl": 3600,
+        "max_connections": 10,
+        "connection_timeout": 300,
+        "cleanup_interval": 60
+    },
+    "security": {
+        "encrypt_connection_strings": true,
+        "max_query_results": 100,
+        "query_timeout": 30000,
+        "rate_limit": {
+            "enabled": true,
+            "requests_per_minute": 60
+        }
+    },
+    "logging": {
+        "level": "INFO",
+        "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        "file": "/app/logs/mongodb-mcp.log",
+        "max_size": "10MB",
+        "backup_count": 5
+    },
+    "web_interface": {
+        "enabled": true,
+        "host": "0.0.0.0",
+        "port": 8080,
+        "websocket_enabled": true,
+        "refresh_interval": 10000
+    },
+    "features": {
+        "schema_analysis": {
+            "enabled": true,
+            "sample_size": 100,
+            "max_depth": 3
+        },
+        "query_history": {
+            "enabled": true,
+            "max_entries": 1000
+        },
+        "real_time_updates": {
+            "enabled": true,
+            "websocket_ping_interval": 30
+        }
+    }
+} 
