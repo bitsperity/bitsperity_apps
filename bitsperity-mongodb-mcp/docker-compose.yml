@@ -46,8 +46,6 @@ services:
     stop_grace_period: 1m
     ports:
       - "8080:8080"  # Web Interface
-    volumes:
-      - ${APP_DATA_DIR:-./data}/logs:/app/logs:ro  # Mount logs read-only
     environment:
       # App Configuration
       APP_ENV: ${APP_ENV:-development}
