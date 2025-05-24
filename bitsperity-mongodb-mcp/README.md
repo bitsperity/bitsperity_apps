@@ -2,84 +2,43 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://www.docker.com/)
+[![Umbrel App](https://img.shields.io/badge/umbrel-app-purple.svg)](https://umbrel.com/)
 
-A modern **MongoDB Model Context Protocol (MCP) Server** that enables seamless integration between AI assistants (like Cursor IDE) and MongoDB databases. Chat with your database using natural language!
+A modern **MongoDB Model Context Protocol (MCP) Server** for Umbrel that enables AI assistants to interact with MongoDB databases using natural language.
 
-## 🎯 What is this?
+## Features
 
-This MCP server allows AI assistants to interact with MongoDB databases through a standardized protocol. Instead of writing complex queries, you can simply ask:
-
-- *"Show me all users from Germany"*
-- *"What's the schema of my products collection?"*
-- *"Find orders from the last 30 days"*
-- *"Create an aggregation for top customers by revenue"*
-
-## ✨ Features
-
-- 🤖 **Natural Language Database Queries** - Chat with your MongoDB
-- 🔌 **Cursor IDE Integration** - Seamless setup with popular AI coding assistant
-- 🔒 **Secure Session Management** - No persistent credential storage
-- 📊 **Automatic Schema Analysis** - Understand your data structure instantly
+- 🤖 **Natural Language Queries** - Chat with your MongoDB databases
+- 🔌 **Cursor IDE Integration** - Seamless setup with AI coding assistants  
+- 📊 **Real-time Monitoring** - Web dashboard on port 8090
+- 🌐 **Multi-Database Support** - Connect to local and remote MongoDB instances
+- 🔒 **Secure Sessions** - No persistent credential storage
 - 🚀 **10 Powerful Tools** - From basic queries to complex aggregations
-- 🐳 **Docker Ready** - Easy deployment and development
-- 🔄 **Multi-Database Support** - Handle multiple connections simultaneously
 
-## 🚀 Quick Start
+## Quick Start
 
-### Prerequisites
+### 1. Install via Umbrel
 
-- **Python 3.11+**
-- **Docker & Docker Compose** (recommended)
-- **Cursor IDE** (for AI integration)
+1. Open Umbrel Dashboard
+2. Go to App Store  
+3. Search for "MongoDB MCP Server"
+4. Click Install
 
-### Installation
+The app will be available at `http://your-umbrel:8090`
 
-#### Option 1: Docker (Recommended)
+### 2. Configure Cursor IDE
 
-```bash
-# Clone the repository
-git clone <your-repo-url>
-cd mongodb-mcp-server
-
-# Start the MCP server
-docker-compose up -d
-
-# Configure Cursor IDE (see below)
-```
-
-#### Option 2: Local Development
-
-```bash
-# Clone and setup
-git clone <your-repo-url>
-cd mongodb-mcp-server
-
-# Create virtual environment
-python3 -m venv venv
-source venv/bin/activate  # or `venv\Scripts\activate` on Windows
-
-# Install dependencies
-pip install -r src/requirements.txt
-
-# Run the server
-python src/simple_mcp_server.py
-```
-
-### Cursor IDE Setup
-
-1. **Open Cursor IDE Settings** (`Cmd/Ctrl + ,`)
-2. **Search for "MCP"** in settings
-3. **Add this configuration**:
+Add this to your Cursor MCP settings:
 
 ```json
 {
   "mcpServers": {
-    "mongodb": {
-      "command": "docker",
+    "mongodb-remote": {
+      "command": "ssh",
       "args": [
-        "exec", "-i", 
-        "mongodb-mcp-server-mcp-server-1",
+        "umbrel@umbrel.local",
+        "sudo", "docker", "exec", "-i", 
+        "bitsperity-mongodb-mcp_mcp-server_1",
         "python", "src/simple_mcp_server.py"
       ]
     }
@@ -87,256 +46,120 @@ python src/simple_mcp_server.py
 }
 ```
 
-4. **Restart Cursor IDE**
-5. **Start a new chat** and try: *"Connect to mongodb://localhost:27017"*
+### 3. Start Chatting
 
-## 🛠️ Available Tools
+In Cursor, try:
+- *"Connect to mongodb://umbrel:umbrel@umbrel.local:27017"*
+- *"Show me all databases"*
+- *"What collections are in my database?"*
 
-| Tool | Description | Example Usage |
-|------|-------------|---------------|
-| `establish_connection` | Connect to MongoDB | *"Connect to mongodb://user:pass@host:port/db"* |
-| `list_databases` | Show all databases | *"Show me all databases"* |
-| `list_collections` | Show collections in a database | *"What collections are in myapp?"* |
-| `get_sample_documents` | Get example documents | *"Show me some examples from users"* |
-| `get_collection_schema` | Analyze document structure | *"What's the schema of products?"* |
-| `query_collection` | Find documents with filters | *"Find all active users"* |
-| `aggregate_collection` | Run aggregation pipelines | *"Group orders by month"* |
-| `list_active_connections` | Show current sessions | *"What connections are active?"* |
-| `test_connection` | Check connection health | *"Test my database connection"* |
-| `close_connection` | End a database session | *"Close the connection"* |
+## Available Tools
 
-## 💬 Usage Examples
+| Tool | Description |
+|------|-------------|
+| `establish_connection` | Connect to MongoDB instance |
+| `list_databases` | Show available databases |
+| `list_collections` | List collections in database |
+| `query_collection` | Find documents with filters |
+| `get_collection_schema` | Analyze document structure |
+| `aggregate_collection` | Run aggregation pipelines |
+| `get_sample_documents` | Get example documents |
+| `list_active_connections` | Show current sessions |
+| `test_connection` | Check connection health |
+| `close_connection` | End database session |
 
-### Basic Exploration
-
-```
-You: "Connect to mongodb://localhost:27017/ecommerce"
-Assistant: ✅ Connected successfully! Session ID: abc123
-
-You: "What databases are available?"
-Assistant: 📊 Found 3 databases:
-- ecommerce (15.2 MB, 5 collections)
-- analytics (8.1 MB, 3 collections)  
-- logs (125.8 MB, 2 collections)
-
-You: "Show me the collections in ecommerce"
-Assistant: 📋 Collections in ecommerce:
-- users (12,450 documents)
-- products (8,932 documents)
-- orders (45,123 documents)
-- reviews (23,891 documents)
-- categories (156 documents)
-```
-
-### Data Analysis
-
-```
-You: "Analyze the schema of the users collection"
-Assistant: 🔍 Schema Analysis for users:
-- _id: ObjectId (100% present)
-- email: string (100% present, appears unique)
-- name: string (98% present)
-- status: string (95% present, values: active, inactive, pending)
-- createdAt: date (100% present)
-- lastLogin: date (78% present)
-
-You: "Find all active users from the last month"
-Assistant: 🔎 Query: {status: "active", createdAt: {$gte: "2024-04-24"}}
-Found 1,247 active users created in the last month.
-
-You: "Group orders by month and show revenue"
-Assistant: 📊 Revenue by month:
-- 2024-05: $45,230
-- 2024-04: $38,910
-- 2024-03: $52,100
-```
-
-## 🏗️ Project Structure
-
-```
-mongodb-mcp-server/
-├── src/
-│   ├── simple_mcp_server.py    # Main MCP server (10 tools)
-│   ├── mcp_stdio_server.py     # Alternative server implementation
-│   ├── connection_manager.py   # Database connection handling
-│   ├── mongodb_tools.py        # Core MongoDB operations
-│   ├── schema_analyzer.py      # Document schema analysis
-│   └── requirements.txt        # Python dependencies
-├── docker-compose.yml          # Docker configuration
-├── Dockerfile                  # Container definition
-├── start-mcp.sh               # Server startup script
-└── README.md                  # This file
-```
-
-## ⚙️ Configuration
-
-### Environment Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `SESSION_TTL` | 3600 | Session timeout in seconds |
-| `MAX_CONNECTIONS` | 10 | Maximum concurrent connections |
-| `CONNECTION_TIMEOUT` | 300 | Connection timeout in seconds |
-| `LOG_LEVEL` | INFO | Logging level (DEBUG, INFO, WARNING, ERROR) |
-| `DATA_DIR` | /app/data | Directory for logs and temporary data |
-
-### Docker Compose
-
-```yaml
-version: '3.8'
-services:
-  mcp-server:
-    build: .
-    restart: unless-stopped
-    network_mode: host  # Required for localhost MongoDB access
-    environment:
-      SESSION_TTL: 3600
-      MAX_CONNECTIONS: 10
-      LOG_LEVEL: INFO
-```
-
-## 🔒 Security
-
-- **No Persistent Credentials** - Connection strings are never stored
-- **Session-Based Authentication** - Connections expire automatically
-- **Encrypted Memory Storage** - Sensitive data encrypted in memory
-- **Isolated Sessions** - No cross-session data leaks
-- **Connection Limits** - Configurable maximum connections
-
-## 🧪 Development
-
-### Running Tests
+## Example Connections
 
 ```bash
-# Start the development server
-docker-compose up -d
+# Local Umbrel MongoDB
+mongodb://umbrel:umbrel@umbrel.local:27017/
 
-# Test all tools
-python test_all_tools.py
+# External MongoDB
+mongodb://192.168.1.100:27017/myapp
+
+# MongoDB with authentication
+mongodb://user:password@host:port/database
+```
+
+## SSH Setup (One-time)
+
+```bash
+# Add SSH key to Umbrel
+ssh-copy-id umbrel@umbrel.local
+
+# Add Docker permission
+ssh umbrel@umbrel.local
+echo 'umbrel ALL=(ALL) NOPASSWD: /usr/bin/docker' | sudo tee /etc/sudoers.d/umbrel-docker
+sudo chmod 440 /etc/sudoers.d/umbrel-docker
+```
+
+## Architecture
+
+```
+┌─────────────────┐    SSH    ┌─────────────────┐
+│   Cursor IDE    │ ────────► │   Umbrel Host   │
+└─────────────────┘           └─────────────────┘
+                                       │
+                               Docker exec -i
+                                       ▼
+                              ┌─────────────────┐
+                              │   MCP Server    │
+                              │   Container     │
+                              └─────────────────┘
+                                       │
+                                  HTTP POST
+                                       ▼
+                              ┌─────────────────┐
+                              │  Web Interface  │
+                              │  Port 8090      │
+                              └─────────────────┘
+```
+
+## Troubleshooting
+
+**MCP tools not available in Cursor:**
+- Restart Cursor IDE
+- Verify SSH connection: `ssh umbrel@umbrel.local`
+- Check container status: `sudo docker ps | grep mongodb-mcp`
+
+**Connection refused:**
+- For Umbrel MongoDB: `mongodb://umbrel:umbrel@umbrel.local:27017/`
+- For external: Check network connectivity and MongoDB port
+
+**Web interface not accessible:**
+- Ensure app is running: Check Umbrel dashboard
+- Verify port 8090 is not blocked
+
+## Development
+
+```bash
+# Clone repository
+git clone https://github.com/bitsperity/bitsperity_apps
+cd bitsperity_apps/bitsperity-mongodb-mcp
+
+# Run locally
+docker-compose up -d
 
 # View logs
 docker-compose logs -f mcp-server
 ```
 
-### Local Development
+## Security
 
-```bash
-# Run without Docker
-source venv/bin/activate
-python src/simple_mcp_server.py
+- Connection strings are never persisted
+- Sessions expire automatically (1 hour default)
+- SSH encryption for all communication
+- Isolated Docker containers
 
-# Monitor logs
-tail -f data/logs/simple-mcp.log
-```
+## License
 
-## 🔍 Troubleshooting
+MIT License - see [LICENSE](LICENSE) for details.
 
-### Cursor IDE Issues
+## Support
 
-**Problem:** "No MCP tools available"
-```bash
-# Solution:
-1. Restart Cursor IDE completely
-2. Check MCP configuration in settings
-3. Verify Docker container is running: docker ps
-4. Check container logs: docker-compose logs mcp-server
-```
-
-**Problem:** "Tool call failed"
-```bash
-# Solution:
-1. Verify MongoDB is accessible: docker ps | grep mongo
-2. Test connection manually: docker exec -it <container> mongo
-3. Check network mode in docker-compose.yml
-```
-
-### MongoDB Connection Issues
-
-**Problem:** "Connection refused"
-```bash
-# For Docker MongoDB:
-docker run -d -p 27017:27017 --name mongodb mongo:latest
-
-# For local MongoDB:
-brew services start mongodb-community  # macOS
-sudo systemctl start mongod           # Linux
-```
-
-**Problem:** "Authentication failed"
-```bash
-# Use correct connection string format:
-mongodb://username:password@host:port/database
-mongodb://localhost:27017  # For no auth
-```
-
-### Docker Issues
-
-**Problem:** "Container not starting"
-```bash
-# Rebuild and restart:
-docker-compose down
-docker-compose build --no-cache
-docker-compose up -d
-
-# Check logs:
-docker-compose logs mcp-server
-```
-
-## 📚 API Reference
-
-### Connection Management
-- `establish_connection(connection_string)` - Create database connection
-- `test_connection(session_id)` - Verify connection health
-- `close_connection(session_id)` - End session
-- `list_active_connections()` - Show all active sessions
-
-### Database Operations
-- `list_databases(session_id)` - Get all databases
-- `list_collections(session_id, database_name)` - Get collections
-
-### Data Exploration
-- `get_sample_documents(session_id, database, collection, limit=5)` - Sample docs
-- `get_collection_schema(session_id, database, collection)` - Schema analysis
-- `query_collection(session_id, database, collection, query, limit=10)` - Find documents
-- `aggregate_collection(session_id, database, collection, pipeline)` - Aggregations
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md).
-
-### Development Setup
-
-1. **Fork the repository**
-2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
-3. **Make your changes**
-4. **Add tests** if applicable
-5. **Commit your changes**: `git commit -m 'Add amazing feature'`
-6. **Push to the branch**: `git push origin feature/amazing-feature`
-7. **Open a Pull Request**
-
-### Code Style
-
-- Follow PEP 8 for Python code
-- Use type hints where possible
-- Add docstrings for all functions
-- Keep functions focused and small
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- [Model Context Protocol](https://modelcontextprotocol.io) - For the amazing MCP specification
-- [Cursor IDE](https://cursor.sh) - For excellent AI coding assistant integration
-- [MongoDB](https://mongodb.com) - For the powerful database platform
-
-## 📞 Support
-
-- **Issues**: [GitHub Issues](https://github.com/yourusername/mongodb-mcp-server/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/mongodb-mcp-server/discussions)
-- **Documentation**: [Wiki](https://github.com/yourusername/mongodb-mcp-server/wiki)
+- [GitHub Issues](https://github.com/bitsperity/bitsperity_apps/issues)
+- [Umbrel Community](https://community.umbrel.com)
 
 ---
 
-**Made with ❤️ for the AI and Database community** 
+**Made with ❤️ for the Umbrel Community** 

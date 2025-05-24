@@ -43,9 +43,9 @@ repo: https://github.com/bitsperity/bitsperity_apps
 support: https://github.com/bitsperity/bitsperity_apps/discussions
 port: 8090
 gallery:
-  - 1.jpg
-  - 2.jpg
-  - 3.jpg
+  - https://raw.githubusercontent.com/bitsperity/bitsperity_apps/main/bitsperity-mongodb-mcp/1.png
+  - https://raw.githubusercontent.com/bitsperity/bitsperity_apps/main/bitsperity-mongodb-mcp/2.png
+  - https://raw.githubusercontent.com/bitsperity/bitsperity_apps/main/bitsperity-mongodb-mcp/3.png
 path: ""
 defaultUsername: ""
 defaultPassword: ""

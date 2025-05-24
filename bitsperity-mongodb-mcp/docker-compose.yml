@@ -22,8 +22,8 @@ services:
       # Data Directory
       DATA_DIR: /app/data
       
-      # Web API URL for logging - Use localhost since mcp-server is in host network
-      WEB_API_URL: http://localhost:8090
+      # Web API URL for logging - Use Docker service name since mcp-server is in host network but web is in docker network
+      WEB_API_URL: http://192.168.178.124:8090
       
     deploy:
       resources:
