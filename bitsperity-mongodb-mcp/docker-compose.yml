@@ -46,7 +46,7 @@ services:
     restart: unless-stopped
     stop_grace_period: 1m
     ports:
-      - "8080:8080"  # Web Interface
+      - "8090:8080"  # Web Interface - Changed from 8080 to 8090 to avoid conflicts
     environment:
       # App Configuration
       APP_ENV: ${APP_ENV:-development}
