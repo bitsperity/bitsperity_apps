@@ -26,8 +26,9 @@ RUN chmod +x ./scripts/*.sh
 # Create non-root user FIRST
 RUN adduser -D -u 1000 appuser
 
-# Create necessary directories with correct ownership
+# Create necessary directories with correct ownership and permissions
 RUN mkdir -p /app/data /app/logs && \
+    chmod 755 /app/logs && \
     chown -R appuser:appuser /app
 
 # Switch to non-root user

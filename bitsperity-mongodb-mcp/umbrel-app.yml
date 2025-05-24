@@ -3,32 +3,37 @@ id: bitsperity-mongodb-mcp
 category: developer-tools
 name: MongoDB MCP Server
 version: "1.0.0"
-tagline: Dynamic MongoDB integration for LLM applications
+tagline: Chat with your MongoDB using natural language through AI assistants
 description: >-
-  Ein moderner MongoDB Model Context Protocol (MCP) Server, der nahtlose Integration 
-  zwischen LLM-Anwendungen wie Cursor und MongoDB-Datenbanken ermöglicht.
+  A modern MongoDB Model Context Protocol (MCP) Server that enables seamless integration 
+  between AI assistants (like Cursor IDE) and MongoDB databases. Transform complex database 
+  operations into simple conversations.
   
-  Mit diesem MCP Server können Sie:
-  - Dynamisch Verbindungen zu verschiedenen MongoDB-Instanzen herstellen
-  - Datenbanken und Collections erkunden
-  - Schemas automatisch analysieren lassen
-  - Intelligente Queries ausführen
-  - Mehrere Verbindungen gleichzeitig verwalten
+  Key Features:
+  • Dynamic MongoDB connections - No hardcoded credentials
+  • Natural language queries - "Show me all users from Germany"
+  • Multi-database support - Handle multiple connections simultaneously
+  • Automatic schema analysis - Understand your data structure instantly
+  • 10 powerful tools - From basic queries to complex aggregations
+  • Secure session management - No persistent credential storage
+  • Real-time monitoring - Track all MCP activities through web interface
   
-  Die App bietet eine benutzerfreundliche Web-Oberfläche zur Überwachung aktiver
-  Verbindungen und unterstützt sowohl MongoDB Atlas als auch lokale Instanzen.
+  Perfect for developers, data analysts, and AI enthusiasts who want to combine 
+  the power of MongoDB with modern AI assistants. Simply connect through Cursor IDE 
+  or any MCP-compatible application and start chatting with your database!
   
-  Sicherheit steht an erster Stelle: Connection-Strings werden niemals persistent
-  gespeichert und Verbindungen laufen automatisch nach Inaktivität ab.
+  Security is paramount: Connection strings are never stored persistently and 
+  sessions automatically expire after inactivity.
 
 releaseNotes: >-
-  Erste Version des MongoDB MCP Servers mit folgenden Features:
-  - Dynamic Connection Management
-  - Multi-Database Support  
-  - Schema Analysis Engine
-  - Mobile-First Web Interface
-  - Session-based Security
-  - Real-time Connection Monitoring
+  Initial release of MongoDB MCP Server featuring:
+  • 10 MongoDB MCP tools (establish_connection, query_collection, etc.)
+  • Real-time web monitoring interface
+  • Docker-based deployment for easy installation
+  • Comprehensive documentation and examples
+  • Secure session-based connection management
+  • Support for MongoDB Atlas and local instances
+  • Mobile-responsive web dashboard
 
 developer: Bitsperity
 website: https://bitsperity.com

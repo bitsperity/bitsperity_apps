@@ -39,37 +39,29 @@ services:
 
   # Optional: Web Interface for monitoring (separate service)
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.web
     restart: unless-stopped
     stop_grace_period: 1m
     ports:
       - "8080:8080"  # Web Interface
     volumes:
-      - ${APP_DATA_DIR:-./data}/data:/app/data
-      - ${APP_DATA_DIR:-./data}/logs:/app/logs
+      - ${APP_DATA_DIR:-./data}/logs:/app/logs:ro  # Mount logs read-only
     environment:
       # App Configuration
       APP_ENV: ${APP_ENV:-development}
-      WEB_HOST: 0.0.0.0
-      WEB_PORT: 8080
       
-      # Settings
-      SESSION_TTL: ${SESSION_TTL:-3600}
-      MAX_CONNECTIONS: ${MAX_CONNECTIONS:-10}
-      LOG_LEVEL: ${LOG_LEVEL:-INFO}
-      DATA_DIR: /app/data
-      
-    command: ["python", "src/server.py"]  # Override to run web server
     deploy:
       resources:
         limits:
-          memory: 256M
-          cpus: '0.5'
+          memory: 64M
+          cpus: '0.2'
         reservations:
-          memory: 128M
-          cpus: '0.25'
+          memory: 32M
+          cpus: '0.1'
     healthcheck:
-      test: ["CMD", "./scripts/health_check.sh"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
