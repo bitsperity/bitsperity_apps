@@ -20,20 +20,22 @@ COPY web/ ./web/
 COPY config/ ./config/
 COPY scripts/ ./scripts/
 
-# Create necessary directories
-RUN mkdir -p /app/data /app/logs
-
 # Make scripts executable
 RUN chmod +x ./scripts/*.sh
 
-# Create non-root user
-RUN adduser -D -u 1000 appuser && \
+# Create non-root user FIRST
+RUN adduser -D -u 1000 appuser
+
+# Create necessary directories with correct ownership
+RUN mkdir -p /app/data /app/logs && \
     chown -R appuser:appuser /app
+
+# Switch to non-root user
 USER appuser
 
 # Health check for MCP server
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD ps aux | grep -v grep | grep "mcp_stdio_server.py" || exit 1
+    CMD ps aux | grep -v grep | grep "simple_mcp_server.py" || exit 1
 
 # Expose STDIO (no ports needed for MCP STDIO)
 # MCP communication happens over stdin/stdout

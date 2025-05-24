@@ -15,13 +15,23 @@ from mongodb_tools import MongoDBTools
 
 # Configure logging
 log_file = Path(os.getenv('DATA_DIR', './data')) / 'logs' / 'simple-mcp.log'
-log_file.parent.mkdir(parents=True, exist_ok=True)
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[logging.FileHandler(log_file)]
-)
+# Try to create log directory, but don't fail if not possible
+try:
+    log_file.parent.mkdir(parents=True, exist_ok=True)
+    # File logging if possible
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[logging.FileHandler(log_file)]
+    )
+except (PermissionError, OSError) as e:
+    # Fallback to console logging only
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[logging.StreamHandler()]
+    )
 
 logger = logging.getLogger(__name__)
 
