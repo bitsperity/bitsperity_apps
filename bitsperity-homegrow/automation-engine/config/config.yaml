@@ -1,0 +1,26 @@
+# HomeGrow Server Konfiguration
+
+# MQTT-Konfiguration
+mqtt:
+  host: localhost
+  port: 1883
+  username: null  # Setze auf null, wenn keine Authentifizierung erforderlich ist
+  password: null
+  client_id: homegrow_server
+  topic_prefix: homegrow
+  use_random_client_id: false  # Wenn true, wird eine zufällige ID an client_id angehängt
+
+# MongoDB-Konfiguration
+mongodb:
+  uri: mongodb://localhost:27017/
+  database: homegrow
+
+# Logging-Konfiguration
+logging:
+  level: info  # debug, info, warning, error, critical
+  file: logs/homegrow_server.log
+
+# Automatisierungskonfiguration
+automation:
+  enabled: true
+  check_interval: 60  # Sekunden 

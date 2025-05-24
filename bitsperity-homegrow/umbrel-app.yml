@@ -1,0 +1,60 @@
+manifestVersion: 1
+id: bitsperity-homegrow
+name: HomeGrow
+tagline: Professional hydroponic monitoring and automation system
+icon: https://svgur.com/i/1DV.svg
+category: Automation
+version: "3.0.0"
+port: 3000
+description: >-
+  HomeGrow v3 is a modern, mobile-first progressive web app for monitoring and automating hydroponic growing systems.
+
+
+  🌱 **Smart Automation** - Create intelligent rules for pH, nutrients, and water management
+
+
+  📱 **Mobile-First Design** - Optimized for smartphone and tablet usage with touch-friendly controls
+
+
+  📊 **Real-time Monitoring** - Live sensor data visualization with historical charts and analytics
+
+
+  ⚡ **ESP32 Integration** - Seamless integration with ESP32-based sensor and control hardware
+
+
+  🔧 **Professional Features** - Advanced automation rules, notifications, and system health monitoring
+
+
+  Built with modern technologies including SvelteKit, Tailwind CSS, and FastAPI for optimal performance and reliability.
+
+developer: Bitsperity
+website: https://bitsperity.com
+submitter: Bitsperity
+submission: https://github.com/bitsperity/umbrel-apps
+repo: https://github.com/bitsperity/homegrow-v3
+support: https://github.com/bitsperity/homegrow-v3/issues
+gallery:
+  - https://i.imgur.com/placeholder1.png
+  - https://i.imgur.com/placeholder2.png
+  - https://i.imgur.com/placeholder3.png
+releaseNotes: >-
+  🎉 **HomeGrow v3.0.0 - Complete Rewrite**
+
+
+  - 📱 Mobile-first responsive design with PWA capabilities
+  - ⚡ Modern tech stack: SvelteKit 2.0 + Tailwind CSS 4.0 + Fastify
+  - 🔗 Native Umbrel service integration (MongoDB + MQTT)
+  - 📊 Enhanced real-time charts and monitoring dashboards
+  - 🤖 Improved automation engine with visual rule editor
+  - 🔒 JWT-based authentication with secure API
+  - 🚀 Performance optimized: <2s load time, <500KB bundle
+  - 📴 Offline support with service worker caching
+  - 🔔 Push notifications for critical alerts
+  - 🛠️ Modular component architecture for easy maintenance
+
+dependencies: 
+  - mosquitto
+  - mongodb
+path: ""
+defaultUsername: ""
+defaultPassword: "" 
