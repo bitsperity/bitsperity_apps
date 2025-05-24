@@ -39,8 +39,8 @@ releaseNotes: >-
 developer: Bitsperity
 website: https://bitsperity.com
 dependencies: []
-repo: https://github.com/bitsperity/umbrel-apps
-support: https://github.com/bitsperity/umbrel-apps/discussions
+repo: https://github.com/bitsperity/bitsperity_apps
+support: https://github.com/bitsperity/bitsperity_apps/discussions
 port: 8080
 gallery:
   - 1.jpg
