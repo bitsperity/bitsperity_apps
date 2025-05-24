@@ -6,7 +6,7 @@ services:
     stop_grace_period: 30s
     stdin_open: true  # Enable STDIN for MCP communication
     tty: true         # Enable TTY for MCP communication
-    # network_mode: host  # Removed to allow external network access
+    network_mode: host  # Restored to access both local and external MongoDB
     volumes:
       - ${APP_DATA_DIR:-./data}/data:/app/data
       - ${APP_DATA_DIR:-./data}/logs:/app/logs
@@ -22,8 +22,8 @@ services:
       # Data Directory
       DATA_DIR: /app/data
       
-      # Web API URL for logging
-      WEB_API_URL: http://localhost:8080
+      # Web API URL for logging - Use localhost since mcp-server is in host network
+      WEB_API_URL: http://localhost:8090
       
     deploy:
       resources:
