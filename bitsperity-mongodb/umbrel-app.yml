@@ -4,8 +4,7 @@ name: "MongoDB"
 tagline: "A clean MongoDB database for your Umbrel apps"
 icon: "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/mongodb.svg"
 category: "Development"
-version: "1.0.0"
-port: 27017 
+version: "1.0.0" 
 description: >-
   MongoDB is a document database designed for ease of application development and scaling.
   

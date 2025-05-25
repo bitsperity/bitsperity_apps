@@ -4,8 +4,7 @@ services:
   # MongoDB database server
   mongodb:
     image: mongo:7.0
-    container_name: bitsperity-mongodb
-    restart: unless-stopped
+    restart: on-failure
     environment:
       MONGO_INITDB_ROOT_USERNAME: umbrel
       MONGO_INITDB_ROOT_PASSWORD: umbrel
@@ -17,22 +16,10 @@ services:
       timeout: 10s
       retries: 3
       start_period: 20s
-    # Port mapping for MongoDB
-    ports:
-      - "27017:27017"
+    # No port mapping needed - internal service only
     # Data persistence
     volumes:
-      - mongodb-data:/data/db
-      - mongodb-config:/data/configdb
-    # Resource limits to ensure stability
-    deploy:
-      resources:
-        limits:
-          memory: 1G
+      - ${APP_DATA_DIR}/data:/data/db
+      - ${APP_DATA_DIR}/config:/data/configdb
 
-# Named volumes for data persistence
-volumes:
-  mongodb-data:
-    driver: local
-  mongodb-config:
-    driver: local 
+# Volumes managed by Umbrel via ${APP_DATA_DIR} 
