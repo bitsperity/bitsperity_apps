@@ -5,7 +5,7 @@ tagline: "Service Discovery Server für das lokale Netzwerk"
 icon: "https://raw.githubusercontent.com/bitsperity/bitsperity_apps/master/bitsperity-beacon/applogo.svg"
 category: "networking"
 version: "1.0.0"
-port: 8080
+port: 8083
 description: >-
   Bitsperity Beacon ist ein zentraler Service Discovery Server mit mDNS/Bonjour-Unterstützung.
   Ermöglicht es Services im lokalen Netzwerk, sich zu registrieren und von anderen Geräten 
