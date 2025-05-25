@@ -8,7 +8,7 @@ services:
       APP_PORT: 8080
 
   beacon-api:
-    image: bitsperity/beacon:v1.0.0@sha256:0d51ceb3bd89c7fbd290de7fa8453c42107bba28c82b9c9600a9476820be43bd
+    image: bitsperity/beacon:v1.0.1@sha256:3d535fca274f00beb4c6e95e0b093df7ec53d54c18a243d5187e3b1cfa02e9cf
     restart: on-failure
     stop_grace_period: 1m
     volumes:
