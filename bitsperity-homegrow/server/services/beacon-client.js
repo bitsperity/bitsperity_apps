@@ -1,7 +1,7 @@
-import { EventEmitter } from 'events';
-import WebSocket from 'ws';
+const EventEmitter = require('events');
+const WebSocket = require('ws');
 
-export class BeaconServiceDiscovery extends EventEmitter {
+class BeaconServiceDiscovery extends EventEmitter {
   constructor(beaconUrl = 'http://bitsperity-beacon:8080') {
     super();
     this.beaconUrl = beaconUrl;
@@ -11,6 +11,7 @@ export class BeaconServiceDiscovery extends EventEmitter {
     this.heartbeatInterval = null;
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 5;
+    this.isInitialized = false;
   }
 
   async initialize() {
@@ -20,11 +21,12 @@ export class BeaconServiceDiscovery extends EventEmitter {
       this.connectWebSocket();
       this.startHeartbeat();
       
-      console.log('Beacon Service Discovery initialized successfully');
+      this.isInitialized = true;
+      console.log('✅ Beacon Service Discovery initialized successfully');
       return true;
     } catch (error) {
-      console.warn('Beacon Service Discovery initialization failed:', error.message);
-      console.warn('Continuing without service discovery...');
+      console.warn('⚠️ Beacon Service Discovery initialization failed:', error.message);
+      console.warn('📱 Continuing without service discovery...');
       return false;
     }
   }
@@ -64,7 +66,7 @@ export class BeaconServiceDiscovery extends EventEmitter {
     const result = await response.json();
     this.serviceId = result.service_id;
     
-    console.log(`HomeGrow Server registered with Beacon: ${this.serviceId}`);
+    console.log(`🚀 HomeGrow Server registered with Beacon: ${this.serviceId}`);
     return result;
   }
 
@@ -85,7 +87,7 @@ export class BeaconServiceDiscovery extends EventEmitter {
       }
     }
 
-    console.log(`Discovered ${this.discoveredDevices.size} existing HomeGrow devices`);
+    console.log(`🔍 Discovered ${this.discoveredDevices.size} existing HomeGrow devices`);
   }
 
   connectWebSocket() {
@@ -94,7 +96,7 @@ export class BeaconServiceDiscovery extends EventEmitter {
       this.wsConnection = new WebSocket(wsUrl);
 
       this.wsConnection.on('open', () => {
-        console.log('WebSocket connection to Beacon established');
+        console.log('🔌 WebSocket connection to Beacon established');
         this.reconnectAttempts = 0;
       });
 
@@ -103,21 +105,21 @@ export class BeaconServiceDiscovery extends EventEmitter {
           const update = JSON.parse(data.toString());
           this.handleWebSocketMessage(update);
         } catch (error) {
-          console.error('Error parsing WebSocket message:', error);
+          console.error('❌ Error parsing WebSocket message:', error);
         }
       });
 
       this.wsConnection.on('close', () => {
-        console.log('WebSocket connection to Beacon closed');
+        console.log('📴 WebSocket connection to Beacon closed');
         this.scheduleReconnect();
       });
 
       this.wsConnection.on('error', (error) => {
-        console.error('WebSocket error:', error);
+        console.error('❌ WebSocket error:', error);
       });
 
     } catch (error) {
-      console.warn('Failed to establish WebSocket connection:', error);
+      console.warn('⚠️ Failed to establish WebSocket connection:', error);
       this.scheduleReconnect();
     }
   }
@@ -162,7 +164,7 @@ export class BeaconServiceDiscovery extends EventEmitter {
 
     this.discoveredDevices.set(service.service_id, deviceInfo);
     
-    console.log(`New HomeGrow device discovered: ${deviceInfo.device_id}`);
+    console.log(`🆕 New HomeGrow device discovered: ${deviceInfo.device_id}`);
     this.emit('device_discovered', deviceInfo);
   }
 
@@ -180,7 +182,7 @@ export class BeaconServiceDiscovery extends EventEmitter {
     const deviceInfo = this.discoveredDevices.get(serviceId);
     if (deviceInfo) {
       this.discoveredDevices.delete(serviceId);
-      console.log(`HomeGrow device removed: ${deviceInfo.device_id}`);
+      console.log(`📤 HomeGrow device removed: ${deviceInfo.device_id}`);
       this.emit('device_removed', deviceInfo);
     }
   }
@@ -201,10 +203,10 @@ export class BeaconServiceDiscovery extends EventEmitter {
           );
           
           if (!response.ok) {
-            console.warn(`Heartbeat failed: ${response.status}`);
+            console.warn(`💓 Heartbeat failed: ${response.status}`);
           }
         } catch (error) {
-          console.warn('Heartbeat error:', error.message);
+          console.warn('💓 Heartbeat error:', error.message);
         }
       }, 60000); // Every 60 seconds
     }
@@ -216,16 +218,43 @@ export class BeaconServiceDiscovery extends EventEmitter {
       this.reconnectAttempts++;
       
       setTimeout(() => {
-        console.log(`Attempting to reconnect to Beacon (attempt ${this.reconnectAttempts})`);
+        console.log(`🔄 Attempting to reconnect to Beacon (attempt ${this.reconnectAttempts})`);
         this.connectWebSocket();
       }, delay);
     } else {
-      console.error('Max reconnection attempts reached. Service discovery disabled.');
+      console.error('❌ Max reconnection attempts reached. Service discovery disabled.');
     }
   }
 
   getDiscoveredDevices() {
     return Array.from(this.discoveredDevices.values());
+  }
+
+  getDeviceByServiceId(serviceId) {
+    return this.discoveredDevices.get(serviceId);
+  }
+
+  getDeviceByDeviceId(deviceId) {
+    for (const device of this.discoveredDevices.values()) {
+      if (device.device_id === deviceId) {
+        return device;
+      }
+    }
+    return null;
+  }
+
+  isDeviceDiscovered(deviceId) {
+    return this.getDeviceByDeviceId(deviceId) !== null;
+  }
+
+  async refreshDiscovery() {
+    try {
+      await this.discoverExistingDevices();
+      return this.getDiscoveredDevices();
+    } catch (error) {
+      console.error('❌ Failed to refresh discovery:', error);
+      return [];
+    }
   }
 
   async shutdown() {
@@ -242,10 +271,22 @@ export class BeaconServiceDiscovery extends EventEmitter {
         await fetch(`${this.beaconUrl}/api/v1/services/${this.serviceId}`, {
           method: 'DELETE'
         });
-        console.log('HomeGrow Server deregistered from Beacon');
+        console.log('📴 HomeGrow Server deregistered from Beacon');
       } catch (error) {
-        console.warn('Failed to deregister from Beacon:', error);
+        console.warn('⚠️ Failed to deregister from Beacon:', error);
       }
     }
   }
-} 
+
+  getStatus() {
+    return {
+      initialized: this.isInitialized,
+      service_id: this.serviceId,
+      discovered_devices: this.discoveredDevices.size,
+      websocket_connected: this.wsConnection?.readyState === WebSocket.OPEN,
+      reconnect_attempts: this.reconnectAttempts
+    };
+  }
+}
+
+module.exports = BeaconServiceDiscovery;

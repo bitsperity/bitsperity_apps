@@ -1,6 +1,6 @@
-import { ObjectId } from 'mongodb';
+const { ObjectId } = require('mongodb');
 
-export class DeviceModel {
+class DeviceModel {
   constructor(db) {
     this.collection = db.collection('devices');
     this.createIndexes();
@@ -104,6 +104,10 @@ export class DeviceModel {
     return await this.collection.findOne({ device_id: deviceId });
   }
 
+  async findAll(filter = {}) {
+    return await this.collection.find(filter).toArray();
+  }
+
   async updateStatus(deviceId, status, lastSeen = new Date()) {
     return await this.collection.updateOne(
       { device_id: deviceId },
@@ -131,16 +135,20 @@ export class DeviceModel {
     );
   }
 
-  async findAll(filter = {}) {
-    return await this.collection.find(filter).toArray();
-  }
-
   async updateConfig(deviceId, configUpdate) {
+    const device = await this.findByDeviceId(deviceId);
+    if (!device) {
+      throw new Error('Device not found');
+    }
+
+    // Merge with existing config
+    const newConfig = { ...device.config, ...configUpdate };
+    
     return await this.collection.updateOne(
       { device_id: deviceId },
       { 
         $set: { 
-          config: configUpdate,
+          config: newConfig,
           updated_at: new Date()
         } 
       }
@@ -163,6 +171,31 @@ export class DeviceModel {
     return await this.collection.deleteOne({ device_id: deviceId });
   }
 
+  async getOnlineDevices() {
+    return await this.collection.find({ status: 'online' }).toArray();
+  }
+
+  async getOfflineDevices() {
+    return await this.collection.find({ status: 'offline' }).toArray();
+  }
+
+  async markOfflineIfStale(staleThresholdMinutes = 5) {
+    const staleTime = new Date(Date.now() - staleThresholdMinutes * 60 * 1000);
+    
+    return await this.collection.updateMany(
+      { 
+        status: 'online',
+        last_seen: { $lt: staleTime }
+      },
+      { 
+        $set: { 
+          status: 'offline',
+          updated_at: new Date()
+        } 
+      }
+    );
+  }
+
   async getDeviceCount() {
     const total = await this.collection.countDocuments();
     const online = await this.collection.countDocuments({ status: 'online' });
@@ -178,4 +211,6 @@ export class DeviceModel {
       last_seen: { $gte: cutoff }
     }).toArray();
   }
-} 
+}
+
+module.exports = DeviceModel; 
