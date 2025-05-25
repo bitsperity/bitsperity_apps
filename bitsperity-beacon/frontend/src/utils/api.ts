@@ -1,7 +1,8 @@
 import { Service, ServiceCreate, ServiceUpdate, ServiceListResponse, HeartbeatResponse } from '../types/service'
 import { HealthResponse, DiscoveryResponse, ServiceDiscoveryFilter } from '../types/api'
+import { API_CONFIG } from '../config/api'
 
-const API_BASE_URL = '/api/v1'
+const API_BASE_URL = API_CONFIG.BASE_URL
 
 class ApiClient {
   private async request<T>(

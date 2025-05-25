@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { Service, ServiceStatus } from '../types/service'
 import { WebSocketMessage } from '../types/api'
 import apiClient from '../utils/api'
+import { API_CONFIG } from '../config/api'
 
 interface ServiceStore {
   // State
@@ -128,8 +129,7 @@ export const useServiceStore = create<ServiceStore>((set, get) => ({
 
   // WebSocket
   connectWebSocket: () => {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const wsUrl = `${protocol}//${window.location.host}/api/v1/ws`
+    const wsUrl = API_CONFIG.WS_URL
     
     try {
       const ws = new WebSocket(wsUrl)
@@ -152,17 +152,26 @@ export const useServiceStore = create<ServiceStore>((set, get) => ({
         console.log('WebSocket disconnected')
         set({ connected: false, websocket: null })
         
-        // Reconnect after 5 seconds
+        // Reconnect after 10 seconds (longer delay for stability)
         setTimeout(() => {
           if (!get().connected) {
+            console.log('Attempting WebSocket reconnection...')
             get().connectWebSocket()
           }
-        }, 5000)
+        }, 10000)
       }
       
       ws.onerror = (error) => {
         console.error('WebSocket error:', error)
-        set({ connected: false })
+        set({ connected: false, websocket: null })
+        
+        // Don't spam reconnection attempts on error
+        setTimeout(() => {
+          if (!get().connected) {
+            console.log('Retrying WebSocket connection after error...')
+            get().connectWebSocket()
+          }
+        }, 15000)
       }
       
     } catch (error) {
