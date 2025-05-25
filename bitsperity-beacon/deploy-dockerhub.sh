@@ -26,6 +26,12 @@ if ! docker info | grep -q "Username"; then
     exit 1
 fi
 
+# Build Frontend
+echo "🎨 Baue Frontend..."
+cd frontend
+npm run build
+cd ..
+
 # Build Multi-Platform Images
 echo "🔨 Baue Multi-Platform Docker Images..."
 
