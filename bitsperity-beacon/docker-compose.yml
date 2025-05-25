@@ -7,7 +7,7 @@ services:
     restart: unless-stopped
     stop_grace_period: 30s
     ports:
-      - "8083:8080"
+      - "8084:8080"
     networks:
       - umbrel_main_network
     volumes:
