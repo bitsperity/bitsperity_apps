@@ -4,15 +4,16 @@ services:
   app_proxy:
     environment:
       # The format here is: <app-id>_<docker-service-name>_1
-      APP_HOST: bitsperity-beacon_server_1
-      APP_PORT: 8080
+      APP_HOST: bitsperity-beacon_web_1
+      APP_PORT: 80
       PROXY_AUTH_ADD: "false"
 
-  server:
+  web:
     image: bitsperity/beacon:latest
+    user: "1000:1000"
+    init: true
     restart: on-failure
     stop_grace_period: 1m
-    user: "1000:1000"
     volumes:
       - ${APP_DATA_DIR}/data:/app/data
       - ${APP_DATA_DIR}/logs:/app/logs

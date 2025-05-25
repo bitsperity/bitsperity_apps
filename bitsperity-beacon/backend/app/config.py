@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     """App Konfiguration"""
     
     # Beacon Configuration
-    beacon_port: int = Field(default=8000, env="BEACON_PORT")
+    beacon_port: int = Field(default=80, env="BEACON_PORT")
     beacon_host: str = Field(default="0.0.0.0", env="BEACON_HOST")
     beacon_mongodb_url: str = Field(
         default="mongodb://umbrel:umbrel@bitsperity-mongodb:27017/beacon",

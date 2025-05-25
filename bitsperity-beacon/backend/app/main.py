@@ -5,7 +5,10 @@ import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 import structlog
+import os
 
 from app.config import settings
 from app.database import database
@@ -150,6 +153,31 @@ app.include_router(
     prefix=settings.api_prefix,
     tags=["WebSocket"]
 )
+
+# Static Files (Frontend)
+frontend_path = "/app/frontend/dist"
+if os.path.exists(frontend_path):
+    app.mount("/static", StaticFiles(directory=frontend_path), name="static")
+    
+    @app.get("/{full_path:path}")
+    async def serve_frontend(full_path: str):
+        """Serve Frontend Files"""
+        # API routes should not be handled here
+        if full_path.startswith("api/"):
+            return {"error": "API endpoint not found"}
+        
+        file_path = os.path.join(frontend_path, full_path)
+        
+        # If file exists, serve it
+        if os.path.isfile(file_path):
+            return FileResponse(file_path)
+        
+        # Otherwise serve index.html (SPA routing)
+        index_path = os.path.join(frontend_path, "index.html")
+        if os.path.isfile(index_path):
+            return FileResponse(index_path)
+        
+        return {"error": "Frontend not found"}
 
 
 @app.get("/")
