@@ -72,7 +72,7 @@ class Database:
     
     async def _create_indexes(self) -> None:
         """Erstelle notwendige Indexes"""
-        if not self.services or not self.health_checks:
+        if self.services is None or self.health_checks is None:
             logger.info("MongoDB nicht verfügbar - überspringe Index-Erstellung")
             return
             
@@ -97,7 +97,7 @@ class Database:
     async def health_check(self) -> bool:
         """Prüfe Datenbankverbindung"""
         try:
-            if not self.client:
+            if self.client is None:
                 return False
             
             await self.client.admin.command('ping')
