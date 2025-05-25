@@ -32,7 +32,15 @@ class Settings(BaseSettings):
     
     # API Configuration
     api_prefix: str = Field(default="/api/v1", env="API_PREFIX")
-    cors_origins: list = Field(default=["*"], env="CORS_ORIGINS")
+    cors_origins: list = Field(default=[
+        "http://localhost:8097",
+        "http://umbrel.local:8097", 
+        "http://127.0.0.1:8097",
+        "http://localhost:8080",
+        "http://umbrel.local:8080",
+        "http://127.0.0.1:8080",
+        "*"
+    ], env="CORS_ORIGINS")
     
     # Logging Configuration
     log_format: str = Field(default="json", env="LOG_FORMAT")

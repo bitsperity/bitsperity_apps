@@ -39,6 +39,6 @@ gallery:
   - https://raw.githubusercontent.com/bitsperity/bitsperity_apps/master/bitsperity-beacon/gallery/3.png
 path: ""
 defaultUsername: ""
-defaultPassword: ""
+defaultPassword: "" 
 submitter: Bitsperity
 submission: https://github.com/getumbrel/umbrel-apps 

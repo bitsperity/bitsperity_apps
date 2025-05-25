@@ -21,7 +21,7 @@ class PyObjectId(ObjectId):
             return v
         if isinstance(v, str) and ObjectId.is_valid(v):
             return ObjectId(v)
-        raise ValueError("Invalid ObjectId")
+            raise ValueError("Invalid ObjectId")
 
     @classmethod
     def __get_pydantic_json_schema__(cls, field_schema, handler):
