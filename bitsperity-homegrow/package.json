@@ -1,0 +1,73 @@
+{
+  "name": "bitsperity-homegrow",
+  "version": "3.0.0",
+  "description": "HomeGrow v3 - Professional Hydroponic System Management",
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "node server/index.js",
+    "test": "vitest",
+    "test:e2e": "playwright test",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "migrate": "node migration/data-migration.js"
+  },
+  "dependencies": {
+    "@sveltejs/kit": "^2.0.0",
+    "svelte": "^4.2.0",
+    "tailwindcss": "^3.3.0",
+    "fastify": "^4.24.0",
+    "socket.io": "^4.7.0",
+    "mongodb": "^6.3.0",
+    "mqtt": "^5.3.0",
+    "ws": "^8.14.0",
+    "jsonwebtoken": "^9.0.0",
+    "bcryptjs": "^2.4.3",
+    "joi": "^17.11.0",
+    "winston": "^3.11.0",
+    "node-cron": "^3.0.0",
+    "@fastify/cors": "^8.4.0",
+    "@fastify/static": "^6.12.0",
+    "@fastify/websocket": "^8.3.0",
+    "@fastify/jwt": "^7.2.0",
+    "dotenv": "^16.3.0"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-node": "^2.0.0",
+    "@sveltejs/vite-plugin-svelte": "^3.0.0",
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0",
+    "playwright": "^1.40.0",
+    "eslint": "^8.55.0",
+    "prettier": "^3.1.0",
+    "vite": "^5.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint-plugin-svelte": "^2.35.0",
+    "prettier-plugin-svelte": "^3.1.0",
+    "autoprefixer": "^10.4.0",
+    "postcss": "^8.4.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "hydroponics",
+    "automation",
+    "iot",
+    "esp32",
+    "mqtt",
+    "umbrel",
+    "svelte",
+    "monitoring"
+  ],
+  "author": "Bitsperity",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bitsperity/homegrow.git"
+  }
+} 

@@ -1,58 +1,36 @@
 version: '3.8'
 
 services:
-  homegrow-frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: homegrow_frontend_v3
+  homegrow-app:
+    build: .
+    container_name: homegrow_v3
     restart: unless-stopped
     ports:
-      - "3002:3000"
+      - "3000:3000"
     environment:
-      - NODE_ENV=development
-      - API_URL=http://host.docker.internal:4001
+      - NODE_ENV=production
+      - MONGODB_URL=mongodb://bitsperity-mongodb:27017/homegrow
+      - MQTT_URL=mqtt://umbrel-mqtt:1883
+      - BEACON_URL=http://bitsperity-beacon:8080
+      - JWT_SECRET=${JWT_SECRET:-homegrow-v3-production-secret}
+      - HOMEGROW_HOST=homegrow-app
+      - HOMEGROW_PORT=3000
     depends_on:
-      - homegrow-backend
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    networks:
-      - homegrow-network
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-  homegrow-backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: homegrow_backend_v3
-    restart: unless-stopped
-    network_mode: "host"
-    environment:
-      - NODE_ENV=development
-      - PORT=4001
-      - HOST=0.0.0.0
-      - MONGODB_URI=mongodb://umbrel:umbrel@192.168.178.124:27017/admin
-      - MQTT_HOST=localhost
-      - MQTT_PORT=1883
-      - JWT_SECRET=${JWT_SECRET:-homegrow-v3-dev-secret}
+      - bitsperity-mongodb
+      - bitsperity-beacon
     volumes:
       - homegrow-v3-data:/app/data
+    networks:
+      - umbrel_main_network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4001/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
 
 networks:
-  homegrow-network:
-    driver: bridge
-  homegrow_default:
+  umbrel_main_network:
     external: true
 
 volumes:

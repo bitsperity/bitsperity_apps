@@ -1,60 +1,80 @@
 manifestVersion: 1
 id: bitsperity-homegrow
-name: HomeGrow
-tagline: Professional hydroponic monitoring and automation system
-icon: https://svgur.com/i/1DV.svg
-category: Automation
+name: HomeGrow v3
+tagline: Professional Hydroponic System Management
+icon: https://raw.githubusercontent.com/bitsperity/homegrow/main/static/icon.svg
+category: automation
 version: "3.0.0"
 port: 3000
 description: >-
-  HomeGrow v3 is a modern, mobile-first progressive web app for monitoring and automating hydroponic growing systems.
+  HomeGrow v3 ist eine professionelle Umbrel-App für die Verwaltung 
+  hydroponischer Systeme mit Arduino/ESP32-basierten Clients.
 
 
-  🌱 **Smart Automation** - Create intelligent rules for pH, nutrients, and water management
+  🌱 **Automatische Service Discovery** - ESP32 Clients werden automatisch über Bitsperity Beacon erkannt
 
 
-  📱 **Mobile-First Design** - Optimized for smartphone and tablet usage with touch-friendly controls
+  📱 **Mobile-First PWA** - Optimiert für Smartphone und Tablet mit Offline-Funktionalität
 
 
-  📊 **Real-time Monitoring** - Live sensor data visualization with historical charts and analytics
+  📊 **Real-time Monitoring** - Live Sensordaten (pH, TDS) mit historischen Charts
 
 
-  ⚡ **ESP32 Integration** - Seamless integration with ESP32-based sensor and control hardware
+  🤖 **Intelligente Automation** - Wachstumsprogramme mit phasenspezifischen Parametern
 
 
-  🔧 **Professional Features** - Advanced automation rules, notifications, and system health monitoring
+  🎛️ **Manuelle Steuerung** - Direkte Kontrolle aller 7 Pumpen pro Client
 
 
-  Built with modern technologies including SvelteKit, Tailwind CSS, and FastAPI for optimal performance and reliability.
+  ⚡ **MQTT v3 Integration** - Zuverlässige Kommunikation mit ESP32 Hardware
+
+
+  🔧 **Professional Features** - Erweiterte Automation, Benachrichtigungen und System-Monitoring
 
 developer: Bitsperity
 website: https://bitsperity.com
 submitter: Bitsperity
-submission: https://github.com/bitsperity/umbrel-apps
-repo: https://github.com/bitsperity/homegrow-v3
-support: https://github.com/bitsperity/homegrow-v3/issues
+submission: https://github.com/bitsperity/homegrow
+repo: https://github.com/bitsperity/homegrow
+support: https://github.com/bitsperity/homegrow/issues
 gallery:
-  - https://i.imgur.com/placeholder1.png
-  - https://i.imgur.com/placeholder2.png
-  - https://i.imgur.com/placeholder3.png
+  - https://raw.githubusercontent.com/bitsperity/homegrow/main/docs/screenshots/dashboard.png
+  - https://raw.githubusercontent.com/bitsperity/homegrow/main/docs/screenshots/devices.png
+  - https://raw.githubusercontent.com/bitsperity/homegrow/main/docs/screenshots/monitoring.png
+  - https://raw.githubusercontent.com/bitsperity/homegrow/main/docs/screenshots/programs.png
+  - https://raw.githubusercontent.com/bitsperity/homegrow/main/docs/screenshots/manual.png
+
 releaseNotes: >-
-  🎉 **HomeGrow v3.0.0 - Complete Rewrite**
+  HomeGrow v3.0.0 - Komplette Neuentwicklung
+  
+  🚀 Neue Features:
+  • Automatische Service Discovery über Bitsperity Beacon
+  • Mobile-first Progressive Web App Design
+  • Real-time WebSocket Updates
+  • Erweiterte Automation Engine
+  • Intelligente Wachstumsprogramme
+  • Umfassende API für Drittanbieter-Integration
+  
+  🔧 Technische Verbesserungen:
+  • SvelteKit Frontend für bessere Performance
+  • MongoDB für skalierbare Datenspeicherung
+  • MQTT v3 Protokoll für zuverlässige Kommunikation
+  • Docker-basierte Deployment
+  
+  📱 Benutzerfreundlichkeit:
+  • Responsive Design für alle Geräte
+  • Dark/Light Mode Support
+  • Offline-Funktionalität
+  • Push-Benachrichtigungen
+  
+  🔄 Migration:
+  • Automatische Migration von HomeGrow v2
+  • Backward-Kompatibilität für bestehende Setups
+  • Nahtloser Upgrade-Prozess
 
-
-  - 📱 Mobile-first responsive design with PWA capabilities
-  - ⚡ Modern tech stack: SvelteKit 2.0 + Tailwind CSS 4.0 + Fastify
-  - 🔗 Native Umbrel service integration (MongoDB + MQTT)
-  - 📊 Enhanced real-time charts and monitoring dashboards
-  - 🤖 Improved automation engine with visual rule editor
-  - 🔒 JWT-based authentication with secure API
-  - 🚀 Performance optimized: <2s load time, <500KB bundle
-  - 📴 Offline support with service worker caching
-  - 🔔 Push notifications for critical alerts
-  - 🛠️ Modular component architecture for easy maintenance
-
-dependencies: 
-  - mosquitto
-  - mongodb
+dependencies:
+  - bitsperity-mongodb
+  - bitsperity-beacon
 path: ""
 defaultUsername: ""
 defaultPassword: "" 
