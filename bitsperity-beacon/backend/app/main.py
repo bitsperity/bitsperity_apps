@@ -3,8 +3,9 @@ Bitsperity Beacon - FastAPI Hauptanwendung
 """
 import asyncio
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.base import BaseHTTPMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import structlog
@@ -43,6 +44,32 @@ service_registry: ServiceRegistry = None
 ttl_manager: TTLManager = None
 mdns_server: MDNSServer = None
 websocket_manager: WebSocketManager = None
+
+
+class CORSHeaderMiddleware(BaseHTTPMiddleware):
+    """Custom CORS Middleware to ensure headers are always set"""
+    
+    async def dispatch(self, request: Request, call_next):
+        # Handle preflight requests
+        if request.method == "OPTIONS":
+            response = Response()
+            response.headers["Access-Control-Allow-Origin"] = "*"
+            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+            response.headers["Access-Control-Allow-Headers"] = "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+            response.headers["Content-Length"] = "0"
+            return response
+        
+        # Process normal requests
+        response = await call_next(request)
+        
+        # Add CORS headers to all responses
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+        response.headers["Access-Control-Allow-Headers"] = "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        
+        return response
 
 
 @asynccontextmanager
@@ -120,7 +147,10 @@ app = FastAPI(
     redirect_slashes=False  # Verhindere automatische Redirects für trailing slashes
 )
 
-# CORS Middleware
+# Custom CORS Middleware (first)
+app.add_middleware(CORSHeaderMiddleware)
+
+# Standard CORS Middleware (backup)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,

@@ -1,4 +1,4 @@
-# Bitsperity Beacon - Production Dockerfile mit Nginx
+# Bitsperity Beacon - Simple Working Dockerfile
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -8,8 +8,6 @@ RUN apt-get update && apt-get install -y \
     curl \
     gcc \
     g++ \
-    nginx \
-    supervisor \
     && rm -rf /var/lib/apt/lists/*
 
 # Python dependencies
@@ -22,27 +20,27 @@ COPY backend/ ./backend/
 # Frontend (pre-built)
 COPY frontend/dist/ ./frontend/dist/
 
-# Nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
-
-# Supervisor configuration
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
-# Create directories
-RUN mkdir -p /app/data /app/logs /var/log/supervisor
+# Create directories and set permissions
+RUN mkdir -p /app/data /app/logs \
+    && chown -R 1000:1000 /app \
+    && chmod -R 755 /app
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    BEACON_PORT=8000 \
+    BEACON_PORT=80 \
     BEACON_HOST=0.0.0.0
+
+# Switch to non-root user
+USER 1000:1000
 
 # Expose port
 EXPOSE 80
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost/api/v1/health || exit 1
+    CMD curl -f http://localhost:80/api/v1/health || exit 1
 
-# Start supervisor
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"] 
+# Start FastAPI directly on port 80
+WORKDIR /app/backend
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"] 
