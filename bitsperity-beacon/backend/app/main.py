@@ -12,6 +12,7 @@ from app.database import database
 from app.core import ServiceRegistry, TTLManager, MDNSServer, WebSocketManager
 from app.api.v1 import services, discovery, health, websocket
 from app.api.v1.services import set_dependencies
+from app.api.v1.websocket import set_websocket_manager
 
 # Konfiguriere Logging
 structlog.configure(
@@ -61,6 +62,7 @@ async def lifespan(app: FastAPI):
         
         # 3. Setze Dependencies für API Endpoints
         set_dependencies(service_registry, mdns_server, websocket_manager)
+        set_websocket_manager(websocket_manager)
         
         # 4. Starte mDNS Server
         await mdns_server.start()

@@ -1,12 +1,26 @@
 """
 WebSocket API Endpoints
 """
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, Depends
 import structlog
 
-from app.api.v1.services import get_websocket_manager
+from app.core.websocket_manager import WebSocketManager
 
 logger = structlog.get_logger(__name__)
+
+# Global WebSocket Manager - wird von main.py gesetzt
+websocket_manager: WebSocketManager = None
+
+def set_websocket_manager(ws_manager: WebSocketManager):
+    """Setze WebSocket Manager"""
+    global websocket_manager
+    websocket_manager = ws_manager
+
+def get_websocket_manager() -> WebSocketManager:
+    """Dependency für WebSocket Manager"""
+    if websocket_manager is None:
+        raise RuntimeError("WebSocket Manager nicht initialisiert")
+    return websocket_manager
 
 router = APIRouter()
 
