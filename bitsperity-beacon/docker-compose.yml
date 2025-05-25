@@ -13,8 +13,6 @@ services:
     stop_grace_period: 1m
     expose:
       - "8080"
-    ports:
-      - "8080"
     volumes:
       - ${APP_DATA_DIR}/data:/app/data
       - ${APP_DATA_DIR}/logs:/app/logs
