@@ -129,7 +129,9 @@ export const useServiceStore = create<ServiceStore>((set, get) => ({
 
   // WebSocket
   connectWebSocket: () => {
-    const wsUrl = API_CONFIG.WS_URL
+    // Build WebSocket URL dynamically at runtime
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    const wsUrl = `${protocol}//${window.location.host}${API_CONFIG.WS_URL}`
     
     try {
       const ws = new WebSocket(wsUrl)

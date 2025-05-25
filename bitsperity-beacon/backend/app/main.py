@@ -116,7 +116,8 @@ app = FastAPI(
     docs_url="/api/docs",
     redoc_url="/api/redoc",
     openapi_url="/api/openapi.json",
-    lifespan=lifespan
+    lifespan=lifespan,
+    redirect_slashes=False  # Verhindere automatische Redirects für trailing slashes
 )
 
 # CORS Middleware
@@ -127,6 +128,7 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
     expose_headers=["*"],
+    max_age=3600,  # Cache preflight requests für 1 Stunde
 )
 
 # API Routes

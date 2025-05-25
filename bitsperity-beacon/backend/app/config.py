@@ -36,9 +36,12 @@ class Settings(BaseSettings):
         "http://localhost:8097",
         "http://umbrel.local:8097", 
         "http://127.0.0.1:8097",
-        "http://localhost:8080",
-        "http://umbrel.local:8080",
-        "http://127.0.0.1:8080",
+        "http://localhost",
+        "http://umbrel.local",
+        "http://127.0.0.1",
+        "http://localhost:80",
+        "http://umbrel.local:80",
+        "http://127.0.0.1:80",
         "*"
     ], env="CORS_ORIGINS")
     
