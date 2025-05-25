@@ -2,14 +2,14 @@ version: '3.8'
 
 services:
   beacon-api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: runtime
+    image: bitsperity/beacon:latest
     container_name: bitsperity-beacon-api
     restart: unless-stopped
     stop_grace_period: 30s
-    network_mode: host  # Für mDNS Multicast erforderlich
+    ports:
+      - "8080:8080"
+    networks:
+      - umbrel_main_network
     volumes:
       - ${APP_DATA_DIR:-./data}/data:/app/data
       - ${APP_DATA_DIR:-./data}/logs:/app/logs
@@ -38,4 +38,13 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 30s 
+      start_period: 30s
+
+  app_proxy:
+    environment:
+      APP_HOST: beacon-api
+      APP_PORT: 8080
+
+networks:
+  umbrel_main_network:
+    external: true
