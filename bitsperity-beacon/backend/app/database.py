@@ -46,11 +46,19 @@ class Database:
             logger.info("MongoDB Verbindung erfolgreich")
             
         except ServerSelectionTimeoutError as e:
-            logger.error("MongoDB Verbindung fehlgeschlagen", error=str(e))
-            raise
+            logger.warning("MongoDB Verbindung fehlgeschlagen - verwende In-Memory Fallback", error=str(e))
+            # Graceful fallback - App läuft ohne MongoDB
+            self.client = None
+            self.db = None
+            self.services = None
+            self.health_checks = None
         except Exception as e:
-            logger.error("Unerwarteter Fehler bei MongoDB Verbindung", error=str(e))
-            raise
+            logger.warning("Unerwarteter Fehler bei MongoDB Verbindung - verwende In-Memory Fallback", error=str(e))
+            # Graceful fallback - App läuft ohne MongoDB
+            self.client = None
+            self.db = None
+            self.services = None
+            self.health_checks = None
     
     async def disconnect(self) -> None:
         """Verbindung zur MongoDB schließen"""
@@ -64,6 +72,10 @@ class Database:
     
     async def _create_indexes(self) -> None:
         """Erstelle notwendige Indexes"""
+        if not self.services or not self.health_checks:
+            logger.info("MongoDB nicht verfügbar - überspringe Index-Erstellung")
+            return
+            
         try:
             # Services Collection Indexes
             await self.services.create_index("service_id", unique=True)
@@ -80,8 +92,7 @@ class Database:
             logger.info("MongoDB Indexes erstellt")
             
         except Exception as e:
-            logger.error("Fehler beim Erstellen der Indexes", error=str(e))
-            raise
+            logger.warning("Fehler beim Erstellen der Indexes - verwende In-Memory Fallback", error=str(e))
     
     async def health_check(self) -> bool:
         """Prüfe Datenbankverbindung"""

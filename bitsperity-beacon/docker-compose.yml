@@ -1,19 +1,22 @@
-version: '3.8'
+version: "3.7"
 
 services:
+  app_proxy:
+    environment:
+      # bitsperity-beacon_beacon-api_1
+      APP_HOST: bitsperity-beacon_beacon-api_1
+      APP_PORT: 8080
+
   beacon-api:
-    image: bitsperity/beacon:latest
-    container_name: bitsperity-beacon-api
-    restart: unless-stopped
-    stop_grace_period: 30s
-    networks:
-      - umbrel_main_network
+    image: bitsperity/beacon:v1.0.0@sha256:0d51ceb3bd89c7fbd290de7fa8453c42107bba28c82b9c9600a9476820be43bd
+    restart: on-failure
+    stop_grace_period: 1m
     volumes:
-      - ${APP_DATA_DIR:-./data}/data:/app/data
-      - ${APP_DATA_DIR:-./data}/logs:/app/logs
+      - ${APP_DATA_DIR}/data:/app/data
+      - ${APP_DATA_DIR}/logs:/app/logs
     environment:
       # Beacon Configuration
-      BEACON_PORT: ${BEACON_PORT:-8080}
+      BEACON_PORT: 8000
       BEACON_MONGODB_URL: ${BEACON_MONGODB_URL:-mongodb://umbrel:umbrel@bitsperity-mongodb:27017/beacon}
       BEACON_LOG_LEVEL: ${LOG_LEVEL:-INFO}
       BEACON_TTL_CLEANUP_INTERVAL: ${TTL_CLEANUP_INTERVAL:-30}
@@ -23,26 +26,9 @@ services:
       MDNS_DOMAIN: ${MDNS_DOMAIN:-local}
       MDNS_INTERFACE: ${MDNS_INTERFACE:-}
       
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-          cpus: '0.5'
-        reservations:
-          memory: 128M
-          cpus: '0.25'
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-
-  app_proxy:
-    environment:
-      APP_HOST: bitsperity-beacon_beacon-api_1
-      APP_PORT: 8080
-
-networks:
-  umbrel_main_network:
-    external: true
+      # Umbrel Environment Variables
+      DEVICE_HOSTNAME: $DEVICE_HOSTNAME
+      DEVICE_DOMAIN_NAME: $DEVICE_DOMAIN_NAME
+      APP_HIDDEN_SERVICE: $APP_HIDDEN_SERVICE
+      APP_PASSWORD: $APP_PASSWORD
+      APP_SEED: $APP_SEED 
