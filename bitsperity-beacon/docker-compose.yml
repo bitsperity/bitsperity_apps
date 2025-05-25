@@ -5,7 +5,7 @@ services:
     environment:
       # bitsperity-beacon_beacon-api_1
       APP_HOST: bitsperity-beacon_beacon-api_1
-      APP_PORT: 8080
+      APP_PORT: 8000
 
   beacon-api:
     image: bitsperity/beacon:v1.0.1@sha256:3d535fca274f00beb4c6e95e0b093df7ec53d54c18a243d5187e3b1cfa02e9cf

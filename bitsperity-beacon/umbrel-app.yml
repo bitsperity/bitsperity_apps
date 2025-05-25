@@ -32,7 +32,7 @@ website: https://bitsperity.com
 dependencies: ["bitsperity-mongodb"]
 repo: https://github.com/bitsperity/bitsperity_apps
 support: https://github.com/bitsperity/bitsperity_apps/issues
-port: 8080
+port: 8097
 gallery:
   - https://raw.githubusercontent.com/bitsperity/bitsperity_apps/master/bitsperity-beacon/gallery/1.png
   - https://raw.githubusercontent.com/bitsperity/bitsperity_apps/master/bitsperity-beacon/gallery/2.png
