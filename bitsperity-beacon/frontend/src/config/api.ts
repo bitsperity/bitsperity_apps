@@ -2,9 +2,9 @@
 
 // Determine the correct API base URL based on environment
 const getApiBaseUrl = (): string => {
-  // In production (Umbrel), use relative URLs that will be proxied
+  // In production (Umbrel), use the same host and port as the current page
   if (window.location.hostname === 'umbrel.local' || window.location.hostname.includes('umbrel')) {
-    return '/api/v1'
+    return `${window.location.protocol}//${window.location.host}/api/v1`
   }
   
   // For development or other environments
