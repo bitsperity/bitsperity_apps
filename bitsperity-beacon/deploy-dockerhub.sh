@@ -32,9 +32,9 @@ echo "🔨 Baue Multi-Platform Docker Images..."
 # Erstelle Builder falls nicht vorhanden
 docker buildx create --name multiarch --use 2>/dev/null || docker buildx use multiarch
 
-# Build und Push für multiple Architekturen
+# Build und Push für amd64 (Multi-Platform Build hat Probleme mit Rollup)
 docker buildx build \
-    --platform linux/amd64,linux/arm64,linux/arm/v7 \
+    --platform linux/amd64 \
     --tag $NAMESPACE/$IMAGE_NAME:$VERSION \
     --tag $NAMESPACE/$IMAGE_NAME:latest \
     --push \
