@@ -1,0 +1,36 @@
+manifestVersion: 1
+id: "bitsperity-beacon"
+name: "Bitsperity Beacon"
+tagline: "Service Discovery Server für das lokale Netzwerk"
+icon: "https://raw.githubusercontent.com/bitsperity/bitsperity_apps/master/bitsperity-beacon/applogo.svg"
+category: "networking"
+version: "1.0.0"
+port: 8080
+description: >-
+  Bitsperity Beacon ist ein zentraler Service Discovery Server mit mDNS/Bonjour-Unterstützung.
+  Ermöglicht es Services im lokalen Netzwerk, sich zu registrieren und von anderen Geräten 
+  gefunden zu werden. Perfekt für IoT-Geräte, Microservices und verteilte Anwendungen.
+  
+  Features:
+  • mDNS/Bonjour Service Discovery
+  • TTL-basierte Service-Verwaltung
+  • Real-time Web Dashboard
+  • REST API + WebSocket
+  • Automatische Service-Cleanup
+  • Netzwerk-agnostisch (funktioniert über Umbrel hinaus)
+
+developer: "Bitsperity"
+website: "https://bitsperity.com"
+submitter: "Bitsperity"
+submission: "https://github.com/bitsperity/bitsperity_apps"
+repo: "https://github.com/bitsperity/bitsperity_apps"
+support: "https://github.com/bitsperity/bitsperity_apps/issues"
+gallery:
+  - https://raw.githubusercontent.com/bitsperity/bitsperity_apps/master/bitsperity-beacon/gallery/1.png
+  - https://raw.githubusercontent.com/bitsperity/bitsperity_apps/master/bitsperity-beacon/gallery/2.png
+  - https://raw.githubusercontent.com/bitsperity/bitsperity_apps/master/bitsperity-beacon/gallery/3.png
+releaseNotes: "Initial release: mDNS Service Discovery Server mit Web Dashboard"
+dependencies: ["bitsperity-mongodb"]
+path: ""
+defaultUsername: ""
+defaultPassword: "" 

@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  beacon-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: bitsperity-beacon-api
+    restart: unless-stopped
+    stop_grace_period: 30s
+    network_mode: host  # Für mDNS Multicast erforderlich
+    volumes:
+      - ${APP_DATA_DIR:-./data}/data:/app/data
+      - ${APP_DATA_DIR:-./data}/logs:/app/logs
+    environment:
+      # Beacon Configuration
+      BEACON_PORT: ${BEACON_PORT:-8080}
+      BEACON_MONGODB_URL: ${BEACON_MONGODB_URL:-mongodb://umbrel:umbrel@bitsperity-mongodb:27017/beacon}
+      BEACON_LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      BEACON_TTL_CLEANUP_INTERVAL: ${TTL_CLEANUP_INTERVAL:-30}
+      BEACON_DEFAULT_TTL: ${DEFAULT_TTL:-300}
+      
+      # mDNS Configuration
+      MDNS_DOMAIN: ${MDNS_DOMAIN:-local}
+      MDNS_INTERFACE: ${MDNS_INTERFACE:-}
+      
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+          cpus: '0.25'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s 
