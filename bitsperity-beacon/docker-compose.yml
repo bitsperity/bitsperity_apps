@@ -17,7 +17,7 @@ services:
     environment:
       # Beacon Configuration
       BEACON_PORT: 8000
-      BEACON_MONGODB_URL: ${BEACON_MONGODB_URL:-mongodb://umbrel:umbrel@umbrel.local:27017/}
+      BEACON_MONGODB_URL: ${BEACON_MONGODB_URL:-mongodb://umbrel:umbrel@host.docker.internal:27017/}
       BEACON_LOG_LEVEL: ${LOG_LEVEL:-INFO}
       BEACON_TTL_CLEANUP_INTERVAL: ${TTL_CLEANUP_INTERVAL:-30}
       BEACON_DEFAULT_TTL: ${DEFAULT_TTL:-300}
