@@ -6,11 +6,13 @@ services:
       # The format here is: <app-id>_<docker-service-name>_1
       APP_HOST: bitsperity-beacon_server_1
       APP_PORT: 8080
+      PROXY_AUTH_ADD: "false"
 
   server:
     image: bitsperity/beacon:latest
     restart: on-failure
     stop_grace_period: 1m
+    user: "1000:1000"
     volumes:
       - ${APP_DATA_DIR}/data:/app/data
       - ${APP_DATA_DIR}/logs:/app/logs
