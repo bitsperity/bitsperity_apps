@@ -3,6 +3,8 @@
 
 #include "BaseCommand.h"
 #include "PumpCommand.h"
+#include "DosingCommand.h"
+#include "SystemCommand.h"
 #include "../network/MQTTClient.h"
 #include "../actuators/ActuatorManager.h"
 #include "../sensors/SensorManager.h"

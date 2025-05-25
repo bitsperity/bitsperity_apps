@@ -159,6 +159,24 @@ std::unique_ptr<BaseCommand> CommandProcessor::createCommand(const String& comma
         return std::unique_ptr<BaseCommand>(new SchedulePumpCommand(command_id, actuator_manager));
     } else if (command_type == "cancel_schedule") {
         return std::unique_ptr<BaseCommand>(new CancelScheduleCommand(command_id, actuator_manager));
+    } else if (command_type == "adjust_ph_by") {
+        return std::unique_ptr<BaseCommand>(new AdjustPHByCommand(command_id, actuator_manager, sensor_manager));
+    } else if (command_type == "set_ph_target") {
+        return std::unique_ptr<BaseCommand>(new SetPHTargetCommand(command_id, actuator_manager, sensor_manager));
+    } else if (command_type == "adjust_tds_by") {
+        return std::unique_ptr<BaseCommand>(new AdjustTDSByCommand(command_id, actuator_manager, sensor_manager));
+    } else if (command_type == "set_tds_target") {
+        return std::unique_ptr<BaseCommand>(new SetTDSTargetCommand(command_id, actuator_manager, sensor_manager));
+    } else if (command_type == "emergency_stop") {
+        return std::unique_ptr<BaseCommand>(new EmergencyStopCommand(command_id, actuator_manager));
+    } else if (command_type == "clear_emergency_stop") {
+        return std::unique_ptr<BaseCommand>(new ClearEmergencyStopCommand(command_id, actuator_manager));
+    } else if (command_type == "calibrate_sensor") {
+        return std::unique_ptr<BaseCommand>(new CalibrateSensorCommand(command_id, sensor_manager));
+    } else if (command_type == "reset_system") {
+        return std::unique_ptr<BaseCommand>(new ResetSystemCommand(command_id, actuator_manager));
+    } else if (command_type == "get_system_status") {
+        return std::unique_ptr<BaseCommand>(new GetSystemStatusCommand(command_id, actuator_manager, sensor_manager));
     }
     
     Logger::error("Unknown command type: " + command_type, "CommandProcessor");
