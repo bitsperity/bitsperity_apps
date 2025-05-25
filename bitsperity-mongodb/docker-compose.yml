@@ -12,7 +12,7 @@ services:
       # Add additional MongoDB configuration
       MONGO_INITDB_DATABASE: admin
     healthcheck:
-      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 30s
       timeout: 10s
       retries: 3
