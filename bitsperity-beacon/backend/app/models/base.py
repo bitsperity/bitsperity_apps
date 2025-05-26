@@ -30,7 +30,11 @@ class PyObjectId(ObjectId):
     
     def __str__(self) -> str:
         """String representation für JSON Serialisierung"""
-        return str(super())
+        return str(ObjectId.__str__(self))
+    
+    def __repr__(self) -> str:
+        """Representation string"""
+        return f"PyObjectId('{str(ObjectId.__str__(self))}')"
 
 
 class BaseModel(PydanticBaseModel):
