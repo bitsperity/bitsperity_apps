@@ -14,10 +14,11 @@ services:
     init: true
     restart: on-failure
     stop_grace_period: 1m
-    network_mode: "host"
     volumes:
       - ${APP_DATA_DIR}/data:/app/data
       - ${APP_DATA_DIR}/logs:/app/logs
+      - /var/run/dbus:/var/run/dbus:ro
+      - /var/run/avahi-daemon:/var/run/avahi-daemon:ro
     environment:
       # Beacon Configuration
       BEACON_PORT: 80

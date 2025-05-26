@@ -13,7 +13,8 @@ import os
 
 from app.config import settings
 from app.database import database
-from app.core import ServiceRegistry, TTLManager, MDNSServer, WebSocketManager
+from app.core import ServiceRegistry, TTLManager, WebSocketManager
+from app.core.avahi_mdns import AvahiMDNSServer
 from app.api.v1 import services, discovery, health, websocket
 from app.api.v1.services import set_dependencies
 from app.api.v1.websocket import set_websocket_manager
@@ -42,7 +43,7 @@ logger = structlog.get_logger(__name__)
 # Global instances
 service_registry: ServiceRegistry = None
 ttl_manager: TTLManager = None
-mdns_server: MDNSServer = None
+mdns_server: AvahiMDNSServer = None
 websocket_manager: WebSocketManager = None
 
 
@@ -87,7 +88,7 @@ async def lifespan(app: FastAPI):
         # 2. Initialisiere Core Komponenten
         service_registry = ServiceRegistry(database)
         websocket_manager = WebSocketManager()
-        mdns_server = MDNSServer()
+        mdns_server = AvahiMDNSServer()
         ttl_manager = TTLManager(service_registry)
         
         # 3. Setze Dependencies für API Endpoints

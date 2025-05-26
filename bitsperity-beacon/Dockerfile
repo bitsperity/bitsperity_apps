@@ -23,6 +23,9 @@ RUN apt-get update && apt-get install -y \
     curl \
     gcc \
     g++ \
+    avahi-utils \
+    avahi-daemon \
+    dbus \
     && rm -rf /var/lib/apt/lists/*
 
 # Python dependencies
