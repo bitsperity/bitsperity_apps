@@ -21,7 +21,7 @@ class PyObjectId(ObjectId):
             return v
         if isinstance(v, str) and ObjectId.is_valid(v):
             return ObjectId(v)
-            raise ValueError("Invalid ObjectId")
+        raise ValueError("Invalid ObjectId")
 
     @classmethod
     def __get_pydantic_json_schema__(cls, field_schema, handler):
@@ -39,7 +39,7 @@ class BaseModel(PydanticBaseModel):
     model_config = {
         "populate_by_name": True,
         "arbitrary_types_allowed": True,
-        "json_encoders": {ObjectId: str}
+        "json_encoders": {ObjectId: str, PyObjectId: str}
     }
         
     def dict(self, **kwargs):
