@@ -97,7 +97,7 @@ async def get_service(
     if not service:
         raise HTTPException(status_code=404, detail="Service nicht gefunden")
     
-    return ServiceResponse(**service.dict())
+    return ServiceResponse(**service.model_dump())
 
 
 @router.put("/{service_id}", response_model=ServiceResponse)
@@ -121,7 +121,7 @@ async def update_service(
             logger.warning("mDNS Update fehlgeschlagen", service_id=service_id)
         
         # Broadcast WebSocket Update
-        service_dict = service.dict()
+        service_dict = jsonable_encoder(service.model_dump())
         await ws_manager.broadcast_service_updated(service_dict)
         
         logger.info("Service erfolgreich aktualisiert", service_id=service_id)
@@ -211,7 +211,7 @@ async def get_service_status(
     if not service:
         raise HTTPException(status_code=404, detail="Service nicht gefunden")
     
-    return ServiceResponse(**service.dict())
+    return ServiceResponse(**service.model_dump())
 
 
 @router.get("/", response_model=ServiceListResponse)
@@ -235,7 +235,7 @@ async def list_services(
             skip=skip
         )
         
-        service_responses = [ServiceResponse(**service.dict()) for service in services]
+        service_responses = [ServiceResponse(**service.model_dump()) for service in services]
         
         return ServiceListResponse(
             services=service_responses,
@@ -284,7 +284,7 @@ async def get_expired_services(
     """Hole alle abgelaufenen Services"""
     try:
         expired_services = await registry.get_expired_services()
-        service_responses = [ServiceResponse(**service.dict()) for service in expired_services]
+        service_responses = [ServiceResponse(**service.model_dump()) for service in expired_services]
         
         return ServiceListResponse(
             services=service_responses,

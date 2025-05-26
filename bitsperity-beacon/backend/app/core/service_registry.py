@@ -10,6 +10,7 @@ from app.database import Database
 from app.models.service import Service, ServiceStatus
 from app.schemas.service import ServiceCreate, ServiceUpdate
 from app.config import settings
+from app.core.json_encoder import jsonable_encoder
 
 logger = structlog.get_logger(__name__)
 
@@ -27,7 +28,7 @@ class ServiceRegistry:
         """Registriere einen neuen Service"""
         try:
             # Erstelle Service Model
-            service = Service(**service_data.dict())
+            service = Service(**service_data.model_dump())
             
             # Prüfe ob Service bereits existiert
             existing = await self.get_service_by_name_and_host(service.name, service.host, service.port)
@@ -37,7 +38,7 @@ class ServiceRegistry:
                 return await self.update_service(existing.service_id, service_data)
             
             # Speichere in Database
-            service_dict = service.dict(by_alias=True)
+            service_dict = jsonable_encoder(service.model_dump(by_alias=True))
             result = await self.database.services.insert_one(service_dict)
             
             # Update Cache
@@ -118,16 +119,17 @@ class ServiceRegistry:
                 return None
             
             # Update Felder
-            update_dict = update_data.dict(exclude_unset=True)
+            update_dict = update_data.model_dump(exclude_unset=True)
             for field, value in update_dict.items():
                 setattr(service, field, value)
             
             service.updated_at = datetime.utcnow()
             
             # Speichere in Database
+            service_dict = jsonable_encoder(service.model_dump(by_alias=True, exclude={"_id"}))
             await self.database.services.update_one(
                 {"service_id": service_id},
-                {"$set": service.dict(by_alias=True, exclude={"_id"})}
+                {"$set": service_dict}
             )
             
             # Update Cache
@@ -151,16 +153,16 @@ class ServiceRegistry:
             service.extend_ttl(ttl)
             
             # Speichere in Database
+            update_dict = {
+                "expires_at": service.expires_at,
+                "last_heartbeat": service.last_heartbeat,
+                "updated_at": service.updated_at,
+                "status": service.status.value
+            }
+            update_dict = jsonable_encoder(update_dict)
             await self.database.services.update_one(
                 {"service_id": service_id},
-                {
-                    "$set": {
-                        "expires_at": service.expires_at,
-                        "last_heartbeat": service.last_heartbeat,
-                        "updated_at": service.updated_at,
-                        "status": service.status.value
-                    }
-                }
+                {"$set": update_dict}
             )
             
             # Update Cache
