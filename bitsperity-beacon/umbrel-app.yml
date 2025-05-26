@@ -3,6 +3,7 @@ id: bitsperity-beacon
 category: networking
 name: Bitsperity Beacon
 version: "1.0.0"
+icon: https://raw.githubusercontent.com/bitsperity/bitsperity_apps/master/bitsperity-beacon/applogo.svg
 tagline: Service Discovery Server für das lokale Netzwerk
 description: >-
   Bitsperity Beacon ist ein zentraler Service Discovery Server mit mDNS/Bonjour-Unterstützung.
