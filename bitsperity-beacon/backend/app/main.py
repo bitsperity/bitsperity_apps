@@ -12,6 +12,7 @@ from fastapi.encoders import jsonable_encoder
 import structlog
 import os
 import json
+from datetime import datetime
 from bson import ObjectId
 
 from app.config import settings
@@ -139,10 +140,12 @@ async def lifespan(app: FastAPI):
         logger.info("Bitsperity Beacon gestoppt")
 
 
-# Custom JSON Encoder für ObjectId
+# Custom JSON Encoder für ObjectId und datetime
 def custom_json_encoder(obj):
     if isinstance(obj, ObjectId):
         return str(obj)
+    if isinstance(obj, datetime):
+        return obj.isoformat()
     raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
 
 # Erstelle FastAPI App

@@ -47,7 +47,11 @@ class BaseModel(PydanticBaseModel):
     model_config = {
         "populate_by_name": True,
         "arbitrary_types_allowed": True,
-        "json_encoders": {ObjectId: str, PyObjectId: str},
+        "json_encoders": {
+            ObjectId: str, 
+            PyObjectId: str,
+            datetime: lambda v: v.isoformat() if v else None
+        },
         "json_schema_extra": {
             "example": {
                 "id": "507f1f77bcf86cd799439011"
