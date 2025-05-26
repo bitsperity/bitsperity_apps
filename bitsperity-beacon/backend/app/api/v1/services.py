@@ -3,7 +3,10 @@ Services API Endpoints
 """
 from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi.responses import JSONResponse
 import structlog
+
+from app.core.json_encoder import jsonable_encoder
 
 from app.database import get_database, Database
 from app.core.service_registry import ServiceRegistry
@@ -49,7 +52,7 @@ def get_websocket_manager() -> WebSocketManager:
     return websocket_manager
 
 
-@router.post("/register", response_model=ServiceResponse, status_code=201)
+@router.post("/register", status_code=201)
 async def register_service(
     service_data: ServiceCreate,
     registry: ServiceRegistry = Depends(get_service_registry),
@@ -67,7 +70,7 @@ async def register_service(
             logger.warning("mDNS Registrierung fehlgeschlagen", service_id=service.service_id)
         
         # Broadcast WebSocket Update
-        service_dict = service.dict()
+        service_dict = jsonable_encoder(service)
         await ws_manager.broadcast_service_registered(service_dict)
         
         logger.info("Service erfolgreich registriert",
@@ -75,7 +78,8 @@ async def register_service(
                    name=service.name,
                    mdns_registered=mdns_success)
         
-        return ServiceResponse(**service.dict())
+        # Konvertiere Service zu Response
+        return JSONResponse(content=jsonable_encoder(service))
         
     except Exception as e:
         logger.error("Fehler bei Service Registrierung", error=str(e))
@@ -121,7 +125,7 @@ async def update_service(
         
         logger.info("Service erfolgreich aktualisiert", service_id=service_id)
         
-        return ServiceResponse(**service.dict())
+        return ServiceResponse(**service.model_dump())
         
     except Exception as e:
         logger.error("Fehler bei Service Update", service_id=service_id, error=str(e))
