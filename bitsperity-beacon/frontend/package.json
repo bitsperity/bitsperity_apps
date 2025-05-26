@@ -12,15 +12,15 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@headlessui/react": "^1.7.19",
+    "@heroicons/react": "^2.2.0",
+    "clsx": "^2.0.0",
+    "date-fns": "^2.30.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.8.1",
-    "zustand": "^4.4.7",
-    "@headlessui/react": "^1.7.17",
-    "@heroicons/react": "^2.0.18",
     "recharts": "^2.8.0",
-    "clsx": "^2.0.0",
-    "date-fns": "^2.30.0"
+    "zustand": "^4.4.7"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",
@@ -37,4 +37,4 @@
     "typescript": "^5.2.2",
     "vite": "^5.0.8"
   }
-} 
+}

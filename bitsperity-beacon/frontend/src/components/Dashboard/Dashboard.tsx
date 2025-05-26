@@ -33,79 +33,196 @@ export default function Dashboard() {
 
   if (loading && services.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Lade Services...</p>
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+            <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-purple-600 rounded-full animate-spin mx-auto" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+          </div>
+          <p className="mt-6 text-lg font-medium text-gray-600">Services werden geladen...</p>
+          <p className="mt-2 text-sm text-gray-500">Einen Moment bitte</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Service Dashboard</h1>
-          <p className="text-gray-600">Übersicht aller registrierten Services</p>
-        </div>
+    <div className="space-y-6 lg:space-y-8">
+      {/* Mobile Header */}
+      <div className="lg:hidden">
+        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+        <p className="mt-1 text-sm text-gray-600">Übersicht aller Services</p>
+      </div>
+
+      {/* Quick Actions - Mobile */}
+      <div className="lg:hidden">
         <button
           onClick={() => fetchServices()}
-          className="btn-primary"
           disabled={loading}
+          className="w-full flex items-center justify-center px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
         >
-          {loading ? 'Aktualisiere...' : 'Aktualisieren'}
+          {loading ? (
+            <>
+              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Aktualisiere...
+            </>
+          ) : (
+            <>
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Aktualisieren
+            </>
+          )}
         </button>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <div className="card p-4">
-          <div className="text-2xl font-bold text-gray-900">{serviceStats.total}</div>
-          <div className="text-sm text-gray-600">Gesamt</div>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 lg:gap-4">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-200/50 hover:shadow-md transition-shadow">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-10 h-10 bg-gradient-to-br from-gray-400 to-gray-600 rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </div>
+            </div>
+            <div className="ml-3 lg:ml-4">
+              <div className="text-2xl lg:text-3xl font-bold text-gray-900">{serviceStats.total}</div>
+              <div className="text-xs lg:text-sm text-gray-600 font-medium">Gesamt</div>
+            </div>
+          </div>
         </div>
-        <div className="card p-4">
-          <div className="text-2xl font-bold text-green-600">{serviceStats.active}</div>
-          <div className="text-sm text-gray-600">Aktiv</div>
+
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-200/50 hover:shadow-md transition-shadow">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </div>
+            <div className="ml-3 lg:ml-4">
+              <div className="text-2xl lg:text-3xl font-bold text-green-600">{serviceStats.active}</div>
+              <div className="text-xs lg:text-sm text-gray-600 font-medium">Aktiv</div>
+            </div>
+          </div>
         </div>
-        <div className="card p-4">
-          <div className="text-2xl font-bold text-gray-600">{serviceStats.inactive}</div>
-          <div className="text-sm text-gray-600">Inaktiv</div>
+
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-200/50 hover:shadow-md transition-shadow">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-10 h-10 bg-gradient-to-br from-gray-300 to-gray-500 rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+            <div className="ml-3 lg:ml-4">
+              <div className="text-2xl lg:text-3xl font-bold text-gray-600">{serviceStats.inactive}</div>
+              <div className="text-xs lg:text-sm text-gray-600 font-medium">Inaktiv</div>
+            </div>
+          </div>
         </div>
-        <div className="card p-4">
-          <div className="text-2xl font-bold text-red-600">{serviceStats.expired}</div>
-          <div className="text-sm text-gray-600">Abgelaufen</div>
+
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-200/50 hover:shadow-md transition-shadow">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-10 h-10 bg-gradient-to-br from-red-400 to-red-600 rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+            <div className="ml-3 lg:ml-4">
+              <div className="text-2xl lg:text-3xl font-bold text-red-600">{serviceStats.expired}</div>
+              <div className="text-xs lg:text-sm text-gray-600 font-medium">Abgelaufen</div>
+            </div>
+          </div>
         </div>
-        <div className="card p-4">
-          <div className="text-2xl font-bold text-yellow-600">{serviceStats.unhealthy}</div>
-          <div className="text-sm text-gray-600">Ungesund</div>
+
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-200/50 hover:shadow-md transition-shadow col-span-2 sm:col-span-1">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+            </div>
+            <div className="ml-3 lg:ml-4">
+              <div className="text-2xl lg:text-3xl font-bold text-yellow-600">{serviceStats.unhealthy}</div>
+              <div className="text-xs lg:text-sm text-gray-600 font-medium">Ungesund</div>
+            </div>
+          </div>
         </div>
       </div>
 
+      {/* Desktop Actions */}
+      <div className="hidden lg:flex lg:justify-between lg:items-center">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900">Service Verwaltung</h2>
+          <p className="text-sm text-gray-600">Filtern und verwalten Sie Ihre Services</p>
+        </div>
+        <button
+          onClick={() => fetchServices()}
+          disabled={loading}
+          className="flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
+        >
+          {loading ? (
+            <>
+              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Aktualisiere...
+            </>
+          ) : (
+            <>
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Aktualisieren
+            </>
+          )}
+        </button>
+      </div>
+
       {/* Filters */}
-      <div className="card p-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 lg:p-6 shadow-sm border border-gray-200/50">
+        <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
               Suche
             </label>
-            <input
-              type="text"
-              value={filters.search}
-              onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-              placeholder="Service Name, Host, Type..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-            />
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                value={filters.search}
+                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                placeholder="Service Name, Host, Type..."
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
+              />
+            </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
               Type
             </label>
             <select
               value={filters.type}
               onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
             >
               <option value="">Alle Types</option>
               <option value="iot">IoT</option>
@@ -116,13 +233,13 @@ export default function Dashboard() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
               Status
             </label>
             <select
               value={filters.status}
               onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value as ServiceStatus | '' }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
             >
               <option value="">Alle Status</option>
               <option value={ServiceStatus.ACTIVE}>Aktiv</option>
@@ -136,10 +253,16 @@ export default function Dashboard() {
 
       {/* Error */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <div className="flex">
-            <div className="text-red-800">
-              <strong>Fehler:</strong> {error}
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 lg:p-6">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-semibold text-red-800">Fehler aufgetreten</h3>
+              <p className="mt-1 text-sm text-red-700">{error}</p>
             </div>
           </div>
         </div>
