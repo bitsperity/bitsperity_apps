@@ -89,14 +89,14 @@ class MDNSServer:
                 else:
                     properties[key.encode('utf-8')] = str(value).encode('utf-8')
             
-            # Erstelle ServiceInfo
+            # Erstelle ServiceInfo - verwende lokale IP statt service.host
             service_info = ServiceInfo(
                 type_=f"{service.mdns_service_type}.{self.domain}.",
                 name=service_name,
-                addresses=[socket.inet_aton(service.host)],
+                addresses=[socket.inet_aton(local_ip)],
                 port=service.port,
                 properties=properties,
-                server=f"{service.name}.{self.domain}."
+                server=f"{socket.gethostname()}.{self.domain}."
             )
             
             # Registriere Service

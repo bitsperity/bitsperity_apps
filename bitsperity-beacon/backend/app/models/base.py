@@ -27,6 +27,10 @@ class PyObjectId(ObjectId):
     def __get_pydantic_json_schema__(cls, field_schema, handler):
         field_schema.update(type="string")
         return field_schema
+    
+    def __str__(self) -> str:
+        """String representation für JSON Serialisierung"""
+        return str(super())
 
 
 class BaseModel(PydanticBaseModel):
