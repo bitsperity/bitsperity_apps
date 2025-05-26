@@ -57,8 +57,21 @@ async def test_serialization():
 @router.get("/test-simple")
 async def test_simple():
     """Einfacher Test ohne komplexe Objekte"""
-    return {
-        "message": "Simple test successful",
-        "timestamp": datetime.utcnow().isoformat(),
-        "status": "ok"
-    } 
+    return {"message": "Debug endpoint works", "status": "ok"}
+
+
+@router.get("/test-datetime")
+async def test_datetime():
+    """Teste datetime Serialisierung"""
+    try:
+        result = {
+            "message": "Testing datetime",
+            "timestamp": datetime.utcnow().isoformat(),
+            "status": "ok"
+        }
+        return JSONResponse(content=result)
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": str(e), "type": str(type(e))}
+        ) 
