@@ -1,4 +1,19 @@
-# Bitsperity Beacon - Simple Working Dockerfile
+# Bitsperity Beacon - Multi-stage build with proper CSS compilation
+FROM node:18-alpine AS frontend-builder
+
+WORKDIR /app/frontend
+
+# Copy package files
+COPY frontend/package*.json ./
+RUN npm ci
+
+# Copy frontend source
+COPY frontend/ ./
+
+# Build frontend with proper Tailwind compilation
+RUN npm run build
+
+# Python backend stage
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -17,8 +32,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Backend code
 COPY backend/ ./backend/
 
-# Frontend (pre-built)
-COPY frontend/dist/ ./frontend/dist/
+# Frontend (properly built)
+COPY --from=frontend-builder /app/frontend/dist/ ./frontend/dist/
 
 # Create directories and set permissions
 RUN mkdir -p /app/data /app/logs \
