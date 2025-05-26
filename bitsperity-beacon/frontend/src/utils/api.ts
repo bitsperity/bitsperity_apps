@@ -89,7 +89,7 @@ class ApiClient {
     if (params.skip) searchParams.append('skip', params.skip.toString())
 
     const query = searchParams.toString()
-    return this.request<ServiceListResponse>(`/services${query ? `?${query}` : ''}`)
+    return this.request<ServiceListResponse>(`/services/${query ? `?${query}` : ''}`)
   }
 
   async discoverServices(params: {

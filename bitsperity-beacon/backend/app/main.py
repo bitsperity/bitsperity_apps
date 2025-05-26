@@ -191,30 +191,36 @@ frontend_path = "/app/frontend/dist"
 if os.path.exists(frontend_path):
     app.mount("/static", StaticFiles(directory=frontend_path), name="static")
     
-    @app.get("/{full_path:path}")
-    async def serve_frontend(full_path: str):
-        """Serve Frontend Files"""
-        # API routes should not be handled here
-        if full_path.startswith("api/"):
-            return {"error": "API endpoint not found"}
-        
-        file_path = os.path.join(frontend_path, full_path)
-        
-        # If file exists, serve it
-        if os.path.isfile(file_path):
-            return FileResponse(file_path)
-        
-        # Otherwise serve index.html (SPA routing)
-        index_path = os.path.join(frontend_path, "index.html")
-        if os.path.isfile(index_path):
-            return FileResponse(index_path)
-        
-        return {"error": "Frontend not found"}
+    # Serve specific frontend assets
+    @app.get("/assets/{file_path:path}")
+    async def serve_assets(file_path: str):
+        """Serve Frontend Assets"""
+        asset_path = os.path.join(frontend_path, "assets", file_path)
+        if os.path.isfile(asset_path):
+            return FileResponse(asset_path)
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Asset not found")
+    
+    @app.get("/logo.svg")
+    async def serve_logo():
+        """Serve Logo"""
+        logo_path = os.path.join(frontend_path, "logo.svg")
+        if os.path.isfile(logo_path):
+            return FileResponse(logo_path)
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Logo not found")
 
 
 @app.get("/")
 async def root():
-    """Root Endpoint"""
+    """Root Endpoint - Serve Frontend"""
+    # Serve frontend if available
+    if os.path.exists(frontend_path):
+        index_path = os.path.join(frontend_path, "index.html")
+        if os.path.isfile(index_path):
+            return FileResponse(index_path)
+    
+    # Fallback to API info
     return {
         "name": "Bitsperity Beacon",
         "version": "1.0.0",
@@ -238,6 +244,22 @@ async def api_info():
             "websocket": f"{settings.api_prefix}/ws"
         }
     }
+
+
+# Frontend SPA Routing - specific routes only
+if os.path.exists(frontend_path):
+    # Serve index.html for common SPA routes
+    @app.get("/dashboard")
+    @app.get("/services")
+    @app.get("/discovery")
+    @app.get("/settings")
+    async def serve_spa_routes():
+        """Serve SPA Routes"""
+        index_path = os.path.join(frontend_path, "index.html")
+        if os.path.isfile(index_path):
+            return FileResponse(index_path)
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Frontend not found")
 
 
 if __name__ == "__main__":
