@@ -79,7 +79,8 @@ async def register_service(
                    mdns_registered=mdns_success)
         
         # Konvertiere Service zu Response
-        return JSONResponse(content=jsonable_encoder(service))
+        service_dict = jsonable_encoder(service)
+        return JSONResponse(content=service_dict)
         
     except Exception as e:
         logger.error("Fehler bei Service Registrierung", error=str(e))
