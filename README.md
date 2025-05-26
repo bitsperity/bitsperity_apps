@@ -1,42 +1,49 @@
-# HomeGrow v3 - Professional Hydroponic System Management
+# HomeGrow v3 - Professional Hydroponic Management
 
 [![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)](https://github.com/bitsperity/homegrow)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Umbrel](https://img.shields.io/badge/umbrel-compatible-purple.svg)](https://umbrel.com)
-[![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://docker.com)
+[![PWA](https://img.shields.io/badge/PWA-enabled-orange.svg)](https://web.dev/progressive-web-apps/)
 
 HomeGrow v3 ist eine professionelle Umbrel-App für die Verwaltung hydroponischer Systeme mit Arduino/ESP32-basierten Clients. Die App bietet eine moderne, mobile-first Benutzeroberfläche für Device-Management, Sensor-Monitoring, automatisierte Wachstumsprogramme und manuelle Steuerung.
 
 ## 🌟 Features
 
-### 🔍 Automatische Service Discovery
-- **Bitsperity Beacon Integration** - ESP32 Clients werden automatisch über mDNS/Bonjour erkannt
-- **Zero-Configuration Networking** - Keine manuelle IP-Konfiguration erforderlich
-- **Real-time Device Updates** - Sofortige Benachrichtigung bei neuen/entfernten Devices
+### 🔧 Device Management
+- **Automatische Erkennung** neuer HomeGrow Clients über Bitsperity Beacon
+- **Service Discovery Integration** für Zero-Configuration Networking
+- **Remote Configuration** für alle Client-Parameter
+- **Real-time Status Monitoring** (online/offline, uptime, connectivity)
 
-### 📱 Mobile-First PWA
-- **Progressive Web App** - App-like Experience auf allen Geräten
-- **Offline-Funktionalität** - Kritische Funktionen auch ohne Internet
-- **Push-Benachrichtigungen** - Alerts und Status-Updates in Echtzeit
-- **Responsive Design** - Optimiert für Smartphone, Tablet und Desktop
+### 📊 Live Monitoring
+- **Real-time Sensor Data** (pH, TDS) mit Raw, Calibrated und Filtered Values
+- **Historical Data Visualization** mit konfigurierbaren Zeiträumen
+- **Multi-Device Comparison** für mehrere Clients gleichzeitig
+- **Mobile-optimized Charts** mit Touch-Gesten
 
-### 📊 Real-time Monitoring
-- **Live Sensordaten** - pH und TDS-Werte in Echtzeit
-- **Historische Charts** - Trends und Analysen über verschiedene Zeiträume
-- **Multi-Device Support** - Überwachung mehrerer ESP32-Clients gleichzeitig
-- **Data Quality Indicators** - Sensor-Status und Kalibrierungs-Gültigkeit
+### 🎛️ Manual Control
+- **Individual Pump Control** für alle 7 Pumpen pro Client
+- **Advanced Dosing Controls** mit Volumen- und pH/TDS-Zielwerten
+- **Emergency Stop** Funktionalität
+- **Pump Scheduling** mit Intervall und Dauer
 
-### 🤖 Intelligente Automation
-- **Wachstumsprogramme** - Mehrstufige Programme mit phasenspezifischen Parametern
-- **Adaptive pH-Korrektur** - Basierend auf historischen Daten
-- **Nutrient Balancing** - Multi-Pump-Koordination für optimale Nährstoffverteilung
-- **Safety Systems** - Emergency-Stop bei kritischen Werten
+### 🌱 Program Management
+- **Growth Program Templates** mit mehrstufigen Wachstumsphasen
+- **Automated Program Execution** mit Phasen-Progression
+- **Real-time Program Monitoring** mit detailliertem Logging
+- **Custom Templates** für benutzerdefinierte Programme
 
-### 🎛️ Manuelle Steuerung
-- **7 Pumpen pro Client** - Wasser, Luft, pH+/-, Nährstoffe A/B, Cal-Mag
-- **Präzise Dosierung** - Volumen- und zeitbasierte Steuerung
-- **Pump Protection** - Überlastungsschutz und Cooldown-Management
-- **Scheduling System** - Automatisierte Pump-Schedules
+### 🤖 Automation Engine
+- **Rule-based Automation** für pH/TDS-Korrekturen
+- **Intelligent Dosing Algorithms** basierend auf historischen Daten
+- **Safety Rules** mit Emergency-Stop-Conditions
+- **Predictive Maintenance** basierend auf Pump-Laufzeiten
+
+### 📱 Progressive Web App
+- **Mobile-first Design** mit responsivem Layout
+- **Offline Capability** für kritische Funktionen
+- **Push Notifications** für Alerts und Status-Updates
+- **Dark/Light Mode** Support
 
 ## 🏗️ Architektur
 
@@ -55,7 +62,7 @@ graph TB
         WS[WebSocket Service]
     end
     
-    subgraph "ESP32 Clients"
+    subgraph "HomeGrow Clients"
         ESP32_1[ESP32 Client 1]
         ESP32_2[ESP32 Client 2]
         ESP32_N[ESP32 Client N]
@@ -79,322 +86,480 @@ graph TB
 
 ## 🚀 Installation
 
+### Voraussetzungen
+
+- **Umbrel OS** (neueste Version)
+- **Bitsperity MongoDB** App installiert
+- **Bitsperity Beacon** App installiert
+- **HomeGrow ESP32 Clients** mit v3 Firmware
+
 ### Über Umbrel App Store
 
 1. Öffnen Sie den Umbrel App Store
 2. Suchen Sie nach "HomeGrow v3"
-3. Klicken Sie auf "Install"
-4. Warten Sie auf die Installation der Dependencies:
-   - `bitsperity-mongodb`
-   - `bitsperity-beacon`
+3. Klicken Sie auf "Installieren"
+4. Warten Sie auf die automatische Installation aller Dependencies
 
 ### Manuelle Installation
 
 ```bash
-# Repository klonen
+# Clone Repository
 git clone https://github.com/bitsperity/homegrow.git
 cd homegrow
 
-# Dependencies installieren
-npm install
+# Build Docker Image
+docker build -t homegrow:v3 .
 
-# Umgebungsvariablen konfigurieren
-cp .env.example .env
-
-# App starten
-npm run dev
+# Deploy mit Docker Compose
+docker-compose up -d
 ```
 
-## ⚙️ Konfiguration
+### Erste Einrichtung
 
-### Umgebungsvariablen
+1. **App öffnen**: Navigieren Sie zu `http://umbrel.local:3000`
+2. **Geräte suchen**: Klicken Sie auf "Geräte suchen" im Dashboard
+3. **ESP32 Clients**: Stellen Sie sicher, dass Ihre ESP32 Clients online sind
+4. **Automatische Erkennung**: HomeGrow erkennt Clients automatisch über Beacon
 
-```bash
-# .env
-NODE_ENV=production
-MONGODB_URL=mongodb://bitsperity-mongodb:27017/homegrow
-MQTT_URL=mqtt://umbrel-mqtt:1883
-BEACON_URL=http://bitsperity-beacon:8080
-JWT_SECRET=your-secret-key
-HOMEGROW_HOST=homegrow-app
-HOMEGROW_PORT=3000
-```
+## 📖 Benutzerhandbuch
 
-### ESP32 Client Setup
+### Dashboard
 
-1. **Hardware-Anforderungen:**
-   - ESP32 Development Board
-   - pH-Sensor (analog)
-   - TDS-Sensor (analog)
-   - 7x Peristaltic Pumps
-   - Relay Board (8-Kanal)
+Das Dashboard bietet eine Übersicht über alle Ihre hydroponischen Systeme:
 
-2. **Software-Installation:**
-   ```cpp
-   // Arduino IDE Libraries
-   #include <WiFi.h>
-   #include <PubSubClient.h>
-   #include <ArduinoJson.h>
-   #include <HTTPClient.h>
-   ```
-
-3. **Beacon Registration:**
-   ```cpp
-   // Automatische Registrierung bei Bitsperity Beacon
-   BeaconClient beacon;
-   beacon.registerWithBeacon();
-   ```
-
-## 📖 API Dokumentation
+- **System Status Cards**: Zeigen Geräte-Status, Alerts, Programme und Uptime
+- **Geräte-Übersicht**: Grid mit allen registrierten Clients und aktuellen Sensordaten
+- **Schnellaktionen**: Buttons für häufige Aktionen wie Geräte-Suche und Notfall-Stop
+- **Letzte Aktivitäten**: Feed mit den neuesten Systemereignissen
 
 ### Device Management
 
+Verwalten Sie Ihre ESP32 Clients:
+
+```javascript
+// Beispiel: Gerät hinzufügen
+const device = {
+  device_id: "homegrow-client-001",
+  name: "Salat System 1",
+  location: "Gewächshaus A",
+  description: "Hauptsystem für Salat-Anbau"
+};
+```
+
+### Live Monitoring
+
+Überwachen Sie Sensordaten in Echtzeit:
+
+- **pH-Werte**: Kontinuierliche Überwachung mit Trend-Anzeige
+- **TDS-Werte**: Nährstoff-Konzentration in ppm
+- **Historische Daten**: Diagramme für verschiedene Zeiträume
+- **Multi-Device View**: Vergleich mehrerer Systeme
+
+### Manual Control
+
+Steuern Sie Pumpen manuell:
+
+```javascript
+// Beispiel: Pumpe aktivieren
+const command = {
+  command: "activate_pump",
+  params: {
+    pump: "ph_down",
+    duration_sec: 30,
+    volume_ml: 10
+  }
+};
+```
+
+### Program Management
+
+Erstellen und verwalten Sie Wachstumsprogramme:
+
+```javascript
+// Beispiel: Salat-Programm
+const program = {
+  name: "Salat Standard",
+  phases: [
+    {
+      name: "Setzling",
+      duration_days: 14,
+      ph_target: { min: 5.5, max: 6.5 },
+      tds_target: { min: 200, max: 350 }
+    },
+    {
+      name: "Wachstum",
+      duration_days: 21,
+      ph_target: { min: 5.5, max: 6.0 },
+      tds_target: { min: 450, max: 600 }
+    }
+  ]
+};
+```
+
+## 🔌 API Dokumentation
+
+### REST API Endpoints
+
+#### Devices
+
 ```http
-# Alle Geräte abrufen
 GET /api/v1/devices
-
-# Gerät erstellen
 POST /api/v1/devices
-Content-Type: application/json
-
-{
-  "device_id": "esp32-001",
-  "name": "Hydroponic System 1",
-  "location": "Greenhouse A"
-}
-
-# Geräte automatisch erkennen
+GET /api/v1/devices/{deviceId}
+PUT /api/v1/devices/{deviceId}
+DELETE /api/v1/devices/{deviceId}
 POST /api/v1/devices/discover
 ```
 
-### Sensor Data
+#### Sensor Data
 
 ```http
-# Aktuelle Sensordaten
-GET /api/v1/sensors/{device_id}/latest
-
-# Historische Daten
-GET /api/v1/sensors/{device_id}/{sensor_type}/history?start=2024-01-01&end=2024-01-31
-
-# Aggregierte Daten
-GET /api/v1/sensors/{device_id}/{sensor_type}/aggregate?interval=hour&start=2024-01-01&end=2024-01-02
+GET /api/v1/sensors/{deviceId}/latest
+GET /api/v1/sensors/{deviceId}/{sensorType}/history
+GET /api/v1/sensors/{deviceId}/{sensorType}/aggregated
 ```
 
-### Commands
+#### Commands
 
 ```http
-# Pump-Befehl senden
-POST /api/v1/commands/{device_id}
-Content-Type: application/json
+POST /api/v1/commands/{deviceId}
+GET /api/v1/commands/{deviceId}/history
+GET /api/v1/commands/{commandId}/status
+```
 
-{
-  "command": "activate_pump",
-  "params": {
-    "pump": "water",
-    "duration_sec": 30
-  }
-}
+#### Programs
 
-# Emergency Stop
-POST /api/v1/commands/emergency-stop
+```http
+GET /api/v1/programs/templates
+POST /api/v1/programs/templates
+GET /api/v1/programs/instances
+POST /api/v1/programs/instances
+PUT /api/v1/programs/instances/{instanceId}
+DELETE /api/v1/programs/instances/{instanceId}
 ```
 
 ### WebSocket Events
 
 ```javascript
-// WebSocket Verbindung
-const ws = new WebSocket('ws://localhost:3000/ws');
+// Client -> Server
+socket.emit('subscribe_device', deviceId);
+socket.emit('send_command', { deviceId, command });
 
-// Sensor-Daten abonnieren
-ws.send(JSON.stringify({
-  type: 'subscribe_device',
-  device_id: 'esp32-001'
-}));
+// Server -> Client
+socket.on('sensor_data', (data) => {
+  console.log('New sensor data:', data);
+});
 
-// Events empfangen
-ws.onmessage = (event) => {
-  const data = JSON.parse(event.data);
-  
-  switch (data.type) {
-    case 'sensor_data':
-      console.log('New sensor reading:', data);
-      break;
-    case 'device_status':
-      console.log('Device status changed:', data);
-      break;
-    case 'command_response':
-      console.log('Command executed:', data);
-      break;
-  }
-};
+socket.on('device_status', (data) => {
+  console.log('Device status changed:', data);
+});
+
+socket.on('command_response', (data) => {
+  console.log('Command response:', data);
+});
 ```
 
-## 🧪 Development
+### MQTT Topics
 
-### Projekt-Setup
+```
+# Sensor Data
+homegrow/devices/{device_id}/sensors/ph
+homegrow/devices/{device_id}/sensors/tds
+
+# Commands
+homegrow/devices/{device_id}/commands
+homegrow/devices/{device_id}/commands/response
+
+# System Status
+homegrow/devices/{device_id}/heartbeat
+homegrow/devices/{device_id}/status
+```
+
+## 🔧 Entwicklung
+
+### Tech Stack
+
+- **Frontend**: SvelteKit 2.0, Tailwind CSS, PWA
+- **Backend**: Node.js, Fastify, Socket.io
+- **Database**: MongoDB
+- **Message Broker**: MQTT
+- **Service Discovery**: Bitsperity Beacon
+- **Container**: Docker Alpine
+
+### Development Setup
 
 ```bash
-# Dependencies installieren
+# Clone Repository
+git clone https://github.com/bitsperity/homegrow.git
+cd homegrow
+
+# Install Dependencies
 npm install
 
-# Development Server starten
+# Setup Environment
+cp .env.example .env
+# Edit .env with your configuration
+
+# Start Development Server
 npm run dev
 
-# Tests ausführen
+# Start Backend Services
+npm run dev:server
+
+# Run Tests
 npm test
-
-# E2E Tests
 npm run test:e2e
-
-# Build für Production
-npm run build
 ```
 
-### Projektstruktur
-
-```
-bitsperity-homegrow/
-├── src/                           # Frontend (SvelteKit)
-│   ├── lib/
-│   │   ├── components/            # Svelte Components
-│   │   ├── stores/                # State Management
-│   │   ├── utils/                 # Utility Functions
-│   │   └── types/                 # TypeScript Types
-│   ├── routes/                    # SvelteKit Routes
-│   └── app.html                   # HTML Template
-├── server/                        # Backend Services
-│   ├── services/                  # Core Services
-│   ├── models/                    # Database Models
-│   ├── routes/                    # API Routes
-│   └── index.js                   # Main Server
-├── static/                        # Static Assets
-├── tests/                         # Test Suite
-└── migration/                     # v2 to v3 Migration
-```
-
-### Code Style
+### Environment Variables
 
 ```bash
-# Linting
-npm run lint
+# Database
+MONGODB_URL=mongodb://localhost:27017/homegrow
 
-# Code Formatting
-npm run format
+# MQTT
+MQTT_URL=mqtt://localhost:1883
 
-# Type Checking
-npm run check
+# Beacon Service Discovery
+BEACON_URL=http://localhost:8080
+
+# App Configuration
+NODE_ENV=development
+PORT=3000
+JWT_SECRET=your-secret-key
+
+# Frontend
+PUBLIC_API_URL=http://localhost:3000/api/v1
+PUBLIC_WS_URL=ws://localhost:3000
 ```
 
-## 🔧 Troubleshooting
+### Build & Deployment
+
+```bash
+# Build for Production
+npm run build
+
+# Build Docker Image
+docker build -t homegrow:v3 .
+
+# Deploy to Umbrel
+./scripts/deploy.sh
+```
+
+## 🧪 Testing
+
+### Unit Tests
+
+```bash
+# Run Unit Tests
+npm test
+
+# Run with Coverage
+npm run test:coverage
+
+# Watch Mode
+npm run test:watch
+```
+
+### Integration Tests
+
+```bash
+# Run Integration Tests
+npm run test:integration
+
+# Test API Endpoints
+npm run test:api
+
+# Test MQTT Communication
+npm run test:mqtt
+```
+
+### End-to-End Tests
+
+```bash
+# Run E2E Tests
+npm run test:e2e
+
+# Run in Headed Mode
+npm run test:e2e:headed
+
+# Test Mobile
+npm run test:e2e:mobile
+```
+
+## 🐛 Troubleshooting
 
 ### Häufige Probleme
 
-**1. ESP32 Client wird nicht erkannt**
+#### 1. Geräte werden nicht erkannt
+
+**Problem**: ESP32 Clients erscheinen nicht in der Geräteliste
+
+**Lösung**:
 ```bash
-# Beacon Service Status prüfen
+# Prüfen Sie Beacon Service
 curl http://bitsperity-beacon:8080/api/v1/services
 
-# MQTT Verbindung testen
-mosquitto_pub -h umbrel-mqtt -t test -m "hello"
+# Prüfen Sie MQTT Verbindung
+mosquitto_sub -h umbrel-mqtt -t "homegrow/devices/+/heartbeat"
+
+# Prüfen Sie ESP32 Logs
+# Auf ESP32: Serial Monitor öffnen
 ```
 
-**2. Sensordaten kommen nicht an**
+#### 2. Sensordaten werden nicht angezeigt
+
+**Problem**: Dashboard zeigt keine aktuellen Sensordaten
+
+**Lösung**:
 ```bash
-# MQTT Topics überwachen
+# Prüfen Sie MQTT Topics
 mosquitto_sub -h umbrel-mqtt -t "homegrow/devices/+/sensors/+"
 
-# Device Logs prüfen
-docker logs homegrow_v3
+# Prüfen Sie Database
+mongo homegrow --eval "db.sensor_data.find().limit(5)"
+
+# Prüfen Sie WebSocket Verbindung
+# Browser DevTools -> Network -> WS
 ```
 
-**3. Database Connection Fehler**
-```bash
-# MongoDB Status prüfen
-docker exec bitsperity-mongodb mongosh --eval "db.adminCommand('ismaster')"
+#### 3. Pumpen reagieren nicht
 
-# Collections anzeigen
-docker exec bitsperity-mongodb mongosh homegrow --eval "show collections"
+**Problem**: Manuelle Pump-Befehle werden nicht ausgeführt
+
+**Lösung**:
+```bash
+# Prüfen Sie Command Topics
+mosquitto_pub -h umbrel-mqtt -t "homegrow/devices/test-001/commands" -m '{"command":"test_pump","params":{"pump":"water","duration_sec":5}}'
+
+# Prüfen Sie ESP32 Command Processing
+# Serial Monitor: Command received/executed logs
+
+# Prüfen Sie Safety Limits
+# Dashboard -> Device -> Configuration
 ```
 
-### Debug Mode
+#### 4. App lädt nicht
+
+**Problem**: HomeGrow App ist nicht erreichbar
+
+**Lösung**:
+```bash
+# Prüfen Sie Container Status
+docker ps | grep homegrow
+
+# Prüfen Sie Logs
+docker logs homegrow-app
+
+# Prüfen Sie Dependencies
+docker ps | grep -E "(mongodb|beacon)"
+
+# Restart Services
+docker-compose restart
+```
+
+### Debug Modus
 
 ```bash
-# Debug Logs aktivieren
+# Enable Debug Logging
 export DEBUG=homegrow:*
 npm run dev
 
-# Verbose Logging
-export LOG_LEVEL=debug
-npm start
+# MQTT Debug
+export DEBUG=mqtt*
+npm run dev:server
+
+# Database Debug
+export DEBUG=mongodb:*
+npm run dev:server
 ```
 
-## 📊 Monitoring & Analytics
-
-### System Metrics
-
-- **Device Uptime** - Verfügbarkeit der ESP32-Clients
-- **Sensor Quality** - Datenqualität und Kalibrierungsstatus
-- **Command Success Rate** - Erfolgsrate der Pump-Befehle
-- **Data Throughput** - Sensor-Daten pro Minute
-- **Error Rates** - System- und Kommunikationsfehler
-
-### Performance Targets
-
-- **Dashboard Load Time**: < 2 Sekunden
-- **Real-time Updates**: < 500ms Latency
-- **API Response Time**: < 1 Sekunde
-- **Mobile Performance**: 60fps Animationen
-- **Memory Usage**: < 512MB RAM
-
-## 🔄 Migration von v2
-
-### Automatische Migration
+### Log Files
 
 ```bash
-# Migration Script ausführen
-npm run migrate
+# Application Logs
+tail -f /app/logs/homegrow.log
 
-# Backup erstellen
-node migration/backup.js
+# MQTT Logs
+tail -f /app/logs/mqtt.log
 
-# Daten validieren
-node migration/validate.js
+# Error Logs
+tail -f /app/logs/error.log
+
+# Access Logs
+tail -f /app/logs/access.log
 ```
 
-### Manuelle Migration
+## 📊 Performance
 
-1. **Daten exportieren:**
-   ```bash
-   mongoexport --db homegrow_v2 --collection devices --out devices_v2.json
-   ```
+### Benchmarks
 
-2. **Konfiguration konvertieren:**
-   ```bash
-   node migration/config-migration.js
-   ```
+- **Dashboard Load Time**: < 2s
+- **Real-time Updates**: < 500ms latency
+- **API Response Time**: < 1s
+- **Mobile Performance**: 60fps animations
+- **Concurrent Users**: 5+ simultaneous sessions
 
-3. **Daten importieren:**
-   ```bash
-   mongoimport --db homegrow --collection devices --file devices_v3.json
-   ```
+### Monitoring
+
+```bash
+# System Resources
+docker stats homegrow-app
+
+# Database Performance
+mongo homegrow --eval "db.runCommand({serverStatus: 1})"
+
+# MQTT Message Rate
+mosquitto_sub -h umbrel-mqtt -t '$SYS/broker/messages/received'
+```
+
+## 🔒 Security
+
+### Authentication
+
+- **JWT Tokens** für API Access
+- **Role-based Access Control** (Admin, User, Viewer)
+- **Session Management** mit automatischem Logout
+
+### Data Protection
+
+- **Encrypted Configuration** Storage
+- **Secure MQTT** Communication
+- **Input Validation** mit Joi
+- **Rate Limiting** für API Endpoints
+
+### Safety Features
+
+- **Emergency Stop** bei kritischen Werten
+- **Pump Protection** gegen Überlastung
+- **Sensor Validation** mit Plausibilitätsprüfungen
+- **Automatic Failsafe** bei Kommunikationsverlust
 
 ## 🤝 Contributing
 
+Wir freuen uns über Beiträge zur HomeGrow v3 Entwicklung!
+
 ### Development Workflow
 
-1. Fork das Repository
-2. Erstellen Sie einen Feature Branch: `git checkout -b feature/amazing-feature`
-3. Committen Sie Ihre Änderungen: `git commit -m 'Add amazing feature'`
-4. Pushen Sie den Branch: `git push origin feature/amazing-feature`
-5. Öffnen Sie einen Pull Request
+1. **Fork** das Repository
+2. **Create** einen Feature Branch (`git checkout -b feature/amazing-feature`)
+3. **Commit** Ihre Änderungen (`git commit -m 'Add amazing feature'`)
+4. **Push** zum Branch (`git push origin feature/amazing-feature`)
+5. **Open** einen Pull Request
 
-### Code Guidelines
+### Code Standards
 
-- **TypeScript** für Type Safety
-- **ESLint** für Code Quality
+- **ESLint** für JavaScript/TypeScript Linting
 - **Prettier** für Code Formatting
-- **Vitest** für Unit Tests
-- **Playwright** für E2E Tests
+- **Conventional Commits** für Commit Messages
+- **JSDoc** für API Documentation
+
+### Testing Requirements
+
+- **Unit Tests** für neue Features (>80% Coverage)
+- **Integration Tests** für API Changes
+- **E2E Tests** für UI Changes
+- **Performance Tests** für Critical Paths
 
 ## 📄 License
 
@@ -402,20 +567,20 @@ Dieses Projekt ist unter der MIT License lizenziert - siehe [LICENSE](LICENSE) f
 
 ## 🙏 Acknowledgments
 
-- **Umbrel Team** - Für die großartige Self-Hosting Platform
-- **SvelteKit** - Für das moderne Frontend Framework
-- **Tailwind CSS** - Für das Utility-First CSS Framework
-- **MongoDB** - Für die skalierbare Datenbank
-- **MQTT** - Für das zuverlässige Messaging Protocol
+- **Umbrel Team** für die großartige Plattform
+- **SvelteKit Community** für das fantastische Framework
+- **Arduino Community** für ESP32 Support
+- **Open Source Contributors** für verwendete Libraries
 
 ## 📞 Support
 
 - **GitHub Issues**: [https://github.com/bitsperity/homegrow/issues](https://github.com/bitsperity/homegrow/issues)
 - **Documentation**: [https://docs.bitsperity.com/homegrow](https://docs.bitsperity.com/homegrow)
-- **Community**: [https://community.bitsperity.com](https://community.bitsperity.com)
+- **Community Forum**: [https://community.bitsperity.com](https://community.bitsperity.com)
+- **Email Support**: support@bitsperity.com
 
 ---
 
 **HomeGrow v3** - Professionelle hydroponische Systemverwaltung für das moderne Smart Home.
 
-*Entwickelt mit ❤️ von [Bitsperity](https://bitsperity.com)*
+Made with ❤️ by [Bitsperity](https://bitsperity.com)
