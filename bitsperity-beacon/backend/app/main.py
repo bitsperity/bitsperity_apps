@@ -8,8 +8,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from fastapi.encoders import jsonable_encoder
 import structlog
 import os
+import json
+from bson import ObjectId
 
 from app.config import settings
 from app.database import database
@@ -135,6 +138,12 @@ async def lifespan(app: FastAPI):
         
         logger.info("Bitsperity Beacon gestoppt")
 
+
+# Custom JSON Encoder für ObjectId
+def custom_json_encoder(obj):
+    if isinstance(obj, ObjectId):
+        return str(obj)
+    raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
 
 # Erstelle FastAPI App
 app = FastAPI(
