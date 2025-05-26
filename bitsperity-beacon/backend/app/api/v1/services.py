@@ -61,17 +61,25 @@ async def register_service(
 ):
     """Registriere einen neuen Service"""
     try:
+        logger.info("=== SERVICE REGISTRATION START ===", service_data=service_data.model_dump())
+        
         # Registriere Service
+        logger.info("Calling registry.register_service...")
         service = await registry.register_service(service_data)
+        logger.info("Service registered successfully", service_id=service.service_id)
         
         # Registriere in mDNS
+        logger.info("Calling mdns.register_service...")
         mdns_success = await mdns.register_service(service)
+        logger.info("mDNS registration result", mdns_success=mdns_success)
         if not mdns_success:
             logger.warning("mDNS Registrierung fehlgeschlagen", service_id=service.service_id)
         
         # Broadcast WebSocket Update
+        logger.info("Preparing WebSocket broadcast...")
         service_dict = jsonable_encoder(service)
-        await ws_manager.broadcast_service_registered(service_dict)
+        logger.info("Service dict encoded successfully", service_dict_keys=list(service_dict.keys()))
+        # await ws_manager.broadcast_service_registered(service_dict)
         
         logger.info("Service erfolgreich registriert",
                    service_id=service.service_id,
@@ -79,7 +87,10 @@ async def register_service(
                    mdns_registered=mdns_success)
         
         # Konvertiere Service zu Response
+        logger.info("Preparing JSON response...")
         service_dict = jsonable_encoder(service)
+        logger.info("Service dict for response created successfully")
+        logger.info("=== SERVICE REGISTRATION SUCCESS ===")
         return JSONResponse(content=service_dict)
         
     except Exception as e:

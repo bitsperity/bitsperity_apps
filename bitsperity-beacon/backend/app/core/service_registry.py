@@ -27,8 +27,10 @@ class ServiceRegistry:
     async def register_service(self, service_data: ServiceCreate) -> Service:
         """Registriere einen neuen Service"""
         try:
+            logger.info("=== REGISTRY: Creating Service Model ===")
             # Erstelle Service Model
             service = Service(**service_data.model_dump())
+            logger.info("Service model created", service_id=service.service_id)
             
             # Prüfe ob Service bereits existiert
             existing = await self.get_service_by_name_and_host(service.name, service.host, service.port)
@@ -38,8 +40,11 @@ class ServiceRegistry:
                 return await self.update_service(existing.service_id, service_data)
             
             # Speichere in Database
+            logger.info("=== REGISTRY: Saving to Database ===")
             service_dict = jsonable_encoder(service.model_dump(by_alias=True))
+            logger.info("Service dict created for database", dict_keys=list(service_dict.keys()))
             result = await self.database.services.insert_one(service_dict)
+            logger.info("Service saved to database", inserted_id=str(result.inserted_id))
             
             # Update Cache
             self._services_cache[service.service_id] = service
