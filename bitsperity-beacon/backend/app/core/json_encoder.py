@@ -4,6 +4,7 @@ Custom JSON Encoder für Bitsperity Beacon
 import json
 from datetime import datetime, date
 from typing import Any
+from enum import Enum
 from bson import ObjectId
 from pydantic import BaseModel
 
@@ -18,6 +19,8 @@ class BeaconJSONEncoder(json.JSONEncoder):
             return obj.isoformat()
         if isinstance(obj, date):
             return obj.isoformat()
+        if isinstance(obj, Enum):
+            return obj.value
         if isinstance(obj, BaseModel):
             return obj.model_dump()
         if hasattr(obj, '__dict__'):
@@ -35,6 +38,8 @@ def jsonable_encoder(obj: Any) -> Any:
         return obj.isoformat()
     if isinstance(obj, date):
         return obj.isoformat()
+    if isinstance(obj, Enum):
+        return obj.value
     if isinstance(obj, BaseModel):
         return obj.model_dump()
     if isinstance(obj, dict):
