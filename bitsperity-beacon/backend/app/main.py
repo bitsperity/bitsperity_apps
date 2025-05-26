@@ -8,18 +8,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from fastapi.encoders import jsonable_encoder
 import structlog
 import os
-import json
-from datetime import datetime
-from bson import ObjectId
 
 from app.config import settings
 from app.database import database
 from app.core import ServiceRegistry, TTLManager, WebSocketManager
 from app.core.avahi_mdns import AvahiMDNSServer
-from app.api.v1 import services, discovery, health, websocket, debug
+from app.api.v1 import services, discovery, health, websocket
 from app.api.v1.services import set_dependencies
 from app.api.v1.websocket import set_websocket_manager
 
@@ -140,14 +136,6 @@ async def lifespan(app: FastAPI):
         logger.info("Bitsperity Beacon gestoppt")
 
 
-# Custom JSON Encoder für ObjectId und datetime
-def custom_json_encoder(obj):
-    if isinstance(obj, ObjectId):
-        return str(obj)
-    if isinstance(obj, datetime):
-        return obj.isoformat()
-    raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
-
 # Erstelle FastAPI App
 app = FastAPI(
     title="Bitsperity Beacon",
@@ -159,21 +147,6 @@ app = FastAPI(
     lifespan=lifespan,
     redirect_slashes=False  # Verhindere automatische Redirects für trailing slashes
 )
-
-# Setze JSON Encoder für die App
-app.json_encoder = BeaconJSONEncoder
-
-# Setze custom JSON encoder für FastAPI
-from fastapi.encoders import jsonable_encoder as fastapi_jsonable_encoder
-from app.core.json_encoder import jsonable_encoder, BeaconJSONEncoder
-
-# Überschreibe FastAPI's jsonable_encoder
-import fastapi.encoders
-fastapi.encoders.jsonable_encoder = jsonable_encoder
-
-# Setze custom JSON encoder für die App
-import json
-json.JSONEncoder = BeaconJSONEncoder
 
 # Custom CORS Middleware (first)
 app.add_middleware(CORSHeaderMiddleware)
@@ -212,12 +185,6 @@ app.include_router(
     websocket.router,
     prefix=settings.api_prefix,
     tags=["WebSocket"]
-)
-
-app.include_router(
-    debug.router,
-    prefix=f"{settings.api_prefix}/debug",
-    tags=["Debug"]
 )
 
 # Static Files (Frontend)

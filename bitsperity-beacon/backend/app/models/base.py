@@ -30,11 +30,7 @@ class PyObjectId(ObjectId):
     
     def __str__(self) -> str:
         """String representation für JSON Serialisierung"""
-        return ObjectId.__str__(self)
-    
-    def __repr__(self) -> str:
-        """Representation für Debugging"""
-        return f"PyObjectId('{ObjectId.__str__(self)}')"
+        return str(super())
 
 
 class BaseModel(PydanticBaseModel):
@@ -47,32 +43,12 @@ class BaseModel(PydanticBaseModel):
     model_config = {
         "populate_by_name": True,
         "arbitrary_types_allowed": True,
-        "json_encoders": {
-            ObjectId: str, 
-            PyObjectId: str,
-            datetime: lambda v: v.isoformat() if v else None
-        },
-        "json_schema_extra": {
-            "example": {
-                "id": "507f1f77bcf86cd799439011"
-            }
-        }
+        "json_encoders": {ObjectId: str, PyObjectId: str}
     }
         
     def dict(self, **kwargs):
         """Override dict method to handle ObjectId"""
-        d = super().model_dump(**kwargs)
-        if "_id" in d and d["_id"] is not None:
+        d = super().dict(**kwargs)
+        if "_id" in d:
             d["_id"] = str(d["_id"])
-        if "id" in d and d["id"] is not None:
-            d["id"] = str(d["id"])
-        return d
-    
-    def model_dump(self, **kwargs):
-        """Override model_dump for Pydantic v2"""
-        d = super().model_dump(**kwargs)
-        if "_id" in d and d["_id"] is not None:
-            d["_id"] = str(d["_id"])
-        if "id" in d and d["id"] is not None:
-            d["id"] = str(d["id"])
         return d 

@@ -38,7 +38,7 @@ async def discover_services(
             skip=skip
         )
         
-        service_responses = [ServiceResponse(**service.model_dump()) for service in services]
+        service_responses = [ServiceResponse(**service.dict()) for service in services]
         
         # Build filters applied dict
         filters_applied = {}
@@ -81,7 +81,7 @@ async def discover_services_with_filter(
             skip=skip
         )
         
-        service_responses = [ServiceResponse(**service.model_dump()) for service in services]
+        service_responses = [ServiceResponse(**service.dict()) for service in services]
         
         # Build filters applied dict
         filters_applied = {}
