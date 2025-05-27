@@ -17,15 +17,11 @@ router = APIRouter()
 
 
 @router.get("/test-time")
-async def test_time():
+async def test_time(db: Database = Depends(get_database)):
     """Test Server Time and Timezone"""
     try:
         now_utc = datetime.utcnow()
         now_local = datetime.now()
-        
-        # Test Service Query Time
-        from app.database import get_database
-        db = await get_database().__anext__()
         
         # Test MongoDB query with current time
         test_query = {"expires_at": {"$gt": now_utc}}

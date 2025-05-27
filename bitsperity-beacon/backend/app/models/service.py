@@ -32,7 +32,7 @@ class Service(BaseModel):
     
     # TTL Management
     ttl: int = Field(default=300, ge=60, le=86400)  # 1 minute to 24 hours
-    expires_at: datetime = Field(default_factory=lambda: datetime.utcnow() + timedelta(seconds=300))
+    expires_at: datetime = Field(default=None)
     last_heartbeat: Optional[datetime] = Field(default_factory=datetime.utcnow)
     
     # Status
@@ -47,8 +47,9 @@ class Service(BaseModel):
     @validator('expires_at', pre=True, always=True)
     def set_expires_at(cls, v, values):
         """Setze expires_at basierend auf TTL"""
-        if v is None and 'ttl' in values:
-            return datetime.utcnow() + timedelta(seconds=values['ttl'])
+        if v is None:
+            ttl = values.get('ttl', 300)  # Default TTL falls nicht gesetzt
+            return datetime.utcnow() + timedelta(seconds=ttl)
         return v
     
     @validator('mdns_service_type', pre=True, always=True)
