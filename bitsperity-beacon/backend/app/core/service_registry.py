@@ -246,7 +246,17 @@ class ServiceRegistry:
             cursor = self.database.services.find(query).skip(skip).limit(limit)
             services_docs = await cursor.to_list(length=limit)
             
-            services = [Service(**doc) for doc in services_docs]
+            # Prepare documents and create Service objects
+            services = []
+            for doc in services_docs:
+                try:
+                    prepared_doc = prepare_service_doc(doc)
+                    service = Service(**prepared_doc)
+                    services.append(service)
+                except Exception as e:
+                    logger.error("Fehler beim Erstellen des Service-Objekts", 
+                               doc_id=str(doc.get("_id", "unknown")), error=str(e))
+                    continue
             
             # Update Cache
             for service in services:

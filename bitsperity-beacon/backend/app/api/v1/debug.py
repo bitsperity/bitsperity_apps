@@ -184,4 +184,62 @@ async def get_system_info():
         "pydantic_version": pydantic.__version__,
         "pymongo_version": pymongo.__version__,
         "encoding": sys.getdefaultencoding()
-    } 
+    }
+
+
+@router.get("/test-service-discovery")
+async def test_service_discovery(db: Database = Depends(get_database)):
+    """Test Service Discovery Logic"""
+    try:
+        from datetime import datetime
+        
+        now_utc = datetime.utcnow()
+        
+        # Test MongoDB query directly
+        query = {"expires_at": {"$gt": now_utc}}
+        cursor = db.services.find(query)
+        services_docs = await cursor.to_list(length=10)
+        
+        # Try to create Service objects
+        services = []
+        errors = []
+        
+        for doc in services_docs:
+            try:
+                from app.models.service import Service
+                from app.core.service_registry import prepare_service_doc
+                
+                # Prepare document
+                prepared_doc = prepare_service_doc(doc)
+                
+                # Create Service object
+                service = Service(**prepared_doc)
+                services.append({
+                    "service_id": service.service_id,
+                    "name": service.name,
+                    "expires_at": service.expires_at.isoformat(),
+                    "is_expired": service.is_expired()
+                })
+            except Exception as e:
+                errors.append({
+                    "doc_id": str(doc.get("_id", "unknown")),
+                    "error": str(e),
+                    "error_type": type(e).__name__
+                })
+        
+        return {
+            "current_time": now_utc.isoformat(),
+            "mongodb_query": query,
+            "raw_docs_found": len(services_docs),
+            "services_created": len(services),
+            "services": services,
+            "errors": errors,
+            "test_successful": True
+        }
+    except Exception as e:
+        logger.error("Service discovery test failed", error=str(e), exc_info=True)
+        return {
+            "error": str(e),
+            "error_type": type(e).__name__,
+            "test_successful": False
+        } 
