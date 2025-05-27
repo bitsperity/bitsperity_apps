@@ -99,11 +99,23 @@ class AvahiMDNSServer(MDNSServerBase):
             ] + txt_args
             
             # Starte Service im Hintergrund
+            print(f"DEBUG: Starting avahi-publish-service with command: {' '.join(cmd)}")
             process = await asyncio.create_subprocess_exec(
                 *cmd,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE
             )
+            
+            # Warte kurz und prüfe ob der Prozess noch läuft
+            await asyncio.sleep(0.5)
+            if process.returncode is not None:
+                stdout, stderr = await process.communicate()
+                print(f"DEBUG: avahi-publish-service exited with code {process.returncode}")
+                print(f"DEBUG: stdout: {stdout.decode()}")
+                print(f"DEBUG: stderr: {stderr.decode()}")
+                return False
+            
+            print(f"DEBUG: avahi-publish-service process started successfully, PID: {process.pid}")
             
             # Speichere Service Info
             self.registered_services[service.service_id] = {
