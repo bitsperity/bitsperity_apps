@@ -2,7 +2,7 @@
 Service Registry für Bitsperity Beacon
 """
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
 import structlog
 from bson import ObjectId
@@ -37,7 +37,7 @@ class ServiceRegistry:
         self.database = database
         self._services_cache: Dict[str, Service] = {}
         self._cache_ttl = 60  # Cache TTL in seconds
-        self._last_cache_update = datetime.utcnow()
+        self._last_cache_update = datetime.now(timezone.utc)
     
     async def register_service(self, service_data: ServiceCreate) -> Service:
         """Registriere einen neuen Service"""
@@ -119,7 +119,7 @@ class ServiceRegistry:
                 "name": name,
                 "host": host,
                 "port": port,
-                "expires_at": {"$gt": datetime.utcnow()}
+                "expires_at": {"$gt": datetime.now(timezone.utc).isoformat()}
             })
             
             if not service_doc:
@@ -147,7 +147,7 @@ class ServiceRegistry:
             for field, value in update_dict.items():
                 setattr(service, field, value)
             
-            service.updated_at = datetime.utcnow()
+            service.updated_at = datetime.now(timezone.utc)
             
             # Speichere in Database
             service_dict = jsonable_encoder(service.model_dump(by_alias=True, exclude={"_id"}))
@@ -225,8 +225,9 @@ class ServiceRegistry:
                               skip: int = 0) -> List[Service]:
         """Entdecke Services mit Filtern"""
         try:
-            # Build query
-            query = {"expires_at": {"$gt": datetime.utcnow()}}
+            # Build query - convert datetime to ISO string for MongoDB comparison
+            current_time = datetime.now(timezone.utc)
+            query = {"expires_at": {"$gt": current_time.isoformat()}}
             
             if service_type:
                 query["type"] = service_type
@@ -275,7 +276,7 @@ class ServiceRegistry:
         """Hole alle abgelaufenen Services"""
         try:
             cursor = self.database.services.find({
-                "expires_at": {"$lt": datetime.utcnow()}
+                "expires_at": {"$lt": datetime.now(timezone.utc).isoformat()}
             })
             services_docs = await cursor.to_list(length=None)
             
@@ -316,7 +317,7 @@ class ServiceRegistry:
         """Hole alle verfügbaren Service Types"""
         try:
             types = await self.database.services.distinct("type", {
-                "expires_at": {"$gt": datetime.utcnow()}
+                "expires_at": {"$gt": datetime.now(timezone.utc).isoformat()}
             })
             return sorted(types)
             
@@ -329,7 +330,7 @@ class ServiceRegistry:
         try:
             # Aggregation Pipeline für alle Tags
             pipeline = [
-                {"$match": {"expires_at": {"$gt": datetime.utcnow()}}},
+                {"$match": {"expires_at": {"$gt": datetime.now(timezone.utc).isoformat()}}},
                 {"$unwind": "$tags"},
                 {"$group": {"_id": "$tags"}},
                 {"$sort": {"_id": 1}}
