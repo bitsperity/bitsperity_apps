@@ -3,7 +3,10 @@ Services API Endpoints
 """
 from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi.responses import JSONResponse
 import structlog
+
+from app.core.json_encoder import jsonable_encoder
 
 from app.database import get_database, Database
 from app.core.service_registry import ServiceRegistry
@@ -49,7 +52,7 @@ def get_websocket_manager() -> WebSocketManager:
     return websocket_manager
 
 
-@router.post("/register", response_model=ServiceResponse, status_code=201)
+@router.post("/register", status_code=201)
 async def register_service(
     service_data: ServiceCreate,
     registry: ServiceRegistry = Depends(get_service_registry),
@@ -58,24 +61,37 @@ async def register_service(
 ):
     """Registriere einen neuen Service"""
     try:
+        logger.info("=== SERVICE REGISTRATION START ===", service_data=service_data.model_dump())
+        
         # Registriere Service
+        logger.info("Calling registry.register_service...")
         service = await registry.register_service(service_data)
+        logger.info("Service registered successfully", service_id=service.service_id)
         
         # Registriere in mDNS
+        logger.info("Calling mdns.register_service...")
         mdns_success = await mdns.register_service(service)
+        logger.info("mDNS registration result", mdns_success=mdns_success)
         if not mdns_success:
             logger.warning("mDNS Registrierung fehlgeschlagen", service_id=service.service_id)
         
         # Broadcast WebSocket Update
-        service_dict = service.dict()
-        await ws_manager.broadcast_service_registered(service_dict)
+        logger.info("Preparing WebSocket broadcast...")
+        service_dict = jsonable_encoder(service)
+        logger.info("Service dict encoded successfully", service_dict_keys=list(service_dict.keys()))
+        # await ws_manager.broadcast_service_registered(service_dict)
         
         logger.info("Service erfolgreich registriert",
                    service_id=service.service_id,
                    name=service.name,
                    mdns_registered=mdns_success)
         
-        return ServiceResponse(**service.dict())
+        # Konvertiere Service zu Response
+        logger.info("Preparing JSON response...")
+        service_dict = jsonable_encoder(service)
+        logger.info("Service dict for response created successfully")
+        logger.info("=== SERVICE REGISTRATION SUCCESS ===")
+        return JSONResponse(content=service_dict)
         
     except Exception as e:
         logger.error("Fehler bei Service Registrierung", error=str(e))
@@ -92,7 +108,7 @@ async def get_service(
     if not service:
         raise HTTPException(status_code=404, detail="Service nicht gefunden")
     
-    return ServiceResponse(**service.dict())
+    return ServiceResponse(**service.model_dump())
 
 
 @router.put("/{service_id}", response_model=ServiceResponse)
@@ -116,12 +132,12 @@ async def update_service(
             logger.warning("mDNS Update fehlgeschlagen", service_id=service_id)
         
         # Broadcast WebSocket Update
-        service_dict = service.dict()
+        service_dict = jsonable_encoder(service.model_dump())
         await ws_manager.broadcast_service_updated(service_dict)
         
         logger.info("Service erfolgreich aktualisiert", service_id=service_id)
         
-        return ServiceResponse(**service.dict())
+        return ServiceResponse(**service.model_dump())
         
     except Exception as e:
         logger.error("Fehler bei Service Update", service_id=service_id, error=str(e))
@@ -206,7 +222,7 @@ async def get_service_status(
     if not service:
         raise HTTPException(status_code=404, detail="Service nicht gefunden")
     
-    return ServiceResponse(**service.dict())
+    return ServiceResponse(**service.model_dump())
 
 
 @router.get("/", response_model=ServiceListResponse)
@@ -230,7 +246,7 @@ async def list_services(
             skip=skip
         )
         
-        service_responses = [ServiceResponse(**service.dict()) for service in services]
+        service_responses = [ServiceResponse(**service.model_dump()) for service in services]
         
         return ServiceListResponse(
             services=service_responses,
@@ -279,7 +295,7 @@ async def get_expired_services(
     """Hole alle abgelaufenen Services"""
     try:
         expired_services = await registry.get_expired_services()
-        service_responses = [ServiceResponse(**service.dict()) for service in expired_services]
+        service_responses = [ServiceResponse(**service.model_dump()) for service in expired_services]
         
         return ServiceListResponse(
             services=service_responses,

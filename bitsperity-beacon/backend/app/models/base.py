@@ -2,7 +2,7 @@
 Base Model für gemeinsame Felder
 """
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Any
 from pydantic import BaseModel as PydanticBaseModel, Field
 from bson import ObjectId
 
@@ -30,11 +30,11 @@ class PyObjectId(ObjectId):
     
     def __str__(self) -> str:
         """String representation für JSON Serialisierung"""
-        return str(ObjectId.__str__(self))
+        return str(super().__str__())
     
     def __repr__(self) -> str:
-        """Representation string"""
-        return f"PyObjectId('{str(ObjectId.__str__(self))}')"
+        """Representation für Debugging"""
+        return f"PyObjectId('{str(super().__str__())}')"
 
 
 class BaseModel(PydanticBaseModel):
@@ -47,12 +47,32 @@ class BaseModel(PydanticBaseModel):
     model_config = {
         "populate_by_name": True,
         "arbitrary_types_allowed": True,
-        "json_encoders": {ObjectId: str, PyObjectId: str}
+        "json_encoders": {
+            ObjectId: lambda v: str(v),
+            PyObjectId: lambda v: str(v),
+            datetime: lambda v: v.isoformat() if v else None
+        },
+        "json_schema_extra": {
+            "example": {
+                "id": "507f1f77bcf86cd799439011"
+            }
+        }
     }
         
     def dict(self, **kwargs):
         """Override dict method to handle ObjectId"""
-        d = super().dict(**kwargs)
-        if "_id" in d:
+        d = super().model_dump(**kwargs)
+        if "_id" in d and d["_id"] is not None:
             d["_id"] = str(d["_id"])
+        if "id" in d and d["id"] is not None:
+            d["id"] = str(d["id"])
+        return d
+    
+    def model_dump(self, **kwargs):
+        """Override model_dump for Pydantic v2"""
+        d = super().model_dump(**kwargs)
+        if "_id" in d and d["_id"] is not None:
+            d["_id"] = str(d["_id"])
+        if "id" in d and d["id"] is not None:
+            d["id"] = str(d["id"])
         return d 
