@@ -77,9 +77,12 @@ async def register_service(
         
         # Broadcast WebSocket Update
         logger.info("Preparing WebSocket broadcast...")
-        service_dict = jsonable_encoder(service)
-        logger.info("Service dict encoded successfully", service_dict_keys=list(service_dict.keys()))
-        # await ws_manager.broadcast_service_registered(service_dict)
+        try:
+            service_dict = jsonable_encoder(service)
+            logger.info("Service dict encoded successfully", service_dict_keys=list(service_dict.keys()))
+            # await ws_manager.broadcast_service_registered(service_dict)
+        except Exception as ws_error:
+            logger.error("WebSocket broadcast failed", error=str(ws_error), exc_info=True)
         
         logger.info("Service erfolgreich registriert",
                    service_id=service.service_id,
@@ -88,13 +91,49 @@ async def register_service(
         
         # Konvertiere Service zu Response
         logger.info("Preparing JSON response...")
-        service_dict = jsonable_encoder(service)
-        logger.info("Service dict for response created successfully")
-        logger.info("=== SERVICE REGISTRATION SUCCESS ===")
-        return JSONResponse(content=service_dict)
+        try:
+            # Debug: verschiedene Serialization Methoden testen
+            logger.debug("Testing serialization methods...")
+            logger.debug("model_dump result", result=service.model_dump())
+            logger.debug("jsonable_encoder result", result=jsonable_encoder(service))
+            
+            service_dict = jsonable_encoder(service)
+            logger.info("Service dict for response created successfully")
+            logger.info("=== SERVICE REGISTRATION SUCCESS ===")
+            return JSONResponse(content=service_dict)
+        except Exception as json_error:
+            logger.error("JSON serialization failed", 
+                        error=str(json_error), 
+                        error_type=type(json_error).__name__,
+                        exc_info=True)
+            # Fallback: try manual serialization
+            try:
+                manual_dict = {
+                    "service_id": service.service_id,
+                    "name": service.name,
+                    "type": service.type,
+                    "host": service.host,
+                    "port": service.port,
+                    "protocol": service.protocol,
+                    "tags": service.tags,
+                    "metadata": service.metadata,
+                    "ttl": service.ttl,
+                    "expires_at": service.expires_at.isoformat() if service.expires_at else None,
+                    "last_heartbeat": service.last_heartbeat.isoformat() if service.last_heartbeat else None,
+                    "status": service.status.value if service.status else None,
+                    "created_at": service.created_at.isoformat() if service.created_at else None,
+                    "updated_at": service.updated_at.isoformat() if service.updated_at else None
+                }
+                return JSONResponse(content=manual_dict)
+            except Exception as fallback_error:
+                logger.error("Fallback serialization also failed", error=str(fallback_error))
+                raise
         
     except Exception as e:
-        logger.error("Fehler bei Service Registrierung", error=str(e))
+        logger.error("Fehler bei Service Registrierung", 
+                    error=str(e), 
+                    error_type=type(e).__name__,
+                    exc_info=True)
         raise HTTPException(status_code=500, detail=f"Service Registrierung fehlgeschlagen: {str(e)}")
 
 
