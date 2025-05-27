@@ -33,8 +33,9 @@ def prepare_service_doc(doc: dict) -> dict:
 class ServiceRegistry:
     """Service Registry Manager"""
     
-    def __init__(self, database: Database):
+    def __init__(self, database: Database, mdns_server=None):
         self.database = database
+        self.mdns_server = mdns_server  # Optional mDNS Server für Cleanup
         self._services_cache: Dict[str, Service] = {}
         self._cache_ttl = 60  # Cache TTL in seconds
         self._last_cache_update = datetime.now(timezone.utc)
@@ -280,7 +281,19 @@ class ServiceRegistry:
             })
             services_docs = await cursor.to_list(length=None)
             
-            return [Service(**doc) for doc in services_docs]
+            # Prepare documents and create Service objects
+            services = []
+            for doc in services_docs:
+                try:
+                    prepared_doc = prepare_service_doc(doc)
+                    service = Service(**prepared_doc)
+                    services.append(service)
+                except Exception as e:
+                    logger.error("Fehler beim Erstellen des Service-Objekts für abgelaufenen Service", 
+                               doc_id=str(doc.get("_id", "unknown")), error=str(e))
+                    continue
+            
+            return services
             
         except Exception as e:
             logger.error("Fehler beim Laden abgelaufener Services", error=str(e))
@@ -295,18 +308,39 @@ class ServiceRegistry:
             if not expired_services:
                 return 0
             
-            # Entferne aus Database
             service_ids = [service.service_id for service in expired_services]
+            
+            # 1. Entferne aus mDNS (falls verfügbar)
+            mdns_cleanup_count = 0
+            if self.mdns_server:
+                for service in expired_services:
+                    try:
+                        print(f"DEBUG: TTL-Cleanup - Deregistering mDNS service {service.service_id}")
+                        mdns_success = await self.mdns_server.unregister_service(service.service_id)
+                        if mdns_success:
+                            mdns_cleanup_count += 1
+                            print(f"DEBUG: TTL-Cleanup - mDNS deregistration SUCCESS for {service.service_id}")
+                        else:
+                            print(f"DEBUG: TTL-Cleanup - mDNS deregistration FAILED for {service.service_id}")
+                    except Exception as mdns_error:
+                        logger.error("Fehler beim mDNS Cleanup", 
+                                   service_id=service.service_id, 
+                                   error=str(mdns_error))
+            
+            # 2. Entferne aus Database
             result = await self.database.services.delete_many({
                 "service_id": {"$in": service_ids}
             })
             
-            # Entferne aus Cache
+            # 3. Entferne aus Cache
             for service_id in service_ids:
                 if service_id in self._services_cache:
                     del self._services_cache[service_id]
             
-            logger.info("Abgelaufene Services entfernt", count=result.deleted_count)
+            logger.info("Abgelaufene Services entfernt", 
+                       count=result.deleted_count,
+                       mdns_cleanup_count=mdns_cleanup_count)
+            print(f"DEBUG: TTL-Cleanup completed - DB: {result.deleted_count}, mDNS: {mdns_cleanup_count}")
             return result.deleted_count
             
         except Exception as e:

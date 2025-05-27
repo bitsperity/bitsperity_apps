@@ -90,9 +90,9 @@ async def lifespan(app: FastAPI):
         logger.info("Database Verbindung hergestellt")
         
         # 2. Initialisiere Core Komponenten
-        service_registry = ServiceRegistry(database)
         websocket_manager = WebSocketManager()
         mdns_server = AvahiMDNSServer()
+        service_registry = ServiceRegistry(database, mdns_server)  # mDNS-Referenz für TTL-Cleanup
         ttl_manager = TTLManager(service_registry)
         
         # 3. Setze Dependencies für API Endpoints
