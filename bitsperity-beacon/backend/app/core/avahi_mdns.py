@@ -83,11 +83,11 @@ class AvahiMDNSServer(MDNSServerBase):
             service_name = f"{service.name}"
             service_type = f"_{service.type}._tcp"
             
-            # Erstelle TXT Records
+            # Erstelle TXT Records (als zusätzliche Argumente, nicht --txt)
             txt_records = service.get_mdns_txt_records()
             txt_args = []
             for key, value in txt_records.items():
-                txt_args.extend(["--txt", f"{key}={value}"])
+                txt_args.append(f"{key}={value}")
             
             # Avahi-publish-service Command
             cmd = [
