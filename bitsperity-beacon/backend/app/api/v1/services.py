@@ -10,7 +10,7 @@ from app.core.json_encoder import jsonable_encoder as custom_jsonable_encoder
 
 from app.database import get_database, Database
 from app.core.service_registry import ServiceRegistry
-from app.core.mdns_server import MDNSServer
+from app.core.mdns_base import MDNSServerBase
 from app.core.websocket_manager import WebSocketManager
 from app.schemas.service import (
     ServiceCreate, 
@@ -27,7 +27,7 @@ router = APIRouter()
 
 # Global instances (werden in main.py initialisiert)
 service_registry: Optional[ServiceRegistry] = None
-mdns_server: Optional[MDNSServer] = None
+mdns_server: Optional[MDNSServerBase] = None
 websocket_manager: Optional[WebSocketManager] = None
 
 
@@ -38,7 +38,7 @@ def get_service_registry() -> ServiceRegistry:
     return service_registry
 
 
-def get_mdns_server() -> MDNSServer:
+def get_mdns_server() -> MDNSServerBase:
     """Dependency für mDNS Server"""
     if mdns_server is None:
         raise HTTPException(status_code=500, detail="mDNS Server nicht initialisiert")
@@ -56,7 +56,7 @@ def get_websocket_manager() -> WebSocketManager:
 async def register_service(
     service_data: ServiceCreate,
     registry: ServiceRegistry = Depends(get_service_registry),
-    mdns: MDNSServer = Depends(get_mdns_server),
+    mdns: MDNSServerBase = Depends(get_mdns_server),
     ws_manager: WebSocketManager = Depends(get_websocket_manager)
 ):
     """Registriere einen neuen Service"""
@@ -155,7 +155,7 @@ async def update_service(
     service_id: str,
     update_data: ServiceUpdate,
     registry: ServiceRegistry = Depends(get_service_registry),
-    mdns: MDNSServer = Depends(get_mdns_server),
+    mdns: MDNSServerBase = Depends(get_mdns_server),
     ws_manager: WebSocketManager = Depends(get_websocket_manager)
 ):
     """Aktualisiere Service"""
@@ -220,7 +220,7 @@ async def service_heartbeat(
 async def deregister_service(
     service_id: str,
     registry: ServiceRegistry = Depends(get_service_registry),
-    mdns: MDNSServer = Depends(get_mdns_server),
+    mdns: MDNSServerBase = Depends(get_mdns_server),
     ws_manager: WebSocketManager = Depends(get_websocket_manager)
 ):
     """Deregistriere Service"""
@@ -349,7 +349,7 @@ async def get_expired_services(
 # Setze globale Instanzen (wird von main.py aufgerufen)
 def set_dependencies(
     registry: ServiceRegistry,
-    mdns: MDNSServer,
+    mdns: MDNSServerBase,
     ws_manager: WebSocketManager
 ):
     """Setze globale Dependencies"""

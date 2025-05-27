@@ -11,11 +11,12 @@ import netifaces
 
 from app.config import settings
 from app.models.service import Service
+from app.core.mdns_base import MDNSServerBase
 
 logger = structlog.get_logger(__name__)
 
 
-class MDNSServer:
+class MDNSServer(MDNSServerBase):
     """mDNS Server für Service Discovery"""
     
     def __init__(self):

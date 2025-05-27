@@ -9,19 +9,23 @@ services:
       PROXY_AUTH_ADD: "false"
 
   web:
-    image: bitsperity/beacon:latest
-    # build:
-    #   context: .
-    #   dockerfile: Dockerfile
-    user: "1000:1000"
+    build:
+      context: .
+      dockerfile: Dockerfile.avahi
+    # image: bitsperity/beacon:avahi-latest
     init: true
     restart: on-failure
     stop_grace_period: 1m
+    # Privileged mode für Avahi-Daemon
+    privileged: true
     volumes:
       - ${APP_DATA_DIR}/data:/app/data
       - ${APP_DATA_DIR}/logs:/app/logs
-      - /var/run/dbus:/var/run/dbus:ro
-      - /var/run/avahi-daemon:/var/run/avahi-daemon:ro
+      # D-Bus und Avahi Sockets vom Host
+      - /var/run/dbus:/var/run/dbus
+      - /var/run/avahi-daemon:/var/run/avahi-daemon
+      # Für mDNS Multicast
+      - /dev/net/tun:/dev/net/tun
     environment:
       # Beacon Configuration
       BEACON_PORT: 80
@@ -33,6 +37,9 @@ services:
       # mDNS Configuration
       MDNS_DOMAIN: ${MDNS_DOMAIN:-local}
       MDNS_INTERFACE: ${MDNS_INTERFACE:-}
+      
+      # Avahi Configuration
+      AVAHI_ENABLE: "true"
       
       # Umbrel Environment Variables
       DEVICE_HOSTNAME: $DEVICE_HOSTNAME

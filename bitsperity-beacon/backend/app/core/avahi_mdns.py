@@ -10,11 +10,12 @@ import structlog
 
 from app.config import settings
 from app.models.service import Service
+from app.core.mdns_base import MDNSServerBase
 
 logger = structlog.get_logger(__name__)
 
 
-class AvahiMDNSServer:
+class AvahiMDNSServer(MDNSServerBase):
     """mDNS Server über Avahi D-Bus"""
     
     def __init__(self):
@@ -29,15 +30,26 @@ class AvahiMDNSServer:
             return
         
         try:
-            # Prüfe ob Avahi-Daemon verfügbar ist
-            result = await self._run_command(["avahi-daemon", "--check"])
+            # Prüfe ob avahi-publish-service verfügbar ist (besserer Test als daemon check)
+            result = await self._run_command(["which", "avahi-publish-service"])
             if result.returncode != 0:
-                logger.warning("Avahi-Daemon nicht verfügbar, verwende Fallback")
+                logger.warning("avahi-publish-service nicht verfügbar, verwende Fallback")
+                self._running = True
+                return
+            
+            # Teste ob Avahi tatsächlich funktioniert mit einem kurzen Test-Service
+            test_result = await self._run_command([
+                "timeout", "2", "avahi-publish-service", "--no-fail", 
+                "beacon-test", "_test._tcp", "1234"
+            ])
+            
+            if test_result.returncode not in [0, 124]:  # 124 = timeout (normal), 0 = success
+                logger.warning("Avahi-Service-Publishing nicht verfügbar, verwende Fallback")
                 self._running = True
                 return
             
             self._running = True
-            logger.info("Avahi mDNS Server gestartet", domain=self.domain)
+            logger.info("Avahi mDNS Server gestartet und getestet", domain=self.domain)
             
         except Exception as e:
             logger.error("Fehler beim Starten des Avahi mDNS Servers", error=str(e))
