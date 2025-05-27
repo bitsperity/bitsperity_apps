@@ -221,7 +221,7 @@ async def service_heartbeat(
         raise HTTPException(status_code=500, detail=f"Heartbeat fehlgeschlagen: {str(e)}")
 
 
-@router.delete("/{service_id}", status_code=204)
+@router.delete("/{service_id}")
 async def deregister_service(
     service_id: str,
     registry: ServiceRegistry = Depends(get_service_registry),
@@ -240,14 +240,26 @@ async def deregister_service(
             raise HTTPException(status_code=404, detail="Service nicht gefunden")
         
         # Deregistriere von mDNS
+        print(f"DEBUG: Deregistering service {service_id} from mDNS")
         mdns_success = await mdns.unregister_service(service_id)
-        if not mdns_success:
+        if mdns_success:
+            print(f"DEBUG: mDNS deregistration SUCCESS for {service_id}")
+        else:
+            print(f"DEBUG: mDNS deregistration FAILED for {service_id}")
             logger.warning("mDNS Deregistrierung fehlgeschlagen", service_id=service_id)
         
         # Broadcast WebSocket Update
         await ws_manager.broadcast_service_deregistered(service_id, service_name)
         
-        logger.info("Service erfolgreich deregistriert", service_id=service_id)
+        logger.info("Service erfolgreich deregistriert", service_id=service_id, mdns_success=mdns_success)
+        
+        # Return JSON response instead of 204
+        return JSONResponse(content={
+            "message": "Service erfolgreich deregistriert",
+            "service_id": service_id,
+            "service_name": service_name,
+            "mdns_deregistered": mdns_success
+        })
         
     except HTTPException:
         raise

@@ -31,7 +31,7 @@ class Service(BaseModel):
     metadata: Dict[str, str] = Field(default_factory=dict)
     
     # TTL Management
-    ttl: int = Field(default=300, ge=60, le=86400)  # 1 minute to 24 hours
+    ttl: int = Field(default=300, ge=10, le=86400)  # 10 seconds to 24 hours
     expires_at: datetime = Field(default=None)
     last_heartbeat: Optional[datetime] = Field(default_factory=datetime.utcnow)
     

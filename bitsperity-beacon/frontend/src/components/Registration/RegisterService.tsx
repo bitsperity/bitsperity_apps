@@ -253,14 +253,14 @@ export default function RegisterService() {
                   </label>
                   <input
                     type="number"
-                    min="60"
+                    min="10"
                     max="3600"
                     value={formData.ttl}
                     onChange={(e) => setFormData(prev => ({ ...prev, ttl: parseInt(e.target.value) }))}
                     className="form-input"
                     placeholder="300"
                   />
-                  <p className="mt-1 text-xs text-gray-500">Zeit bis zur automatischen Löschung (60-3600s)</p>
+                  <p className="mt-1 text-xs text-gray-500">Zeit bis zur automatischen Löschung (10-3600s)</p>
                 </div>
               </div>
             </div>

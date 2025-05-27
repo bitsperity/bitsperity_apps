@@ -18,7 +18,7 @@ class ServiceCreate(BaseModel):
     protocol: str = Field(default="http", max_length=20, description="Service Protocol")
     tags: List[str] = Field(default_factory=list, description="Service Tags")
     metadata: Dict[str, str] = Field(default_factory=dict, description="Service Metadata")
-    ttl: int = Field(default=300, ge=60, le=86400, description="Time to Live in seconds")
+    ttl: int = Field(default=300, ge=10, le=86400, description="Time to Live in seconds")
     health_check_url: Optional[str] = Field(None, description="Health Check URL")
     health_check_interval: Optional[int] = Field(default=60, ge=30, le=3600, description="Health Check Interval")
     
