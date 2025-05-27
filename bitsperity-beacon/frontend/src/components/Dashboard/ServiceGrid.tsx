@@ -1,5 +1,6 @@
 import { Service } from '../../types/service'
 import ServiceCard from './ServiceCard'
+import { Link } from 'react-router-dom'
 
 interface ServiceGridProps {
   services: Service[]
@@ -22,15 +23,15 @@ export default function ServiceGrid({ services }: ServiceGridProps) {
             Es wurden noch keine Services registriert. Registriere deinen ersten Service um mit der Überwachung zu beginnen.
           </p>
           <div className="space-y-4">
-            <a
-              href="/register"
+            <Link
+              to="/register"
               className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
               Service registrieren
-            </a>
+            </Link>
             <div className="text-sm text-gray-500">
               oder verwende die API für automatische Registrierung
             </div>
