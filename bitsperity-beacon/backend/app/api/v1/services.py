@@ -70,10 +70,15 @@ async def register_service(
         
         # Registriere in mDNS
         logger.info("Calling mdns.register_service...")
+        print(f"DEBUG: About to register service {service.name} with mDNS")
         mdns_success = await mdns.register_service(service)
+        print(f"DEBUG: mDNS registration result: {mdns_success}")
         logger.info("mDNS registration result", mdns_success=mdns_success)
         if not mdns_success:
+            print(f"DEBUG: mDNS registration FAILED for service {service.service_id}")
             logger.warning("mDNS Registrierung fehlgeschlagen", service_id=service.service_id)
+        else:
+            print(f"DEBUG: mDNS registration SUCCESS for service {service.service_id}")
         
         # Broadcast WebSocket Update
         logger.info("Preparing WebSocket broadcast...")
