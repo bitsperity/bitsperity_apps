@@ -115,7 +115,7 @@ class Service(BaseModel):
         return txt_records
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "name": "homegrow-client",
                 "type": "iot",

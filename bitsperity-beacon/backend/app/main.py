@@ -19,7 +19,7 @@ from app.config import settings
 from app.database import database
 from app.core import ServiceRegistry, TTLManager, WebSocketManager
 from app.core.avahi_mdns import AvahiMDNSServer
-from app.api.v1 import services, discovery, health, websocket, debug
+from app.api.v1 import services, discovery, health, websocket
 from app.api.v1.services import set_dependencies
 from app.api.v1.websocket import set_websocket_manager
 
@@ -205,12 +205,6 @@ app.include_router(
     websocket.router,
     prefix=settings.api_prefix,
     tags=["WebSocket"]
-)
-
-app.include_router(
-    debug.router,
-    prefix=f"{settings.api_prefix}/debug",
-    tags=["Debug"]
 )
 
 # Static Files (Frontend)
