@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query
 from fastapi.responses import JSONResponse
 import structlog
 
-from app.core.json_encoder import jsonable_encoder
+from app.core.json_encoder import jsonable_encoder as custom_jsonable_encoder
 
 from app.database import get_database, Database
 from app.core.service_registry import ServiceRegistry
@@ -78,7 +78,7 @@ async def register_service(
         # Broadcast WebSocket Update
         logger.info("Preparing WebSocket broadcast...")
         try:
-            service_dict = jsonable_encoder(service)
+            service_dict = custom_jsonable_encoder(service)
             logger.info("Service dict encoded successfully", service_dict_keys=list(service_dict.keys()))
             # await ws_manager.broadcast_service_registered(service_dict)
         except Exception as ws_error:
@@ -95,9 +95,9 @@ async def register_service(
             # Debug: verschiedene Serialization Methoden testen
             logger.debug("Testing serialization methods...")
             logger.debug("model_dump result", result=service.model_dump())
-            logger.debug("jsonable_encoder result", result=jsonable_encoder(service))
+            logger.debug("jsonable_encoder result", result=custom_jsonable_encoder(service))
             
-            service_dict = jsonable_encoder(service)
+            service_dict = custom_jsonable_encoder(service)
             logger.info("Service dict for response created successfully")
             logger.info("=== SERVICE REGISTRATION SUCCESS ===")
             return JSONResponse(content=service_dict)
@@ -171,7 +171,7 @@ async def update_service(
             logger.warning("mDNS Update fehlgeschlagen", service_id=service_id)
         
         # Broadcast WebSocket Update
-        service_dict = jsonable_encoder(service.model_dump())
+        service_dict = custom_jsonable_encoder(service.model_dump())
         await ws_manager.broadcast_service_updated(service_dict)
         
         logger.info("Service erfolgreich aktualisiert", service_id=service_id)

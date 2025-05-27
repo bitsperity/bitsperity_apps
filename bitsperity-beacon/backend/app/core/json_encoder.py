@@ -28,9 +28,10 @@ class BeaconJSONEncoder(json.JSONEncoder):
         return super().default(obj)
 
 
-def jsonable_encoder(obj: Any) -> Any:
+def jsonable_encoder(obj: Any, by_alias: bool = True, **kwargs) -> Any:
     """
     Konvertiere ein Objekt in ein JSON-serialisierbares Format
+    Kompatibel mit FastAPI's jsonable_encoder Signatur
     """
     # Handle PyObjectId specifically
     if hasattr(obj, '__class__') and obj.__class__.__name__ == 'PyObjectId':
@@ -45,11 +46,11 @@ def jsonable_encoder(obj: Any) -> Any:
         return obj.value
     if isinstance(obj, BaseModel):
         # Use model_dump with mode='json' to ensure proper serialization
-        return obj.model_dump(mode='json')
+        return obj.model_dump(mode='json', by_alias=by_alias)
     if isinstance(obj, dict):
-        return {k: jsonable_encoder(v) for k, v in obj.items()}
+        return {k: jsonable_encoder(v, by_alias=by_alias) for k, v in obj.items()}
     if isinstance(obj, list):
-        return [jsonable_encoder(item) for item in obj]
+        return [jsonable_encoder(item, by_alias=by_alias) for item in obj]
     if hasattr(obj, '__dict__'):
-        return jsonable_encoder(obj.__dict__)
+        return jsonable_encoder(obj.__dict__, by_alias=by_alias)
     return obj 

@@ -164,10 +164,6 @@ app = FastAPI(
 from fastapi.encoders import jsonable_encoder as fastapi_jsonable_encoder
 from app.core.json_encoder import jsonable_encoder
 
-# Überschreibe FastAPI's jsonable_encoder
-import fastapi.encoders
-fastapi.encoders.jsonable_encoder = jsonable_encoder
-
 # Custom CORS Middleware (first)
 app.add_middleware(CORSHeaderMiddleware)
 
