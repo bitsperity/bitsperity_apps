@@ -21,15 +21,13 @@ def prepare_service_doc(doc: dict) -> dict:
     if doc is None:
         return None
     
-    # Konvertiere _id zu ObjectId wenn es ein String ist
-    if "_id" in doc and isinstance(doc["_id"], str):
-        try:
-            doc["_id"] = ObjectId(doc["_id"])
-        except Exception:
-            # Falls Konvertierung fehlschlägt, entferne _id
-            doc.pop("_id", None)
+    # Erstelle eine Kopie des Dokuments
+    prepared_doc = doc.copy()
     
-    return doc
+    # Entferne _id Feld, da es nicht Teil des Service-Models ist
+    prepared_doc.pop("_id", None)
+    
+    return prepared_doc
 
 
 class ServiceRegistry:
