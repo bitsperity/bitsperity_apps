@@ -16,6 +16,38 @@ logger = structlog.get_logger(__name__)
 router = APIRouter()
 
 
+@router.get("/test-time")
+async def test_time():
+    """Test Server Time and Timezone"""
+    try:
+        now_utc = datetime.utcnow()
+        now_local = datetime.now()
+        
+        # Test Service Query Time
+        from app.database import get_database
+        db = await get_database().__anext__()
+        
+        # Test MongoDB query with current time
+        test_query = {"expires_at": {"$gt": now_utc}}
+        services_count = await db.services.count_documents(test_query)
+        
+        return {
+            "server_time_utc": now_utc.isoformat(),
+            "server_time_local": now_local.isoformat(),
+            "timezone_offset_hours": (now_local - now_utc).total_seconds() / 3600,
+            "mongodb_query_time": now_utc.isoformat(),
+            "services_found_with_current_time": services_count,
+            "test_successful": True
+        }
+    except Exception as e:
+        logger.error("Time test failed", error=str(e), exc_info=True)
+        return {
+            "error": str(e),
+            "error_type": type(e).__name__,
+            "test_successful": False
+        }
+
+
 @router.get("/test-objectid")
 async def test_objectid():
     """Test PyObjectId Serialization"""

@@ -5,6 +5,7 @@ import asyncio
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 import structlog
+from bson import ObjectId
 
 from app.database import Database
 from app.models.service import Service, ServiceStatus
@@ -13,6 +14,22 @@ from app.config import settings
 from app.core.json_encoder import jsonable_encoder
 
 logger = structlog.get_logger(__name__)
+
+
+def prepare_service_doc(doc: dict) -> dict:
+    """Bereite Service-Dokument aus der DB für Pydantic-Validierung vor"""
+    if doc is None:
+        return None
+    
+    # Konvertiere _id zu ObjectId wenn es ein String ist
+    if "_id" in doc and isinstance(doc["_id"], str):
+        try:
+            doc["_id"] = ObjectId(doc["_id"])
+        except Exception:
+            # Falls Konvertierung fehlschlägt, entferne _id
+            doc.pop("_id", None)
+    
+    return doc
 
 
 class ServiceRegistry:
@@ -80,6 +97,8 @@ class ServiceRegistry:
             if not service_doc:
                 return None
             
+            # Bereite Dokument vor
+            service_doc = prepare_service_doc(service_doc)
             service = Service(**service_doc)
             
             # Prüfe ob abgelaufen
@@ -108,6 +127,8 @@ class ServiceRegistry:
             if not service_doc:
                 return None
             
+            # Bereite Dokument vor
+            service_doc = prepare_service_doc(service_doc)
             service = Service(**service_doc)
             self._services_cache[service.service_id] = service
             return service
