@@ -23,9 +23,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['svelte', '@sveltejs/kit'],
-          charts: ['chart.js'],
-          utils: ['lodash-es']
+          vendor: ['svelte', '@sveltejs/kit']
         }
       }
     }
