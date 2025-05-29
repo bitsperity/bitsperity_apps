@@ -11,17 +11,13 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - MONGODB_URL=mongodb://umbrel:umbrel@bitsperity-mongodb:27017/homegrow
-      - MQTT_URL=mqtt://mosquitto:1883
-      - BEACON_URL=http://bitsperity-beacon:8097
+      - MONGODB_URL=mongodb://umbrel:umbrel@bitsperity-mongodb_mongodb_1:27017/homegrow
+      - MQTT_URL=mqtt://mosquitto_broker_1:1883
+      - BEACON_URL=http://bitsperity-beacon_web_1:8097
       - HOMEGROW_HOST=bitsperity-homegrow
       - HOMEGROW_PORT=3000
-    depends_on:
-      - bitsperity-mongodb
-      - bitsperity-beacon
-      - mosquitto
     networks:
-      - umbrel
+      - umbrel_main_network
     volumes:
       - ${APP_DATA_DIR}/data:/app/data
       - ${APP_DATA_DIR}/logs:/app/logs
@@ -33,7 +29,7 @@ services:
       start_period: 40s
 
 networks:
-  umbrel:
+  umbrel_main_network:
     external: true
 
 volumes:
