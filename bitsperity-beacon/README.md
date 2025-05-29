@@ -214,14 +214,14 @@ Register a new service with automatic mDNS announcement.
 **Request Body:**
 ```json
 {
-  "name": "homegrow-client",
-  "type": "iot",
-  "host": "192.168.1.100",
-  "port": 8080,
-  "protocol": "http",
-  "tags": ["iot", "agriculture", "sensors"],
-  "metadata": {
-    "version": "1.0.0",
+    "name": "homegrow-client",
+    "type": "iot",
+    "host": "192.168.1.100",
+    "port": 8080,
+    "protocol": "http",
+    "tags": ["iot", "agriculture", "sensors"],
+    "metadata": {
+      "version": "1.0.0",
     "description": "HomegrowClient for plant monitoring"
   },
   "ttl": 300,
@@ -235,9 +235,9 @@ Register a new service with automatic mDNS announcement.
 {
   "service_id": "12345678-1234-1234-1234-123456789012",
   "name": "homegrow-client",
-  "type": "iot",
-  "host": "192.168.1.100",
-  "port": 8080,
+        "type": "iot",
+        "host": "192.168.1.100",
+        "port": 8080,
   "protocol": "http",
   "tags": ["iot", "agriculture", "sensors"],
   "metadata": {
@@ -472,7 +472,7 @@ class BeaconClient:
         async with aiohttp.ClientSession() as session:
             async with session.post(
                 f"{self.beacon_url}/api/v1/services/register",
-                json=service_data
+        json=service_data
             ) as response:
                 result = await response.json()
                 self.service_id = result["service_id"]
@@ -747,10 +747,10 @@ Beacon uses structured JSON logging for easy parsing:
   "logger": "app.core.service_registry",
   "message": "Service registered",
   "service_id": "12345678-1234-1234-1234-123456789012",
-  "name": "homegrow-client",
-  "type": "iot",
-  "host": "192.168.1.100",
-  "port": 8080,
+    "name": "homegrow-client",
+    "type": "iot",
+    "host": "192.168.1.100",
+    "port": 8080,
   "expires_at": "2024-01-01T12:05:00Z"
 }
 ```
@@ -760,19 +760,19 @@ Beacon uses structured JSON logging for easy parsing:
 ### Common Issues
 
 **1. mDNS not working**
-```bash
+   ```bash
 # Check network mode
-docker inspect bitsperity-beacon | grep NetworkMode
+   docker inspect bitsperity-beacon | grep NetworkMode
 # Should be "host"
 
 # Test mDNS manually
 avahi-browse -a
-```
+   ```
 
 **2. MongoDB connection failed**
-```bash
+   ```bash
 # Check MongoDB status
-umbrel app logs bitsperity-mongodb
+   umbrel app logs bitsperity-mongodb
 
 # Test connection
 docker exec bitsperity-beacon python -c "
@@ -783,9 +783,9 @@ asyncio.run(database.test_connection())
 ```
 
 **3. Services not discovered**
-```bash
+   ```bash
 # Check service TTL status
-curl http://localhost:8080/api/v1/services/expired
+   curl http://localhost:8080/api/v1/services/expired
 
 # Check mDNS registration
 curl http://localhost:8080/api/v1/health

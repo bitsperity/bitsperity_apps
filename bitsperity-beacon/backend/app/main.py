@@ -80,45 +80,6 @@ class CORSHeaderMiddleware(BaseHTTPMiddleware):
         return response
 
 
-async def bootstrap_self_registration():
-    """Bootstrap: Register Beacon as service with health checks"""
-    try:
-        from app.schemas.service import ServiceCreate
-        
-        # Wait a bit for everything to be ready
-        await asyncio.sleep(5)
-        
-        # Self-register Beacon service
-        beacon_service = ServiceCreate(
-            name="bitsperity-beacon",
-            type="service-discovery",
-            host="0.0.0.0",  # Internal host
-            port=80,  # Internal port
-            protocol="http",
-            tags=["beacon", "service-discovery", "mdns", "umbrel"],
-            metadata={
-                "version": "1.0.0",
-                "description": "Bitsperity Beacon Service Discovery Server",
-                "umbrel_app": "true",
-                "auto_registered": "true"
-            },
-            health_check_url="http://127.0.0.1:80/api/v1/health",  # Internal health check
-            health_check_interval=60,
-            health_check_timeout=10,
-            health_check_enabled=True,
-            fallback_to_health_check=True,
-            ttl=300
-        )
-        
-        beacon_service_obj = await service_registry.register_service(beacon_service)
-        logger.info("Beacon self-registered successfully", 
-                   service_id=beacon_service_obj.service_id,
-                   name=beacon_service_obj.name)
-        
-    except Exception as e:
-        logger.warning("Self-registration failed (non-critical)", error=str(e))
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application Lifespan Manager"""
@@ -161,9 +122,6 @@ async def lifespan(app: FastAPI):
         # 5. Starte TTL Manager
         await ttl_manager.start()
         logger.info("TTL Manager gestartet")
-        
-        # 6. 🆕 Bootstrap self-registration (async)
-        asyncio.create_task(bootstrap_self_registration())
         
         logger.info("Bitsperity Beacon erfolgreich gestartet")
         
