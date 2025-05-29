@@ -10,6 +10,7 @@ REGISTRY="docker.io"
 NAMESPACE="bitsperity"
 IMAGE_NAME="beacon"
 VERSION=${1:-"latest"}
+UMBREL_HOST=${UMBREL_HOST:-"umbrel@umbrel.local"}
 
 echo "🚀 Deploying Bitsperity Beacon to Docker Hub..."
 
@@ -58,7 +59,52 @@ if [ "$VERSION" != "latest" ]; then
     git push origin "v$VERSION" 2>/dev/null || echo "Tag bereits gepusht"
 fi
 
-echo "✅ Deployment erfolgreich!"
+echo "✅ Docker Deployment erfolgreich!"
+
+# 🆕 AUTO-DEPLOY auf Umbrel Server
+echo ""
+echo "🔄 Auto-Deploy auf Umbrel Server..."
+
+# Prüfe SSH-Verbindung
+if ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no $UMBREL_HOST "echo 'SSH OK'" 2>/dev/null; then
+    echo "📡 SSH-Verbindung zu $UMBREL_HOST erfolgreich"
+    
+    # Deinstalliere App
+    echo "🗑️  Deinstalliere bitsperity-beacon..."
+    if ssh $UMBREL_HOST "umbreld client apps.uninstall.mutate --appId bitsperity-beacon" 2>/dev/null; then
+        echo "✅ App erfolgreich deinstalliert"
+        
+        # Warte kurz für cleanup
+        echo "⏳ Warte 5 Sekunden für Cleanup..."
+        sleep 5
+        
+        # Installiere App neu
+        echo "📦 Installiere bitsperity-beacon neu..."
+        if ssh $UMBREL_HOST "umbreld client apps.install.mutate --appId bitsperity-beacon" 2>/dev/null; then
+            echo "✅ App erfolgreich neu installiert"
+            
+            # Warte auf Start
+            echo "⏳ Warte 10 Sekunden für App-Start..."
+            sleep 10
+            
+            # Teste Health Endpoint
+            echo "🏥 Teste Health Endpoint..."
+            if curl -s -o /dev/null -w "%{http_code}" http://umbrel.local:8097/api/v1/health | grep -q "200"; then
+                echo "✅ Health Check erfolgreich - App läuft!"
+            else
+                echo "⚠️  Health Check fehlgeschlagen - prüfe App-Status"
+            fi
+        else
+            echo "❌ App-Installation fehlgeschlagen"
+        fi
+    else
+        echo "❌ App-Deinstallation fehlgeschlagen"
+    fi
+else
+    echo "⚠️  SSH-Verbindung zu $UMBREL_HOST fehlgeschlagen - überspringe Auto-Deploy"
+    echo "   Setze UMBREL_HOST environment variable für anderen Host"
+fi
+
 echo ""
 echo "📦 Image: $NAMESPACE/$IMAGE_NAME:$VERSION"
 echo "🌐 Docker Hub: https://hub.docker.com/r/$NAMESPACE/$IMAGE_NAME"
