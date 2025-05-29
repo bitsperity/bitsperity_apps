@@ -9,6 +9,7 @@ interface ServiceCardProps {
 export default function ServiceCard({ service }: ServiceCardProps) {
   const { sendHeartbeat, deleteService } = useServiceStore()
   const [isLoading, setIsLoading] = useState(false)
+  const [copySuccess, setCopySuccess] = useState(false)
 
   const getStatusConfig = (status: ServiceStatus) => {
     switch (status) {
@@ -149,38 +150,74 @@ export default function ServiceCard({ service }: ServiceCardProps) {
     }
   }
 
+  const handleCopyAddress = async () => {
+    const address = `${service.host}:${service.port}`
+    try {
+      await navigator.clipboard.writeText(address)
+      setCopySuccess(true)
+      setTimeout(() => setCopySuccess(false), 2000)
+    } catch (err) {
+      // Fallback für ältere Browser
+      const textArea = document.createElement('textarea')
+      textArea.value = address
+      document.body.appendChild(textArea)
+      textArea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textArea)
+      setCopySuccess(true)
+      setTimeout(() => setCopySuccess(false), 2000)
+    }
+  }
+
   const statusConfig = getStatusConfig(service.status)
   const typeConfig = getTypeConfig(service.type)
 
   return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-gray-200/50 hover:shadow-lg hover:border-gray-300/50 transition-all duration-200 group">
+    <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-200/50 hover:shadow-lg hover:border-gray-300/50 transition-all duration-200 group">
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3 flex-1 min-w-0">
-          <div className={`w-12 h-12 bg-gradient-to-br ${typeConfig.color} rounded-xl flex items-center justify-center text-white shadow-sm`}>
+          <div className={`w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br ${typeConfig.color} rounded-xl flex items-center justify-center text-white shadow-sm flex-shrink-0`}>
             {typeConfig.icon}
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-bold text-gray-900 truncate group-hover:text-blue-700 transition-colors">
+            <h3 className="text-base sm:text-lg font-bold text-gray-900 group-hover:text-blue-700 transition-colors leading-tight break-words">
               {service.name}
             </h3>
-            <p className="text-sm text-gray-600 truncate">
-              {service.host}:{service.port}
-            </p>
+            <div className="flex items-center space-x-2 mt-1">
+              <p className="text-sm text-gray-600 font-mono break-all">
+                {service.host}:{service.port}
+              </p>
+              <button
+                onClick={handleCopyAddress}
+                className="flex-shrink-0 p-1 text-gray-400 hover:text-blue-600 transition-colors"
+                title="IP:Port kopieren"
+              >
+                {copySuccess ? (
+                  <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
         </div>
-        <div className={`flex items-center space-x-1 px-3 py-1.5 text-xs font-semibold rounded-full border ${statusConfig.color}`}>
+        <div className={`flex items-center space-x-1 px-2 sm:px-3 py-1.5 text-xs font-semibold rounded-full border flex-shrink-0 ${statusConfig.color}`}>
           {statusConfig.icon}
           <span className="hidden sm:inline">{statusConfig.text}</span>
         </div>
       </div>
 
       {/* Details */}
-      <div className="space-y-3 mb-6">
-        <div className="grid grid-cols-2 gap-4 text-sm">
+      <div className="space-y-3 mb-4 sm:mb-6">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 text-sm">
           <div>
             <span className="text-gray-500 font-medium">Type</span>
-            <p className="font-semibold text-gray-900 capitalize">{service.type}</p>
+            <p className="font-semibold text-gray-900 capitalize break-words">{service.type}</p>
           </div>
           <div>
             <span className="text-gray-500 font-medium">Protocol</span>
@@ -206,12 +243,12 @@ export default function ServiceCard({ service }: ServiceCardProps) {
 
       {/* Tags */}
       {service.tags && service.tags.length > 0 && (
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <div className="flex flex-wrap gap-2">
             {service.tags.slice(0, 3).map((tag) => (
               <span
                 key={tag}
-                className="px-2.5 py-1 text-xs bg-blue-50 text-blue-700 rounded-lg font-medium border border-blue-200"
+                className="px-2.5 py-1 text-xs bg-blue-50 text-blue-700 rounded-lg font-medium border border-blue-200 break-words"
               >
                 {tag}
               </span>
@@ -226,7 +263,7 @@ export default function ServiceCard({ service }: ServiceCardProps) {
       )}
 
       {/* Actions */}
-      <div className="flex space-x-3">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
         <button
           onClick={handleHeartbeat}
           disabled={isLoading}
@@ -242,7 +279,7 @@ export default function ServiceCard({ service }: ServiceCardProps) {
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
-              <span className="hidden sm:inline">Heartbeat</span>
+              <span>Heartbeat</span>
             </>
           )}
         </button>
