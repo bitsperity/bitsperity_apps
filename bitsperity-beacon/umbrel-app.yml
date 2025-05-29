@@ -62,7 +62,6 @@ port: 8097
 gallery:
   - https://raw.githubusercontent.com/bitsperity/bitsperity_apps/master/bitsperity-beacon/gallery/dashboard.png
   - https://raw.githubusercontent.com/bitsperity/bitsperity_apps/master/bitsperity-beacon/gallery/registration.png
-  - https://raw.githubusercontent.com/bitsperity/bitsperity_apps/master/bitsperity-beacon/gallery/api-docs.png
 path: ""
 defaultUsername: ""
 defaultPassword: "" 

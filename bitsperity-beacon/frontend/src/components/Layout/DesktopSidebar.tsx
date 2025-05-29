@@ -27,7 +27,7 @@ export default function DesktopSidebar() {
 
   return (
     <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
-      <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white/80 backdrop-blur-xl border-r border-gray-200/50 px-6 pb-4">
+      <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-r border-gray-200/50 dark:border-gray-700/50 px-6 pb-4">
         <div className="flex h-16 shrink-0 items-center">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
@@ -39,7 +39,7 @@ export default function DesktopSidebar() {
               <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 Bitsperity
               </h1>
-              <p className="text-sm text-gray-500 font-medium">Beacon</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Beacon</p>
             </div>
           </div>
         </div>
@@ -56,12 +56,12 @@ export default function DesktopSidebar() {
                         className={`
                           group flex gap-x-3 rounded-xl p-3 text-sm leading-6 font-semibold transition-all duration-200
                           ${isActive
-                            ? 'bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 shadow-sm ring-1 ring-blue-200/50'
-                            : 'text-gray-700 hover:text-blue-700 hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-purple-50/50'
+                            ? 'bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 text-blue-700 dark:text-blue-300 shadow-sm ring-1 ring-blue-200/50 dark:ring-blue-800/50'
+                            : 'text-gray-700 dark:text-gray-300 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-purple-50/50 dark:hover:from-blue-900/10 dark:hover:to-purple-900/10'
                           }
                         `}
                       >
-                        <span className={`${isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-blue-600'} transition-colors`}>
+                        <span className={`${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500 group-hover:text-blue-600 dark:group-hover:text-blue-400'} transition-colors`}>
                           {item.icon}
                         </span>
                         {item.name}
@@ -72,7 +72,7 @@ export default function DesktopSidebar() {
               </ul>
             </li>
             <li className="mt-auto">
-              <div className="rounded-xl bg-gradient-to-r from-blue-50 to-purple-50 p-4 border border-blue-200/50">
+              <div className="rounded-xl bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 p-4 border border-blue-200/50 dark:border-blue-800/50">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-lg flex items-center justify-center">
                     <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -80,8 +80,8 @@ export default function DesktopSidebar() {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900">Service Discovery</p>
-                    <p className="text-xs text-gray-500">Active & Ready</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">Service Discovery</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Active & Ready</p>
                   </div>
                 </div>
               </div>
