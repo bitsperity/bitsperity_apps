@@ -203,6 +203,7 @@ class HealthCheckManager:
         try:
             if result.success:
                 # Health check successful!
+                print(f"🎯 HEALTH CHECK SUCCESS! service_id={service.service_id}, name={service.name}, response_time={result.response_time_ms}ms")
                 logger.info("Health check passed - extending TTL like heartbeat",
                            service_id=service.service_id,
                            name=service.name,
