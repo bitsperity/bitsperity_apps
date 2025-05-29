@@ -15,7 +15,7 @@ const navigation = [
     )
   },
   { 
-    name: 'Service registrieren', 
+    name: 'Register Service', 
     href: '/register', 
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -61,7 +61,7 @@ export default function MobileNav({ isOpen, onClose }: MobileNavProps) {
             <Dialog.Panel className="relative mr-16 flex w-full max-w-xs flex-1">
               <div className="absolute left-full top-0 flex w-16 justify-center pt-5">
                 <button type="button" className="-m-2.5 p-2.5" onClick={onClose}>
-                  <span className="sr-only">Sidebar schließen</span>
+                  <span className="sr-only">Close sidebar</span>
                   <XMarkIcon className="h-6 w-6 text-white" aria-hidden="true" />
                 </button>
               </div>

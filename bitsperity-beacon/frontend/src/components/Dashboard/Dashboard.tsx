@@ -39,8 +39,8 @@ export default function Dashboard() {
             <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
             <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-purple-600 rounded-full animate-spin mx-auto" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
           </div>
-          <p className="mt-6 text-lg font-medium text-gray-600">Services werden geladen...</p>
-          <p className="mt-2 text-sm text-gray-500">Einen Moment bitte</p>
+          <p className="mt-6 text-lg font-medium text-gray-600">Loading services...</p>
+          <p className="mt-2 text-sm text-gray-500">Please wait a moment</p>
         </div>
       </div>
     )
@@ -51,7 +51,7 @@ export default function Dashboard() {
       {/* Mobile Header */}
       <div className="lg:hidden">
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-600">Übersicht aller Services</p>
+        <p className="mt-1 text-sm text-gray-600">Overview of all registered services</p>
       </div>
 
       {/* Quick Actions - Mobile */}
@@ -67,14 +67,14 @@ export default function Dashboard() {
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              Aktualisiere...
+              Refreshing...
             </>
           ) : (
             <>
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              Aktualisieren
+              Refresh
             </>
           )}
         </button>
@@ -93,7 +93,7 @@ export default function Dashboard() {
             </div>
             <div className="ml-3 lg:ml-4">
               <div className="text-2xl lg:text-3xl font-bold text-gray-900">{serviceStats.total}</div>
-              <div className="text-xs lg:text-sm text-gray-600 font-medium">Gesamt</div>
+              <div className="text-xs lg:text-sm text-gray-600 font-medium">Total</div>
             </div>
           </div>
         </div>
@@ -109,7 +109,7 @@ export default function Dashboard() {
             </div>
             <div className="ml-3 lg:ml-4">
               <div className="text-2xl lg:text-3xl font-bold text-green-600">{serviceStats.active}</div>
-              <div className="text-xs lg:text-sm text-gray-600 font-medium">Aktiv</div>
+              <div className="text-xs lg:text-sm text-gray-600 font-medium">Active</div>
             </div>
           </div>
         </div>
@@ -125,7 +125,7 @@ export default function Dashboard() {
             </div>
             <div className="ml-3 lg:ml-4">
               <div className="text-2xl lg:text-3xl font-bold text-gray-600">{serviceStats.inactive}</div>
-              <div className="text-xs lg:text-sm text-gray-600 font-medium">Inaktiv</div>
+              <div className="text-xs lg:text-sm text-gray-600 font-medium">Inactive</div>
             </div>
           </div>
         </div>
@@ -141,7 +141,7 @@ export default function Dashboard() {
             </div>
             <div className="ml-3 lg:ml-4">
               <div className="text-2xl lg:text-3xl font-bold text-red-600">{serviceStats.expired}</div>
-              <div className="text-xs lg:text-sm text-gray-600 font-medium">Abgelaufen</div>
+              <div className="text-xs lg:text-sm text-gray-600 font-medium">Expired</div>
             </div>
           </div>
         </div>
@@ -157,7 +157,7 @@ export default function Dashboard() {
             </div>
             <div className="ml-3 lg:ml-4">
               <div className="text-2xl lg:text-3xl font-bold text-yellow-600">{serviceStats.unhealthy}</div>
-              <div className="text-xs lg:text-sm text-gray-600 font-medium">Ungesund</div>
+              <div className="text-xs lg:text-sm text-gray-600 font-medium">Unhealthy</div>
             </div>
           </div>
         </div>
@@ -166,8 +166,8 @@ export default function Dashboard() {
       {/* Desktop Actions */}
       <div className="hidden lg:flex lg:justify-between lg:items-center">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">Service Verwaltung</h2>
-          <p className="text-sm text-gray-600">Filtern und verwalten Sie Ihre Services</p>
+          <h2 className="text-lg font-semibold text-gray-900">Service Management</h2>
+          <p className="text-sm text-gray-600">Filter and manage your services</p>
         </div>
         <button
           onClick={() => fetchServices()}
@@ -180,14 +180,14 @@ export default function Dashboard() {
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              Aktualisiere...
+              Refreshing...
             </>
           ) : (
             <>
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              Aktualisieren
+              Refresh
             </>
           )}
         </button>
@@ -198,22 +198,15 @@ export default function Dashboard() {
         <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-6">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Suche
+              Search
             </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <input
-                type="text"
-                value={filters.search}
-                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                placeholder="Service Name, Host, Type..."
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
-              />
-            </div>
+            <input
+              type="text"
+              placeholder="Service Name, Host, Type..."
+              value={filters.search}
+              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/70 backdrop-blur-sm"
+            />
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -221,14 +214,15 @@ export default function Dashboard() {
             </label>
             <select
               value={filters.type}
-              onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value }))}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
+              onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/70 backdrop-blur-sm"
             >
-              <option value="">Alle Types</option>
-              <option value="iot">IoT</option>
-              <option value="mqtt">MQTT</option>
+              <option value="">All Types</option>
               <option value="http">HTTP</option>
+              <option value="https">HTTPS</option>
+              <option value="mqtt">MQTT</option>
               <option value="api">API</option>
+              <option value="iot">IoT</option>
               <option value="database">Database</option>
             </select>
           </div>
@@ -238,38 +232,52 @@ export default function Dashboard() {
             </label>
             <select
               value={filters.status}
-              onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value as ServiceStatus | '' }))}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
+              onChange={(e) => setFilters({ ...filters, status: e.target.value as ServiceStatus })}
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/70 backdrop-blur-sm"
             >
-              <option value="">Alle Status</option>
-              <option value={ServiceStatus.ACTIVE}>Aktiv</option>
-              <option value={ServiceStatus.INACTIVE}>Inaktiv</option>
-              <option value={ServiceStatus.EXPIRED}>Abgelaufen</option>
-              <option value={ServiceStatus.UNHEALTHY}>Ungesund</option>
+              <option value="">All Status</option>
+              <option value={ServiceStatus.ACTIVE}>Active</option>
+              <option value={ServiceStatus.INACTIVE}>Inactive</option>
+              <option value={ServiceStatus.EXPIRED}>Expired</option>
+              <option value={ServiceStatus.UNHEALTHY}>Unhealthy</option>
             </select>
           </div>
         </div>
       </div>
 
-      {/* Error */}
+      {/* Service Grid */}
+      <ServiceGrid 
+        services={filteredServices} 
+      />
+
+      {/* Error Display */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-2xl p-4 lg:p-6">
           <div className="flex items-start">
             <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
             <div className="ml-3">
-              <h3 className="text-sm font-semibold text-red-800">Fehler aufgetreten</h3>
-              <p className="mt-1 text-sm text-red-700">{error}</p>
+              <h3 className="text-sm font-medium text-red-800">
+                Error loading services
+              </h3>
+              <div className="mt-2 text-sm text-red-700">
+                <p>{error}</p>
+              </div>
+              <div className="mt-4">
+                <button
+                  onClick={() => fetchServices()}
+                  className="text-sm bg-red-100 text-red-800 px-3 py-1.5 rounded-lg hover:bg-red-200 transition-colors"
+                >
+                  Try Again
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
-
-      {/* Services Grid */}
-      <ServiceGrid services={filteredServices} />
     </div>
   )
 } 

@@ -17,10 +17,10 @@ export default function ServiceGrid({ services }: ServiceGridProps) {
             </svg>
           </div>
           <h3 className="text-xl font-bold text-gray-900 mb-3">
-            Keine Services gefunden
+            No Services Found
           </h3>
           <p className="text-gray-600 mb-8 leading-relaxed">
-            Es wurden noch keine Services registriert. Registriere deinen ersten Service um mit der Überwachung zu beginnen.
+            No services have been registered yet. Register your first service to start monitoring your network.
           </p>
           <div className="space-y-4">
             <Link
@@ -30,10 +30,10 @@ export default function ServiceGrid({ services }: ServiceGridProps) {
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
-              Service registrieren
+              Register Service
             </Link>
             <div className="text-sm text-gray-500">
-              oder verwende die API für automatische Registrierung
+              or use the API for automatic registration
             </div>
           </div>
         </div>
@@ -45,10 +45,10 @@ export default function ServiceGrid({ services }: ServiceGridProps) {
     <div>
       <div className="mb-6 lg:mb-8">
         <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          Gefundene Services ({services.length})
+          Found Services ({services.length})
         </h3>
         <p className="text-sm text-gray-600">
-          Klicke auf eine Service-Karte für weitere Details
+          Click on a service card for more details
         </p>
       </div>
       

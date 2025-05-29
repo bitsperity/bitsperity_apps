@@ -4,29 +4,54 @@ category: networking
 name: Bitsperity Beacon
 version: "1.0.0"
 icon: https://raw.githubusercontent.com/bitsperity/bitsperity_apps/master/bitsperity-beacon/applogo.svg
-tagline: Service Discovery Server für das lokale Netzwerk
+tagline: Network Service Discovery & Registry Platform
 description: >-
-  Bitsperity Beacon ist ein zentraler Service Discovery Server mit mDNS/Bonjour-Unterstützung.
-  Ermöglicht es Services im lokalen Netzwerk, sich zu registrieren und von anderen Geräten 
-  gefunden zu werden. Perfekt für IoT-Geräte, Microservices und verteilte Anwendungen.
-  
-  Features:
-  • mDNS/Bonjour Service Discovery
-  • TTL-basierte Service-Verwaltung
-  • Real-time Web Dashboard
-  • REST API + WebSocket
-  • Automatische Service-Cleanup
-  • Netzwerk-agnostisch (funktioniert über Umbrel hinaus)
+  Bitsperity Beacon is a powerful service discovery and registry platform that enables seamless 
+  service communication across your local network. Built for modern distributed architectures, 
+  it provides centralized service registration with mDNS/Bonjour broadcasting for automatic discovery.
+
+  Perfect for IoT ecosystems, microservices architectures, home automation, and development environments 
+  where services need to find and communicate with each other dynamically.
+
+  🚀 Key Features:
+  • Real-time Service Registry with TTL-based lifecycle management
+  • mDNS/Bonjour broadcasting for zero-configuration service discovery
+  • Modern React-based web dashboard with live updates
+  • RESTful API + WebSocket for real-time integrations  
+  • Health monitoring with automatic service validation
+  • Docker-first architecture with multi-platform support
+  • Network-agnostic design works beyond Umbrel ecosystem
+
+  🛠️ Technical Highlights:
+  • FastAPI backend with async/await for high performance
+  • MongoDB for scalable service metadata storage
+  • Auto-expiring services with configurable TTL
+  • Real-time WebSocket updates for live dashboard
+  • Copy-to-clipboard integration for easy service access
+  • Mobile-responsive design for any device
 
 releaseNotes: >-
-  Initial release: mDNS Service Discovery Server mit Web Dashboard.
-  
-  Features:
-  • Service Registration API
-  • mDNS/Bonjour Discovery
-  • Web Dashboard
-  • TTL-basierte Service-Verwaltung
-  • Real-time Updates via WebSocket
+  🎉 Initial Release v1.0.0
+
+  This foundational release establishes Bitsperity Beacon as a comprehensive service discovery 
+  solution for modern network architectures.
+
+  ✨ Core Features:
+  • Service Registration & Discovery API
+  • mDNS/Bonjour network broadcasting
+  • Real-time Web Dashboard with live service monitoring
+  • TTL-based automatic service lifecycle management
+  • WebSocket integration for instant updates
+  • Health check monitoring with configurable intervals
+  • Mobile-optimized responsive interface
+  • Copy-to-clipboard for quick service access
+
+  🏗️ Architecture:
+  • FastAPI + Python 3.11 backend
+  • React + TypeScript frontend  
+  • MongoDB persistence layer
+  • Docker multi-platform deployment
+  • RESTful API with comprehensive documentation
 
 developer: Bitsperity
 website: https://bitsperity.com
@@ -35,9 +60,9 @@ repo: https://github.com/bitsperity/bitsperity_apps
 support: https://github.com/bitsperity/bitsperity_apps/issues
 port: 8097
 gallery:
-  - https://raw.githubusercontent.com/bitsperity/bitsperity_apps/master/bitsperity-beacon/gallery/1.png
-  - https://raw.githubusercontent.com/bitsperity/bitsperity_apps/master/bitsperity-beacon/gallery/2.png
-  - https://raw.githubusercontent.com/bitsperity/bitsperity_apps/master/bitsperity-beacon/gallery/3.png
+  - https://raw.githubusercontent.com/bitsperity/bitsperity_apps/master/bitsperity-beacon/gallery/dashboard.png
+  - https://raw.githubusercontent.com/bitsperity/bitsperity_apps/master/bitsperity-beacon/gallery/registration.png
+  - https://raw.githubusercontent.com/bitsperity/bitsperity_apps/master/bitsperity-beacon/gallery/api-docs.png
 path: ""
 defaultUsername: ""
 defaultPassword: "" 

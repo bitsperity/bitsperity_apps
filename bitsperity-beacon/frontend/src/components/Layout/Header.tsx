@@ -16,7 +16,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
           className="-m-2.5 p-2.5 text-gray-700 lg:hidden"
           onClick={onMenuClick}
         >
-          <span className="sr-only">Hauptmenü öffnen</span>
+          <span className="sr-only">Open main menu</span>
           <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
           </svg>
@@ -43,7 +43,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
         <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
           <div className="hidden lg:flex lg:items-center">
             <h1 className="text-xl font-semibold text-gray-900">Service Dashboard</h1>
-            <span className="ml-3 text-sm text-gray-500">Übersicht aller registrierten Services</span>
+            <span className="ml-3 text-sm text-gray-500">Overview of all registered services</span>
           </div>
         </div>
 
@@ -63,7 +63,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
           <div className="flex items-center space-x-2">
             <div className={`w-2.5 h-2.5 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'} animate-pulse`} />
             <span className="hidden sm:inline text-sm font-medium text-gray-700">
-              {connected ? 'Verbunden' : 'Getrennt'}
+              {connected ? 'Connected' : 'Disconnected'}
             </span>
           </div>
 

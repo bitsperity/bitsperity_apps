@@ -12,7 +12,7 @@ const navigation = [
     )
   },
   { 
-    name: 'Service registrieren', 
+    name: 'Register Service', 
     href: '/register', 
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -81,7 +81,7 @@ export default function DesktopSidebar() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-900">Service Discovery</p>
-                    <p className="text-xs text-gray-500">Aktiv & Bereit</p>
+                    <p className="text-xs text-gray-500">Active & Ready</p>
                   </div>
                 </div>
               </div>

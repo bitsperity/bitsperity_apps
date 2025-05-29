@@ -2,15 +2,472 @@
 
 **Bitsperity Beacon** is a comprehensive service discovery server implemented as an Umbrel app. It provides automatic service registration and discovery for local network services using mDNS/Bonjour protocol, combined with a powerful REST API and real-time WebSocket updates.
 
+## 🚀 Developer Quick Start
+
+### Option 1: Health Check Registration (Recommended)
+The easiest way to integrate your containerized services with automatic health monitoring:
+
+```yaml
+# docker-compose.yml
+version: '3.8'
+services:
+  my-service:
+    image: my-app:latest
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    
+  beacon-registrar:
+    image: curlimages/curl:latest
+    depends_on:
+      my-service:
+        condition: service_healthy
+    restart: "no"
+    command: >
+      curl -X POST http://beacon.local:8097/api/v1/services/register
+      -H "Content-Type: application/json"
+      -d '{
+        "name": "my-awesome-service",
+        "type": "api",
+        "host": "192.168.1.100",
+        "port": 8080,
+        "protocol": "http",
+        "tags": ["production", "api", "microservice"],
+        "ttl": 300,
+        "health_check_url": "http://192.168.1.100:8080/health",
+        "health_check_interval": 30,
+        "health_check_timeout": 5,
+        "health_check_retries": 3
+      }'
+```
+
+### Option 2: Manual Heartbeat Registration
+For services that prefer to manage their own lifecycle:
+
+```yaml
+# docker-compose.yml
+version: '3.8'
+services:
+  my-service:
+    image: my-app:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - BEACON_URL=http://beacon.local:8097
+    volumes:
+      - ./register-service.sh:/register-service.sh
+    entrypoint: ["/bin/sh", "-c"]
+    command: |
+      "
+      # Register service on startup
+      ./register-service.sh
+      
+      # Start main application
+      exec my-app
+      "
+```
+
+```bash
+#!/bin/bash
+# register-service.sh
+set -e
+
+# Register with Beacon
+RESPONSE=$(curl -s -X POST ${BEACON_URL}/api/v1/services/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "my-service",
+    "type": "api", 
+    "host": "'$(hostname -i)'",
+    "port": 8080,
+    "protocol": "http",
+    "ttl": 300,
+    "tags": ["production", "api"]
+  }')
+
+# Extract service_id
+SERVICE_ID=$(echo $RESPONSE | jq -r '.service_id')
+echo "Registered as: $SERVICE_ID"
+
+# Start heartbeat in background
+(
+  while true; do
+    sleep 60
+    curl -s -X PUT ${BEACON_URL}/api/v1/services/${SERVICE_ID}/heartbeat || true
+  done
+) &
+
+# Store SERVICE_ID for cleanup
+echo $SERVICE_ID > /tmp/beacon_service_id
+```
+
+## 🔧 Health Checks vs Heartbeats
+
+### Health Check Mode (Recommended) ✅
+- **Automated**: Beacon monitors your service automatically
+- **Zero Code**: No integration required in your application
+- **Reliable**: Works even if your app crashes
+- **Smart TTL**: Automatic TTL extension based on health status
+
+```bash
+# Register with health checks
+curl -X POST http://beacon.local:8097/api/v1/services/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "my-service",
+    "host": "192.168.1.100",
+    "port": 8080,
+    "health_check_url": "http://192.168.1.100:8080/health",
+    "health_check_interval": 30
+  }'
+```
+
+### Manual Heartbeat Mode ⚡
+- **Control**: You decide when to send heartbeats
+- **Custom Logic**: Implement your own health logic
+- **Lightweight**: Minimal overhead
+
+```bash
+# Register without health checks
+curl -X POST http://beacon.local:8097/api/v1/services/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "my-service",
+    "host": "192.168.1.100", 
+    "port": 8080,
+    "ttl": 300
+  }'
+
+# Send heartbeats manually
+curl -X PUT http://beacon.local:8097/api/v1/services/{service_id}/heartbeat
+```
+
+## 🐳 Docker Integration Patterns
+
+### Pattern 1: Init Container Registration
+```yaml
+version: '3.8'
+services:
+  beacon-register:
+    image: curlimages/curl:latest
+    restart: "no"
+    command: |
+      sh -c "curl -X POST http://beacon.local:8097/api/v1/services/register 
+             -H 'Content-Type: application/json'
+             -d @- <<EOF
+      {
+        \"name\": \"$$SERVICE_NAME\",
+        \"type\": \"$$SERVICE_TYPE\",
+        \"host\": \"$$SERVICE_HOST\",
+        \"port\": $$SERVICE_PORT,
+        \"health_check_url\": \"http://$$SERVICE_HOST:$$SERVICE_PORT/health\",
+        \"health_check_interval\": 30,
+        \"tags\": [\"docker\", \"$$ENVIRONMENT\"]
+      }
+      EOF"
+    environment:
+      - SERVICE_NAME=my-microservice
+      - SERVICE_TYPE=api
+      - SERVICE_HOST=192.168.1.100
+      - SERVICE_PORT=8080
+```
+
+### Pattern 2: Sidecar Health Monitor
+```yaml
+version: '3.8'
+services:
+  my-service:
+    image: my-app:latest
+    ports:
+      - "8080:8080"
+      
+  health-monitor:
+    image: curlimages/curl:latest
+    depends_on:
+      - my-service
+    restart: always
+    command: |
+      sh -c "
+      # Wait for main service
+      sleep 10
+      
+      # Register with health checks
+      SERVICE_ID=$$(curl -s -X POST http://beacon.local:8097/api/v1/services/register \
+        -H 'Content-Type: application/json' \
+        -d '{
+          \"name\": \"my-service\",
+          \"host\": \"my-service\",
+          \"port\": 8080,
+          \"health_check_url\": \"http://my-service:8080/health\",
+          \"health_check_interval\": 30
+        }' | jq -r '.service_id')
+      
+      echo 'Registered as:' $$SERVICE_ID
+      
+      # Keep container alive
+      while true; do sleep 3600; done
+      "
+```
+
+### Pattern 3: Multi-Service Stack
+```yaml
+version: '3.8'
+services:
+  api:
+    image: my-api:latest
+    ports:
+      - "8080:8080"
+    labels:
+      - "beacon.enable=true"
+      - "beacon.name=my-api"
+      - "beacon.type=api"
+      - "beacon.port=8080"
+      - "beacon.health_path=/health"
+
+  worker:
+    image: my-worker:latest
+    labels:
+      - "beacon.enable=true"
+      - "beacon.name=my-worker" 
+      - "beacon.type=worker"
+      - "beacon.port=8081"
+
+  database:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: myapp
+    labels:
+      - "beacon.enable=true"
+      - "beacon.name=postgres-db"
+      - "beacon.type=database"
+      - "beacon.port=5432"
+
+  # Auto-register all labeled services
+  beacon-auto-register:
+    image: docker:dind
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./auto-register.sh:/auto-register.sh
+    command: /auto-register.sh
+    depends_on:
+      - api
+      - worker
+      - database
+```
+
+```bash
+#!/bin/bash
+# auto-register.sh - Automatically register Docker services with labels
+for container in $(docker ps --format "table {{.Names}}" --filter "label=beacon.enable=true" | tail -n +2); do
+  NAME=$(docker inspect $container --format '{{index .Config.Labels "beacon.name"}}')
+  TYPE=$(docker inspect $container --format '{{index .Config.Labels "beacon.type"}}')
+  PORT=$(docker inspect $container --format '{{index .Config.Labels "beacon.port"}}')
+  IP=$(docker inspect $container --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
+  HEALTH_PATH=$(docker inspect $container --format '{{index .Config.Labels "beacon.health_path"}}')
+  
+  HEALTH_URL=""
+  if [ -n "$HEALTH_PATH" ]; then
+    HEALTH_URL="\"health_check_url\": \"http://$IP:$PORT$HEALTH_PATH\","
+  fi
+  
+  curl -X POST http://beacon.local:8097/api/v1/services/register \
+    -H "Content-Type: application/json" \
+    -d "{
+      \"name\": \"$NAME\",
+      \"type\": \"$TYPE\", 
+      \"host\": \"$IP\",
+      \"port\": $PORT,
+      $HEALTH_URL
+      \"tags\": [\"docker\", \"auto-registered\"]
+    }"
+    
+  echo "Registered: $NAME ($IP:$PORT)"
+done
+```
+
+## 📱 Client Libraries
+
+### Python Client
+```python
+import asyncio
+import aiohttp
+from typing import Optional
+
+class BeaconClient:
+    def __init__(self, beacon_url: str = "http://beacon.local:8097"):
+        self.beacon_url = beacon_url
+        self.service_id: Optional[str] = None
+        
+    async def register(self, **service_config):
+        """Register service with optional health checks"""
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                f"{self.beacon_url}/api/v1/services/register",
+                json=service_config
+            ) as response:
+                result = await response.json()
+                self.service_id = result["service_id"]
+                return result
+    
+    async def heartbeat(self):
+        """Send manual heartbeat"""
+        if not self.service_id:
+            raise ValueError("Service not registered")
+            
+        async with aiohttp.ClientSession() as session:
+            async with session.put(
+                f"{self.beacon_url}/api/v1/services/{self.service_id}/heartbeat"
+            ) as response:
+                return await response.json()
+    
+    async def deregister(self):
+        """Cleanup on shutdown"""
+        if self.service_id:
+            async with aiohttp.ClientSession() as session:
+                await session.delete(
+                    f"{self.beacon_url}/api/v1/services/{self.service_id}"
+                )
+
+# Usage example
+async def main():
+    client = BeaconClient()
+    
+    # Register with health checks (recommended)
+    await client.register(
+        name="my-python-service",
+        type="api",
+        host="192.168.1.100",
+        port=8080,
+        health_check_url="http://192.168.1.100:8080/health",
+        health_check_interval=30,
+        tags=["python", "fastapi", "production"]
+    )
+    
+    print(f"Registered as: {client.service_id}")
+    
+    # Your application logic here
+    await asyncio.sleep(3600)
+    
+    # Cleanup
+    await client.deregister()
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+### JavaScript/Node.js Client
+```javascript
+const axios = require('axios');
+
+class BeaconClient {
+  constructor(beaconUrl = 'http://beacon.local:8097') {
+    this.beaconUrl = beaconUrl;
+    this.serviceId = null;
+    this.heartbeatInterval = null;
+  }
+  
+  async register(serviceConfig) {
+    try {
+      const response = await axios.post(
+        `${this.beaconUrl}/api/v1/services/register`,
+        serviceConfig
+      );
+      this.serviceId = response.data.service_id;
+      return response.data;
+    } catch (error) {
+      console.error('Registration failed:', error.message);
+      throw error;
+    }
+  }
+  
+  async startHeartbeat(interval = 60000) {
+    if (!this.serviceId) {
+      throw new Error('Service not registered');
+    }
+    
+    this.heartbeatInterval = setInterval(async () => {
+      try {
+        await axios.put(
+          `${this.beaconUrl}/api/v1/services/${this.serviceId}/heartbeat`
+        );
+        console.log('Heartbeat sent successfully');
+      } catch (error) {
+        console.error('Heartbeat failed:', error.message);
+      }
+    }, interval);
+  }
+  
+  async deregister() {
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+    }
+    
+    if (this.serviceId) {
+      try {
+        await axios.delete(
+          `${this.beaconUrl}/api/v1/services/${this.serviceId}`
+        );
+        console.log('Service deregistered');
+      } catch (error) {
+        console.error('Deregistration failed:', error.message);
+      }
+    }
+  }
+}
+
+// Usage with Express.js
+const express = require('express');
+const app = express();
+const beacon = new BeaconClient();
+
+// Health endpoint for Beacon monitoring
+app.get('/health', (req, res) => {
+  res.json({ status: 'healthy', timestamp: new Date().toISOString() });
+});
+
+app.listen(8080, async () => {
+  console.log('Server running on port 8080');
+  
+  // Register with health checks
+  try {
+    await beacon.register({
+      name: 'my-node-service',
+      type: 'api',
+      host: '192.168.1.100',
+      port: 8080,
+      health_check_url: 'http://192.168.1.100:8080/health',
+      health_check_interval: 30,
+      tags: ['nodejs', 'express', 'production']
+    });
+    
+    console.log(`Registered as: ${beacon.serviceId}`);
+  } catch (error) {
+    console.error('Registration failed:', error);
+  }
+});
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  console.log('Shutting down...');
+  await beacon.deregister();
+  process.exit(0);
+});
+```
+
 ## 🎯 Key Features
 
 - **mDNS/Bonjour Service Discovery** - Automatic service announcement via Zeroconf
-- **TTL-based Service Management** - Automatic cleanup of expired services with heartbeat system
+- **Health Check Monitoring** - Proactive service health validation
+- **TTL-based Service Management** - Automatic cleanup of expired services
 - **Real-time Web Dashboard** - Live service monitoring with WebSocket updates
 - **Comprehensive REST API** - Full CRUD operations for service management
 - **MongoDB Integration** - Persistent storage using bitsperity-mongodb backend
 - **Docker-native** - Containerized deployment as Umbrel app
-- **Network Health Monitoring** - Service health checks and status tracking
+- **Copy-to-Clipboard** - Easy access to service endpoints
 
 ## 🏗️ System Architecture
 
@@ -604,7 +1061,7 @@ import aiohttp
 from contextlib import asynccontextmanager
 
 class ServiceWithBeacon:
-    def __init__(self, service_config: dict, beacon_url: str = "http://beacon.local:8080"):
+    def __init__(self, service_config: dict, beacon_url: str = "http://beacon.local:8097"):
         self.config = service_config
         self.beacon_url = beacon_url
         self.beacon_client = BeaconClient(beacon_url)

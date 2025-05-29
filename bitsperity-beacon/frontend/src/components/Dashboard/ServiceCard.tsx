@@ -21,7 +21,7 @@ export default function ServiceCard({ service }: ServiceCardProps) {
               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
             </svg>
           ),
-          text: 'Aktiv'
+          text: 'Active'
         }
       case ServiceStatus.INACTIVE:
         return {
@@ -31,7 +31,7 @@ export default function ServiceCard({ service }: ServiceCardProps) {
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 012 0v4a1 1 0 11-2 0V7zM8 13a1 1 0 112 0 1 1 0 01-2 0z" clipRule="evenodd" />
             </svg>
           ),
-          text: 'Inaktiv'
+          text: 'Inactive'
         }
       case ServiceStatus.EXPIRED:
         return {
@@ -41,7 +41,7 @@ export default function ServiceCard({ service }: ServiceCardProps) {
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
             </svg>
           ),
-          text: 'Abgelaufen'
+          text: 'Expired'
         }
       case ServiceStatus.UNHEALTHY:
         return {
@@ -51,7 +51,7 @@ export default function ServiceCard({ service }: ServiceCardProps) {
               <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
             </svg>
           ),
-          text: 'Ungesund'
+          text: 'Unhealthy'
         }
       default:
         return {
@@ -61,7 +61,7 @@ export default function ServiceCard({ service }: ServiceCardProps) {
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
             </svg>
           ),
-          text: 'Unbekannt'
+          text: 'Unknown'
         }
     }
   }
@@ -138,7 +138,7 @@ export default function ServiceCard({ service }: ServiceCardProps) {
   }
 
   const handleDelete = async () => {
-    if (window.confirm(`Service "${service.name}" wirklich löschen?`)) {
+    if (window.confirm(`Really delete service "${service.name}"?`)) {
       setIsLoading(true)
       try {
         await deleteService(service.service_id)
@@ -191,7 +191,7 @@ export default function ServiceCard({ service }: ServiceCardProps) {
               <button
                 onClick={handleCopyAddress}
                 className="flex-shrink-0 p-1 text-gray-400 hover:text-blue-600 transition-colors"
-                title="IP:Port kopieren"
+                title="Copy IP:Port"
               >
                 {copySuccess ? (
                   <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -227,9 +227,9 @@ export default function ServiceCard({ service }: ServiceCardProps) {
         
         {service.expires_at && (
           <div className="text-sm">
-            <span className="text-gray-500 font-medium">Läuft ab</span>
+            <span className="text-gray-500 font-medium">Expires</span>
             <p className="font-semibold text-gray-900">
-              {new Date(service.expires_at).toLocaleString('de-DE', {
+              {new Date(service.expires_at).toLocaleString('en-US', {
                 day: '2-digit',
                 month: '2-digit',
                 year: 'numeric',
