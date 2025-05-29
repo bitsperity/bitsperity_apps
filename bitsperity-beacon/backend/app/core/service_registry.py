@@ -193,7 +193,8 @@ class ServiceRegistry:
             # Update Cache
             self._services_cache[service_id] = service
             
-            logger.debug("Service TTL verlängert", service_id=service_id, expires_at=service.expires_at)
+            print(f"🔥 DEBUG: Service TTL extended! service_id={service_id}, expires_at={service.expires_at}")
+            logger.warning("🔥 MYSTERY: Service TTL verlängert", service_id=service_id, expires_at=service.expires_at)
             return service
             
         except Exception as e:
