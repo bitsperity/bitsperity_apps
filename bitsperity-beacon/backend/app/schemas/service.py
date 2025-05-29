@@ -74,6 +74,15 @@ class ServiceResponse(BaseModel):
     updated_at: datetime
     health_check_url: Optional[str]
     health_check_interval: Optional[int]
+    
+    # 🆕 ADD: Missing Health Check Fields
+    health_check_timeout: Optional[int] = None
+    health_check_retries: Optional[int] = None
+    last_health_check: Optional[datetime] = None
+    consecutive_health_failures: int = 0
+    health_check_enabled: bool = True
+    fallback_to_health_check: bool = True
+    
     mdns_service_type: Optional[str]
     
     class Config:
