@@ -31,10 +31,6 @@ fi
 echo "🎨 Baue Frontend..."
 npm run build
 
-# Build Backend
-echo "🔧 Prüfe Backend Dependencies..."
-npm ci --only=production
-
 # Build Multi-Platform Images
 echo "🔨 Baue Multi-Platform Docker Images..."
 

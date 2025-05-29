@@ -3,7 +3,7 @@ id: bitsperity-homegrow
 category: automation
 name: HomeGrow v3
 version: "3.0.0"
-icon: https://raw.githubusercontent.com/bitsperity/homegrow/main/static/logo.svg
+icon: https://raw.githubusercontent.com/bitsperity/bitsperity_apps/master/bitsperity-homegrow/applogo.svg
 tagline: Professional Hydroponic System Management with ESP32 Integration
 description: >-
   HomeGrow v3 is a comprehensive Umbrel app for managing hydroponic systems with 
