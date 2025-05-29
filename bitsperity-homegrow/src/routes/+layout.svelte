@@ -8,12 +8,14 @@
   import { themeStore } from '$lib/stores/theme.js';
   import { deviceStore } from '$lib/stores/device.js';
   import { notificationStore } from '$lib/stores/notification.js';
+  import { websocketStore, isConnected } from '$lib/stores/websocketStore.js';
   
   // Import components (will be created)
   import Navigation from '$lib/components/Navigation.svelte';
   import NotificationToast from '$lib/components/ui/NotificationToast.svelte';
   import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
   import ToastContainer from '$lib/components/ui/ToastContainer.svelte';
+  import ErrorBoundary from '$lib/components/ui/ErrorBoundary.svelte';
 
   let isLoading = true;
   let navigationOpen = false;
@@ -26,6 +28,9 @@
       // Initialize device store
       await deviceStore.initialize();
       
+      // Initialize WebSocket connection
+      websocketStore.connect();
+      
       // Register service worker for PWA
       if ('serviceWorker' in navigator) {
         try {
@@ -37,6 +42,11 @@
       }
 
       isLoading = false;
+      
+      // Cleanup on unmount
+      return () => {
+        websocketStore.disconnect();
+      };
     }
   });
 
@@ -97,6 +107,46 @@
 
       <!-- Toast Container -->
       <ToastContainer />
+
+      <!-- Mobile Header -->
+      <header class="mobile-header md:hidden">
+        <button 
+          class="menu-button"
+          on:click={() => navigationOpen = !navigationOpen}
+          aria-label="Navigation öffnen"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        
+        <h1 class="app-title">HomeGrow v3</h1>
+        
+        <div class="header-right">
+          <!-- WebSocket Connection Status -->
+          <div class="connection-indicator" class:connected={$isConnected} title={$isConnected ? 'Verbunden' : 'Getrennt'}>
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <circle cx="10" cy="10" r="3" />
+            </svg>
+          </div>
+          
+          <button 
+            class="theme-toggle"
+            on:click={themeStore.toggle}
+            aria-label="Theme wechseln"
+          >
+            {#if $themeStore.isDark}
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            {:else}
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            {/if}
+          </button>
+        </div>
+      </header>
     </div>
   {/if}
 </div>
@@ -178,5 +228,25 @@
   :global(.dark) .mobile-menu-button:hover {
     background: #374151;
     color: #d1d5db;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .connection-indicator {
+    display: flex;
+    align-items: center;
+    padding: 0.25rem;
+    color: var(--danger-500);
+    opacity: 0.7;
+    transition: all 0.3s ease;
+  }
+  
+  .connection-indicator.connected {
+    color: var(--success-500);
+    opacity: 1;
   }
 </style> 

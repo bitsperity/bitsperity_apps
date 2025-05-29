@@ -1,80 +1,96 @@
 manifestVersion: 1
 id: bitsperity-homegrow
-name: HomeGrow v3
-tagline: Professional Hydroponic System Management
-icon: https://raw.githubusercontent.com/bitsperity/homegrow/main/static/icon.svg
 category: automation
+name: HomeGrow v3
 version: "3.0.0"
-port: 3000
+icon: https://raw.githubusercontent.com/bitsperity/homegrow/main/static/logo.svg
+tagline: Professional Hydroponic System Management with ESP32 Integration
 description: >-
-  HomeGrow v3 ist eine professionelle Umbrel-App für die Verwaltung 
-  hydroponischer Systeme mit Arduino/ESP32-basierten Clients.
+  HomeGrow v3 is a comprehensive Umbrel app for managing hydroponic systems with 
+  Arduino/ESP32-based clients. Built for professional growers who demand reliable 
+  automation, real-time monitoring, and seamless hardware integration.
 
+  Perfect for indoor farming, greenhouse automation, and hydroponic enthusiasts who 
+  want to combine modern IoT technology with proven growing techniques.
 
-  🌱 **Automatische Service Discovery** - ESP32 Clients werden automatisch über Bitsperity Beacon erkannt
+  🌱 **Key Features:**
+  • Automatic Service Discovery - ESP32 clients detected via Bitsperity Beacon
+  • Mobile-First PWA Design - Optimized for smartphones and tablets with offline support
+  • Real-time Monitoring - Live sensor data (pH, TDS, temperature) with historical charts
+  • Intelligent Automation - Growth programs with phase-specific parameters
+  • Manual Control - Direct control of all 7 pumps per client with safety confirmations
+  • MQTT v3 Integration - Reliable communication with ESP32 hardware
+  • Professional Dashboard - System overview with device status and alerts
 
+  🔧 **Technical Highlights:**
+  • SvelteKit frontend for optimal performance and mobile experience
+  • MongoDB for scalable data storage with automatic TTL cleanup
+  • WebSocket integration for real-time updates and live monitoring
+  • Comprehensive REST API for third-party integrations
+  • Docker-based deployment with health monitoring
+  • Multi-device support with automatic client discovery
+  • Advanced program engine with sensor-based triggers
 
-  📱 **Mobile-First PWA** - Optimiert für Smartphone und Tablet mit Offline-Funktionalität
+  🚀 **Professional Features:**
+  • Emergency stop functionality for safety-critical operations
+  • Command history and status tracking for full audit trails
+  • Dark/Light mode support with user preference persistence
+  • Responsive design optimized for all device types
+  • Push notifications for critical system alerts
+  • Data export capabilities for analysis and reporting
 
+releaseNotes: >-
+  🎉 HomeGrow v3.0.0 - Complete Platform Rewrite
 
-  📊 **Real-time Monitoring** - Live Sensordaten (pH, TDS) mit historischen Charts
+  This major release establishes HomeGrow v3 as the definitive solution for 
+  professional hydroponic system management with modern IoT integration.
 
+  ✨ Revolutionary Features:
+  • Automatic Service Discovery through Bitsperity Beacon integration
+  • Mobile-first Progressive Web App with offline functionality
+  • Real-time WebSocket updates for instantaneous data streaming
+  • Advanced automation engine with intelligent program execution
+  • Comprehensive ESP32 client support with automatic detection
+  • Professional dashboard with system monitoring and analytics
 
-  🤖 **Intelligente Automation** - Wachstumsprogramme mit phasenspezifischen Parametern
+  🏗️ Technical Excellence:
+  • SvelteKit frontend architecture for superior performance
+  • MongoDB persistence with optimized indexing and TTL management
+  • MQTT v3 protocol implementation for reliable hardware communication
+  • Docker-containerized deployment with health checks
+  • RESTful API with comprehensive endpoint coverage
+  • WebSocket service for real-time bidirectional communication
 
+  📱 User Experience:
+  • Responsive design optimized for smartphones, tablets, and desktops
+  • Dark/Light mode support with system preference detection
+  • Offline-first PWA capabilities with background sync
+  • Push notification system for critical alerts
+  • Intuitive manual control interface with safety confirmations
 
-  🎛️ **Manuelle Steuerung** - Direkte Kontrolle aller 7 Pumpen pro Client
-
-
-  ⚡ **MQTT v3 Integration** - Zuverlässige Kommunikation mit ESP32 Hardware
-
-
-  🔧 **Professional Features** - Erweiterte Automation, Benachrichtigungen und System-Monitoring
+  🔄 Migration & Compatibility:
+  • Seamless upgrade path from HomeGrow v2 installations
+  • Backward compatibility with existing ESP32 client configurations
+  • Automatic database migration with data preservation
+  • Zero-downtime deployment process
 
 developer: Bitsperity
 website: https://bitsperity.com
-submitter: Bitsperity
-submission: https://github.com/bitsperity/homegrow
+dependencies:
+  - bitsperity-mongodb
+  - bitsperity-beacon
+  - mosquitto
 repo: https://github.com/bitsperity/homegrow
 support: https://github.com/bitsperity/homegrow/issues
+port: 3000
 gallery:
   - https://raw.githubusercontent.com/bitsperity/homegrow/main/docs/screenshots/dashboard.png
   - https://raw.githubusercontent.com/bitsperity/homegrow/main/docs/screenshots/devices.png
   - https://raw.githubusercontent.com/bitsperity/homegrow/main/docs/screenshots/monitoring.png
   - https://raw.githubusercontent.com/bitsperity/homegrow/main/docs/screenshots/programs.png
   - https://raw.githubusercontent.com/bitsperity/homegrow/main/docs/screenshots/manual.png
-
-releaseNotes: >-
-  HomeGrow v3.0.0 - Komplette Neuentwicklung
-  
-  🚀 Neue Features:
-  • Automatische Service Discovery über Bitsperity Beacon
-  • Mobile-first Progressive Web App Design
-  • Real-time WebSocket Updates
-  • Erweiterte Automation Engine
-  • Intelligente Wachstumsprogramme
-  • Umfassende API für Drittanbieter-Integration
-  
-  🔧 Technische Verbesserungen:
-  • SvelteKit Frontend für bessere Performance
-  • MongoDB für skalierbare Datenspeicherung
-  • MQTT v3 Protokoll für zuverlässige Kommunikation
-  • Docker-basierte Deployment
-  
-  📱 Benutzerfreundlichkeit:
-  • Responsive Design für alle Geräte
-  • Dark/Light Mode Support
-  • Offline-Funktionalität
-  • Push-Benachrichtigungen
-  
-  🔄 Migration:
-  • Automatische Migration von HomeGrow v2
-  • Backward-Kompatibilität für bestehende Setups
-  • Nahtloser Upgrade-Prozess
-
-dependencies:
-  - bitsperity-mongodb
-  - bitsperity-beacon
 path: ""
 defaultUsername: ""
-defaultPassword: "" 
+defaultPassword: ""
+submitter: Bitsperity
+submission: https://github.com/getumbrel/umbrel-apps 

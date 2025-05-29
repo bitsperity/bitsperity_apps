@@ -1,60 +1,66 @@
 {
-  "name": "HomeGrow v3",
+  "name": "HomeGrow v3 - Hydroponic Management",
   "short_name": "HomeGrow",
-  "description": "Professional Hydroponic System Management",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#ffffff",
+  "description": "Professional hydroponic system management with real-time monitoring and automation",
   "theme_color": "#3b82f6",
+  "background_color": "#ffffff",
+  "display": "standalone",
   "orientation": "portrait-primary",
   "scope": "/",
+  "start_url": "/",
   "lang": "de",
-  "categories": ["productivity", "utilities"],
+  "categories": ["productivity", "utilities", "lifestyle"],
   "icons": [
     {
-      "src": "/icons/icon-72x72.png",
+      "src": "/favicon.png",
+      "sizes": "48x48",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-72.png",
       "sizes": "72x72",
       "type": "image/png",
       "purpose": "maskable any"
     },
     {
-      "src": "/icons/icon-96x96.png",
+      "src": "/icons/icon-96.png",
       "sizes": "96x96",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
     },
     {
-      "src": "/icons/icon-128x128.png",
+      "src": "/icons/icon-128.png",
       "sizes": "128x128",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
     },
     {
-      "src": "/icons/icon-144x144.png",
+      "src": "/icons/icon-144.png",
       "sizes": "144x144",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
     },
     {
-      "src": "/icons/icon-152x152.png",
+      "src": "/icons/icon-152.png",
       "sizes": "152x152",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
     },
     {
-      "src": "/icons/icon-192x192.png",
+      "src": "/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable any"
     },
     {
-      "src": "/icons/icon-384x384.png",
+      "src": "/icons/icon-384.png",
       "sizes": "384x384",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
     },
     {
-      "src": "/icons/icon-512x512.png",
+      "src": "/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable any"
@@ -64,88 +70,70 @@
     {
       "name": "Dashboard",
       "short_name": "Dashboard",
-      "description": "System-Übersicht",
+      "description": "System-Übersicht und Geräte-Status",
       "url": "/",
       "icons": [
         {
           "src": "/icons/shortcut-dashboard.png",
-          "sizes": "96x96"
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Live Monitoring",
+      "short_name": "Monitoring",
+      "description": "Echtzeit-Sensordaten",
+      "url": "/monitoring",
+      "icons": [
+        {
+          "src": "/icons/shortcut-monitoring.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Manuelle Steuerung",
+      "short_name": "Steuerung",
+      "description": "Pumpen manuell steuern",
+      "url": "/manual",
+      "icons": [
+        {
+          "src": "/icons/shortcut-manual.png",
+          "sizes": "192x192"
         }
       ]
     },
     {
       "name": "Geräte",
       "short_name": "Geräte",
-      "description": "Device Management",
+      "description": "Geräte-Verwaltung",
       "url": "/devices",
       "icons": [
         {
           "src": "/icons/shortcut-devices.png",
-          "sizes": "96x96"
-        }
-      ]
-    },
-    {
-      "name": "Monitoring",
-      "short_name": "Monitor",
-      "description": "Live Sensordaten",
-      "url": "/monitoring",
-      "icons": [
-        {
-          "src": "/icons/shortcut-monitoring.png",
-          "sizes": "96x96"
-        }
-      ]
-    },
-    {
-      "name": "Manuell",
-      "short_name": "Manuell",
-      "description": "Manuelle Steuerung",
-      "url": "/manual",
-      "icons": [
-        {
-          "src": "/icons/shortcut-manual.png",
-          "sizes": "96x96"
+          "sizes": "192x192"
         }
       ]
     }
   ],
   "screenshots": [
     {
+      "src": "/screenshots/dashboard-mobile.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Dashboard auf Mobile"
+    },
+    {
       "src": "/screenshots/dashboard-desktop.png",
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "Dashboard Desktop View"
-    },
-    {
-      "src": "/screenshots/dashboard-mobile.png",
-      "sizes": "375x667",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Dashboard Mobile View"
-    },
-    {
-      "src": "/screenshots/monitoring-desktop.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Monitoring Desktop View"
-    },
-    {
-      "src": "/screenshots/monitoring-mobile.png",
-      "sizes": "375x667",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Monitoring Mobile View"
+      "label": "Dashboard auf Desktop"
     }
   ],
-  "related_applications": [],
   "prefer_related_applications": false,
   "edge_side_panel": {
-    "preferred_width": 400
-  },
-  "launch_handler": {
-    "client_mode": "navigate-existing"
+    "preferred_width": 480
   }
 } 

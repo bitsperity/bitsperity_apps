@@ -14,9 +14,11 @@ const DeviceRoutes = require('./routes/devices');
 const SensorRoutes = require('./routes/sensors');
 const ProgramRoutes = require('./routes/programs');
 const CommandRoutes = require('./routes/commands');
+const { DatabaseService } = require('./services/database');
+const WebSocketService = require('./services/websocket');
 
 // Global services
-let db, deviceModel, sensorDataModel, beaconClient, mqttBridge, programEngine;
+let db, deviceModel, sensorDataModel, beaconClient, mqttBridge, programEngine, databaseService, webSocketService;
 
 // Register plugins
 fastify.register(require('@fastify/static'), {
@@ -44,7 +46,7 @@ async function initializeServices() {
     sensorDataModel = new SensorDataModel(db);
     
     // Initialize Beacon Service Discovery
-    beaconClient = new BeaconServiceDiscovery(process.env.BEACON_URL);
+    beaconClient = new BeaconServiceDiscovery(process.env.BEACON_URL || 'http://bitsperity-beacon:8097');
     await beaconClient.initialize();
     
     // Initialize MQTT Bridge
@@ -60,6 +62,12 @@ async function initializeServices() {
     programEngine = ProgramEngine;
     await programEngine.initialize(mqttBridge);
     programEngine.start();
+    
+    // Initialize Database Service
+    databaseService = new DatabaseService();
+    
+    // Initialize WebSocket Service
+    webSocketService = new WebSocketService();
     
     // Setup event listeners
     setupEventListeners();
@@ -91,6 +99,9 @@ function setupEventListeners() {
         await mqttBridge.subscribeToDevice(deviceInfo.device_id);
         
         console.log(`✅ Auto-registered device: ${deviceInfo.device_id}`);
+        
+        // Broadcast to WebSocket clients
+        webSocketService.broadcastDeviceDiscovered(deviceInfo);
       } catch (error) {
         console.error(`❌ Failed to auto-register device ${deviceInfo.device_id}:`, error);
       }
@@ -100,33 +111,60 @@ function setupEventListeners() {
   beaconClient.on('device_removed', async (deviceInfo) => {
     console.log(`📤 Device removed from Beacon: ${deviceInfo.device_id}`);
     await deviceModel.updateStatus(deviceInfo.device_id, 'offline');
+    
+    // Broadcast status update
+    webSocketService.broadcastDeviceStatus(deviceInfo.device_id, 'offline');
   });
 
   // MQTT events
   mqttBridge.on('sensor_data', (data) => {
-    // Real-time sensor data received - could broadcast via WebSocket
+    // Real-time sensor data received - broadcast via WebSocket
     console.log(`📊 Real-time sensor data: ${data.device_id}/${data.sensor_type}`);
+    
+    // Broadcast to WebSocket clients
+    webSocketService.broadcastSensorData(data.device_id, data.sensor_type, data.data);
     
     // Trigger sensor-based programs
     if (programEngine) {
-      programEngine.handleSensorTrigger(data.device_id, data.sensor_type, data.values.calibrated);
+      programEngine.handleSensorTrigger(data.device_id, data.sensor_type, data.data.values.calibrated);
     }
   });
 
   mqttBridge.on('device_heartbeat', async (data) => {
     // Device heartbeat received
     await deviceModel.updateStatus(data.device_id, 'online');
+    
+    // Broadcast status update
+    webSocketService.broadcastDeviceStatus(data.device_id, 'online');
   });
 
-  mqttBridge.on('commandResponse', async (commandResponse) => {
-    // Command response received from device
-    try {
-      await Command.updateResponse(commandResponse.commandId, commandResponse);
-      console.log(`✅ Command response processed: ${commandResponse.commandId}`);
-    } catch (error) {
-      console.error('❌ Error processing command response:', error);
-    }
+  mqttBridge.on('device_status', (data) => {
+    // Device status changed - broadcast via WebSocket
+    webSocketService.broadcastDeviceStatus(data.device_id, data.status);
   });
+
+  mqttBridge.on('command_response', (data) => {
+    // Command response received - broadcast via WebSocket
+    webSocketService.broadcastCommandResponse(data.device_id, data.command_id, data.response);
+  });
+  
+  // Program Engine events
+  if (programEngine) {
+    programEngine.on('program_started', (program) => {
+      console.log(`▶️ Program started: ${program.name}`);
+      webSocketService.broadcastProgramUpdate(program._id, { status: 'started' });
+    });
+    
+    programEngine.on('program_completed', (program) => {
+      console.log(`✅ Program completed: ${program.name}`);
+      webSocketService.broadcastProgramUpdate(program._id, { status: 'completed' });
+    });
+    
+    programEngine.on('program_error', (program, error) => {
+      console.error(`❌ Program error: ${program.name}`, error);
+      webSocketService.broadcastProgramUpdate(program._id, { status: 'error', error: error.message });
+    });
+  }
 
   // Periodic cleanup of stale devices
   setInterval(async () => {
@@ -169,35 +207,25 @@ fastify.get('/api/health', async (request, reply) => {
 });
 
 fastify.get('/api/v1/system/status', async (request, reply) => {
-  try {
-    const deviceCount = await deviceModel.findAll();
-    const onlineDevices = await deviceModel.getOnlineDevices();
-    
-    return {
-      success: true,
-      system: {
-        version: '3.0.0',
-        uptime: process.uptime(),
-        memory_usage: process.memoryUsage(),
-        devices: {
-          total: deviceCount.length,
-          online: onlineDevices.length,
-          offline: deviceCount.length - onlineDevices.length
-        },
-        services: {
-          database: 'connected',
-          mqtt: mqttBridge.getConnectionStatus(),
-          beacon: beaconClient.getStatus()
-        }
-      },
-      timestamp: new Date()
-    };
-  } catch (error) {
-    return reply.status(500).send({
-      success: false,
-      error: error.message
-    });
-  }
+  const status = {
+    server: 'running',
+    version: '3.0.0',
+    uptime: process.uptime(),
+    timestamp: new Date(),
+    services: {
+      database: databaseService.getStatus(),
+      mqtt: mqttBridge ? mqttBridge.getConnectionStatus() : { connected: false },
+      beacon: beaconClient.getStatus(),
+      websocket: webSocketService.getStatus(),
+      program_engine: programEngine ? programEngine.getStatus() : { running: false }
+    },
+    memory: {
+      used: process.memoryUsage().heapUsed / 1024 / 1024,
+      total: process.memoryUsage().heapTotal / 1024 / 1024
+    }
+  };
+  
+  return reply.send(status);
 });
 
 // Register API routes after services are initialized
@@ -235,24 +263,7 @@ fastify.register(async function (fastify) {
 // WebSocket endpoint for real-time updates
 fastify.register(async function (fastify) {
   fastify.get('/ws', { websocket: true }, (connection, req) => {
-    console.log('🔌 WebSocket client connected');
-    
-    connection.socket.on('message', message => {
-      try {
-        const data = JSON.parse(message);
-        
-        if (data.type === 'subscribe_device') {
-          // Subscribe to device updates
-          console.log(`📡 Client subscribed to device: ${data.device_id}`);
-        }
-      } catch (error) {
-        console.error('❌ WebSocket message error:', error);
-      }
-    });
-    
-    connection.socket.on('close', () => {
-      console.log('📴 WebSocket client disconnected');
-    });
+    webSocketService.handleConnection(connection, req);
   });
 });
 

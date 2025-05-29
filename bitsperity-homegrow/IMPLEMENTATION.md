@@ -2,7 +2,28 @@
 
 ## Übersicht
 
-Dieses Dokument definiert den detaillierten Implementierungsplan für HomeGrow v3 - eine professionelle Umbrel-App für hydroponische Systeme mit Arduino/ESP32-basierten Clients und Bitsperity Beacon Service Discovery.
+Dieses Dokument definiert den detaillierten Implementierungsplan für HomeGrow v3 - eine professionelle Umbrel-App für hydroponische Systeme mit Arduino/ESP32-basierten Clients. Die App nutzt die Umbrel-Infrastruktur mit Eclipse Mosquitto (MQTT), Bitsperity MongoDB und Bitsperity Beacon für Service Discovery.
+
+## Externe Umbrel App Dependencies
+
+HomeGrow v3 nutzt folgende Umbrel Apps:
+
+### 1. Eclipse Mosquitto (MQTT Broker)
+- **App ID**: `mosquitto`
+- **Interne Verbindung**: `mqtt://mosquitto:1883`
+- **Web-Interface**: Port 9021
+- **Konfiguration**: Keine Authentifizierung für lokale Nutzung
+
+### 2. Bitsperity MongoDB
+- **App ID**: `bitsperity-mongodb`
+- **Connection String**: `mongodb://umbrel:umbrel@bitsperity-mongodb:27017/homegrow`
+- **Persistente Datenspeicherung**: Automatisch durch Umbrel verwaltet
+
+### 3. Bitsperity Beacon (Service Discovery)
+- **App ID**: `bitsperity-beacon`
+- **API URL**: `http://bitsperity-beacon:8097`
+- **mDNS/Bonjour**: Automatische ESP32-Client-Erkennung
+- **WebSocket**: Real-time Updates für neue Geräte
 
 ## Projektstruktur
 
@@ -170,15 +191,18 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - MONGODB_URL=mongodb://bitsperity-mongodb:27017/homegrow
-      - MQTT_URL=mqtt://umbrel-mqtt:1883
-      - BEACON_URL=http://bitsperity-beacon:8080
+      - MONGODB_URL=mongodb://umbrel:umbrel@bitsperity-mongodb:27017/homegrow
+      - MQTT_URL=mqtt://mosquitto:1883
+      - BEACON_URL=http://bitsperity-beacon:8097
     depends_on:
       - bitsperity-mongodb
       - bitsperity-beacon
+      - mosquitto
     volumes:
       - ./data:/app/data
     restart: unless-stopped
+    networks:
+      - umbrel
 ```
 
 **Umbrel App Konfiguration:**
@@ -195,9 +219,17 @@ port: 3000
 description: >-
   HomeGrow v3 ist eine professionelle Umbrel-App für die Verwaltung 
   hydroponischer Systeme mit Arduino/ESP32-basierten Clients.
+  
+  Features:
+  - Automatische Geräteerkennung via Bitsperity Beacon
+  - MQTT-basierte Kommunikation über Eclipse Mosquitto
+  - Persistente Datenspeicherung mit MongoDB
+  - Real-time Monitoring und Steuerung
+  - Mobile-optimierte Web-Oberfläche
 dependencies:
   - bitsperity-mongodb
   - bitsperity-beacon
+  - mosquitto
 path: ""
 defaultUsername: ""
 defaultPassword: ""
@@ -209,9 +241,10 @@ gallery:
   - https://raw.githubusercontent.com/bitsperity/homegrow/main/docs/screenshots/dashboard.png
   - https://raw.githubusercontent.com/bitsperity/homegrow/main/docs/screenshots/monitoring.png
 releaseNotes: >-
-  HomeGrow v3 bringt eine komplett überarbeitete Benutzeroberfläche,
-  automatische Service Discovery über Bitsperity Beacon und erweiterte
-  Automation-Features.
+  HomeGrow v3 nutzt jetzt die Umbrel-Infrastruktur optimal:
+  - Eclipse Mosquitto für MQTT-Kommunikation
+  - Bitsperity MongoDB für Datenspeicherung
+  - Bitsperity Beacon für Service Discovery
 ```
 
 ### 1.2 Entwicklungsumgebung
@@ -222,73 +255,91 @@ releaseNotes: >-
 - [ ] Vitest für Unit Testing
 - [ ] Playwright für E2E Testing
 - [ ] GitHub Actions für CI/CD
+- [ ] Lokale Umbrel App Dependencies für Entwicklung
 
-**Konfigurationsdateien:**
-```javascript
-// svelte.config.js
-import adapter from '@sveltejs/adapter-node';
-import { vitePreprocess } from '@sveltejs/kit/vite';
+**Lokale Entwicklung mit Umbrel Apps:**
+```bash
+# .env.development
+MONGODB_URL=mongodb://umbrel:umbrel@localhost:27017/homegrow
+MQTT_URL=mqtt://localhost:1883
+BEACON_URL=http://localhost:8097
 
-export default {
-  preprocess: vitePreprocess(),
-  kit: {
-    adapter: adapter(),
-    alias: {
-      $lib: 'src/lib',
-      $components: 'src/lib/components',
-      $stores: 'src/lib/stores',
-      $utils: 'src/lib/utils',
-      $types: 'src/lib/types'
-    }
-  }
-};
-```
-
-```javascript
-// tailwind.config.js
-export default {
-  content: ['./src/**/*.{html,js,svelte,ts}'],
-  theme: {
-    extend: {
-      colors: {
-        primary: {
-          50: '#f0f9ff',
-          500: '#3b82f6',
-          900: '#1e3a8a'
-        },
-        success: {
-          50: '#f0fdf4',
-          500: '#22c55e',
-          900: '#14532d'
-        },
-        warning: {
-          50: '#fffbeb',
-          500: '#f59e0b',
-          900: '#78350f'
-        },
-        danger: {
-          50: '#fef2f2',
-          500: '#ef4444',
-          900: '#7f1d1d'
-        }
-      }
-    }
-  },
-  plugins: []
-};
+# Für Entwicklung: Port-Forwarding zu Umbrel Apps
+# ssh umbrel@umbrel.local -L 27017:bitsperity-mongodb:27017 -L 1883:mosquitto:1883 -L 8097:bitsperity-beacon:8097
 ```
 
 ## Phase 2: Backend Services Development (Woche 3-6)
 
 ### 2.1 Database Models & Schema
 
-**Aufgaben:**
-- [ ] MongoDB Connection Setup
-- [ ] Device Model Implementation
-- [ ] Sensor Data Model mit Time-Series Optimierung
-- [ ] Command Model mit Status Tracking
-- [ ] Program Model mit Phase Management
-- [ ] User Model mit Role-Based Access
+**MongoDB Konfiguration:**
+```javascript
+// server/config/database.js
+const { MongoClient } = require('mongodb');
+
+class Database {
+  constructor() {
+    // Nutze Bitsperity MongoDB von Umbrel
+    this.url = process.env.MONGODB_URL || 'mongodb://umbrel:umbrel@bitsperity-mongodb:27017/homegrow';
+    this.client = null;
+    this.db = null;
+  }
+
+  async connect() {
+    try {
+      this.client = new MongoClient(this.url, {
+        useUnifiedTopology: true,
+        useNewUrlParser: true,
+        maxPoolSize: 10,
+        minPoolSize: 2
+      });
+
+      await this.client.connect();
+      this.db = this.client.db('homegrow');
+      
+      console.log('Connected to Bitsperity MongoDB on Umbrel');
+      
+      // Erstelle Indizes
+      await this.createIndexes();
+      
+      return this.db;
+    } catch (error) {
+      console.error('MongoDB connection failed:', error);
+      throw error;
+    }
+  }
+
+  async createIndexes() {
+    // Device indexes
+    await this.db.collection('devices').createIndex({ device_id: 1 }, { unique: true });
+    await this.db.collection('devices').createIndex({ status: 1 });
+    await this.db.collection('devices').createIndex({ 'beacon.service_id': 1 });
+    
+    // Sensor data indexes mit TTL für automatische Bereinigung
+    await this.db.collection('sensor_data').createIndex(
+      { device_id: 1, sensor_type: 1, timestamp: -1 }
+    );
+    await this.db.collection('sensor_data').createIndex(
+      { timestamp: 1 }, 
+      { expireAfterSeconds: 30 * 24 * 60 * 60 } // 30 Tage
+    );
+    
+    console.log('Database indexes created');
+  }
+
+  getDb() {
+    return this.db;
+  }
+
+  async disconnect() {
+    if (this.client) {
+      await this.client.close();
+    }
+  }
+}
+
+module.exports = new Database();
+```
 
 **Device Model:**
 ```javascript
@@ -557,7 +608,7 @@ const EventEmitter = require('events');
 const WebSocket = require('ws');
 
 class BeaconServiceDiscovery extends EventEmitter {
-  constructor(beaconUrl = 'http://bitsperity-beacon:8080') {
+  constructor(beaconUrl = 'http://bitsperity-beacon:8097') {
     super();
     this.beaconUrl = beaconUrl;
     this.serviceId = null;
@@ -810,23 +861,17 @@ module.exports = BeaconServiceDiscovery;
 
 ### 2.3 MQTT Bridge Service
 
-**Aufgaben:**
-- [ ] MQTT Client Setup mit Reconnection Logic
-- [ ] Topic Subscription Management
-- [ ] Message Parsing & Validation
-- [ ] Database Integration für Sensor Data
-- [ ] Command Publishing & Response Handling
-
-**MQTT Bridge Implementation:**
+**MQTT Bridge mit Umbrel Mosquitto:**
 ```javascript
 // server/services/mqtt-bridge.js
 const mqtt = require('mqtt');
 const EventEmitter = require('events');
 
 class MQTTBridge extends EventEmitter {
-  constructor(mqttUrl, deviceModel, sensorDataModel, commandModel) {
+  constructor(deviceModel, sensorDataModel, commandModel) {
     super();
-    this.mqttUrl = mqttUrl;
+    // Verwende Umbrel Mosquitto
+    this.mqttUrl = process.env.MQTT_URL || 'mqtt://mosquitto:1883';
     this.client = null;
     this.deviceModel = deviceModel;
     this.sensorDataModel = sensorDataModel;
@@ -838,16 +883,21 @@ class MQTTBridge extends EventEmitter {
 
   async connect() {
     return new Promise((resolve, reject) => {
+      console.log('Connecting to Umbrel Mosquitto at:', this.mqttUrl);
+      
       this.client = mqtt.connect(this.mqttUrl, {
         clientId: `homegrow-server-${Date.now()}`,
         clean: true,
         connectTimeout: 30000,
         reconnectPeriod: 5000,
-        keepalive: 60
+        keepalive: 60,
+        // Keine Authentifizierung für lokale Umbrel Nutzung
+        username: undefined,
+        password: undefined
       });
 
       this.client.on('connect', () => {
-        console.log('Connected to MQTT broker');
+        console.log('Connected to Umbrel Mosquitto MQTT broker');
         this.reconnectAttempts = 0;
         this.subscribeToTopics();
         resolve();
@@ -855,6 +905,9 @@ class MQTTBridge extends EventEmitter {
 
       this.client.on('error', (error) => {
         console.error('MQTT connection error:', error);
+        if (error.code === 'ECONNREFUSED') {
+          console.error('Cannot connect to Mosquitto. Ensure the Mosquitto app is running on Umbrel.');
+        }
         reject(error);
       });
 
@@ -2780,6 +2833,463 @@ test.describe('Real-time Updates', () => {
     await expect(page.locator('[data-testid="ph-value"]')).toContainText('6.5');
   });
 });
+```
+
+## ESP32 Client Konfiguration
+
+### MQTT Verbindung zu Umbrel
+
+Die ESP32 Clients müssen konfiguriert werden, um sich mit dem Umbrel Mosquitto zu verbinden:
+
+```cpp
+// ESP32 Client Konfiguration
+#define MQTT_SERVER "umbrel.local"  // oder IP-Adresse des Umbrel
+#define MQTT_PORT 1883
+#define MQTT_CLIENT_ID "homegrow-client-001"
+
+// Keine Authentifizierung für lokale Nutzung
+#define MQTT_USER ""
+#define MQTT_PASS ""
+
+// Topics
+#define TOPIC_SENSORS "homegrow/devices/001/sensors"
+#define TOPIC_COMMANDS "homegrow/devices/001/commands"
+#define TOPIC_HEARTBEAT "homegrow/devices/001/heartbeat"
+```
+
+### Beacon Service Discovery
+
+Die ESP32 Clients registrieren sich automatisch beim Bitsperity Beacon:
+
+```cpp
+// Beacon Registration
+void registerWithBeacon() {
+  HTTPClient http;
+  http.begin("http://umbrel.local:8097/api/v1/services/register");
+  http.addHeader("Content-Type", "application/json");
+  
+  String json = R"({
+    "name": "homegrow-client-001",
+    "type": "iot",
+    "host": ")" + WiFi.localIP().toString() + R"(",
+    "port": 80,
+    "protocol": "http",
+    "tags": ["homegrow", "esp32", "hydroponics"],
+    "metadata": {
+      "device_id": "001",
+      "firmware": "3.0.0",
+      "sensors": ["ph", "tds", "temperature"]
+    },
+    "ttl": 300,
+    "health_check_url": "http://)" + WiFi.localIP().toString() + R"(:80/health"
+  })";
+  
+  int httpCode = http.POST(json);
+  if (httpCode == 201) {
+    Serial.println("Successfully registered with Beacon");
+  }
+  http.end();
+}
+```
+
+### Vollständige ESP32 Setup-Anleitung
+
+```cpp
+// HomegrowClient.ino
+#include <WiFi.h>
+#include <PubSubClient.h>
+#include <HTTPClient.h>
+#include <ArduinoJson.h>
+
+// WiFi Konfiguration
+const char* ssid = "YOUR_WIFI_SSID";
+const char* password = "YOUR_WIFI_PASSWORD";
+
+// Umbrel Server Konfiguration
+const char* mqtt_server = "umbrel.local";
+const int mqtt_port = 1883;
+const char* beacon_url = "http://umbrel.local:8097";
+
+// Device Konfiguration
+const char* device_id = "001";
+String mqtt_client_id = "homegrow-client-" + String(device_id);
+
+// MQTT Topics
+String topic_sensors = "homegrow/devices/" + String(device_id) + "/sensors";
+String topic_commands = "homegrow/devices/" + String(device_id) + "/commands";
+String topic_heartbeat = "homegrow/devices/" + String(device_id) + "/heartbeat";
+
+WiFiClient espClient;
+PubSubClient mqtt(espClient);
+
+void setup() {
+  Serial.begin(115200);
+  
+  // WiFi verbinden
+  setupWiFi();
+  
+  // MQTT konfigurieren
+  mqtt.setServer(mqtt_server, mqtt_port);
+  mqtt.setCallback(mqttCallback);
+  
+  // Bei Beacon registrieren
+  registerWithBeacon();
+  
+  // MQTT verbinden
+  reconnectMQTT();
+}
+
+void loop() {
+  if (!mqtt.connected()) {
+    reconnectMQTT();
+  }
+  mqtt.loop();
+  
+  // Sensordaten senden
+  static unsigned long lastSensorRead = 0;
+  if (millis() - lastSensorRead > 10000) { // Alle 10 Sekunden
+    sendSensorData();
+    lastSensorRead = millis();
+  }
+  
+  // Heartbeat senden
+  static unsigned long lastHeartbeat = 0;
+  if (millis() - lastHeartbeat > 60000) { // Jede Minute
+    sendHeartbeat();
+    lastHeartbeat = millis();
+  }
+}
+
+void setupWiFi() {
+  delay(10);
+  Serial.println();
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
+  
+  WiFi.begin(ssid, password);
+  
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+}
+
+void reconnectMQTT() {
+  while (!mqtt.connected()) {
+    Serial.print("Attempting MQTT connection...");
+    
+    if (mqtt.connect(mqtt_client_id.c_str())) {
+      Serial.println("connected");
+      
+      // Commands Topic abonnieren
+      mqtt.subscribe(topic_commands.c_str());
+      Serial.print("Subscribed to: ");
+      Serial.println(topic_commands);
+      
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(mqtt.state());
+      Serial.println(" try again in 5 seconds");
+      delay(5000);
+    }
+  }
+}
+
+void mqttCallback(char* topic, byte* payload, unsigned int length) {
+  // Command verarbeiten
+  StaticJsonDocument<512> doc;
+  DeserializationError error = deserializeJson(doc, payload, length);
+  
+  if (error) {
+    Serial.print("deserializeJson() failed: ");
+    Serial.println(error.c_str());
+    return;
+  }
+  
+  const char* command = doc["command"];
+  JsonObject params = doc["params"];
+  
+  Serial.print("Command received: ");
+  Serial.println(command);
+  
+  // Command ausführen
+  if (strcmp(command, "activate_pump") == 0) {
+    const char* pump_type = params["pump_type"];
+    int duration = params["duration"];
+    activatePump(pump_type, duration);
+  }
+  // Weitere Commands...
+}
+
+void sendSensorData() {
+  // Sensoren lesen (Beispiel)
+  float ph = readPH();
+  float tds = readTDS();
+  float temperature = readTemperature();
+  
+  // JSON erstellen
+  StaticJsonDocument<256> doc;
+  doc["timestamp"] = millis();
+  doc["ph"] = ph;
+  doc["tds"] = tds;
+  doc["temperature"] = temperature;
+  
+  char buffer[256];
+  serializeJson(doc, buffer);
+  
+  // Über MQTT senden
+  mqtt.publish((topic_sensors + "/ph").c_str(), buffer);
+  mqtt.publish((topic_sensors + "/tds").c_str(), buffer);
+  mqtt.publish((topic_sensors + "/temperature").c_str(), buffer);
+}
+
+void sendHeartbeat() {
+  StaticJsonDocument<256> doc;
+  doc["timestamp"] = millis();
+  doc["uptime"] = millis() / 1000;
+  doc["free_heap"] = ESP.getFreeHeap();
+  doc["wifi_rssi"] = WiFi.RSSI();
+  
+  char buffer[256];
+  serializeJson(doc, buffer);
+  
+  mqtt.publish(topic_heartbeat.c_str(), buffer);
+}
+```
+
+## Entwicklungs-Setup
+
+### Voraussetzungen
+
+1. **Umbrel Installation** mit folgenden Apps:
+   - Eclipse Mosquitto
+   - Bitsperity MongoDB  
+   - Bitsperity Beacon
+
+2. **Entwicklungsumgebung**:
+   ```bash
+   # Port-Forwarding für lokale Entwicklung
+   ssh umbrel@umbrel.local -L 27017:bitsperity-mongodb:27017 \
+                            -L 1883:mosquitto:1883 \
+                            -L 8097:bitsperity-beacon:8097
+   ```
+
+3. **Environment Variables**:
+   ```bash
+   # .env.local
+   MONGODB_URL=mongodb://umbrel:umbrel@localhost:27017/homegrow
+   MQTT_URL=mqtt://localhost:1883
+   BEACON_URL=http://localhost:8097
+   ```
+
+### Test der Verbindungen
+
+```bash
+# Test MongoDB Verbindung
+mongosh "mongodb://umbrel:umbrel@localhost:27017/homegrow" --eval "db.stats()"
+
+# Test MQTT Verbindung (mit mosquitto-clients)
+mosquitto_sub -h localhost -p 1883 -t "homegrow/#" -v
+
+# Test Beacon API
+curl http://localhost:8097/api/v1/health
+```
+
+### Lokale Entwicklung
+
+```bash
+# 1. Repository klonen
+git clone https://github.com/bitsperity/homegrow.git
+cd homegrow
+
+# 2. Dependencies installieren
+npm install
+
+# 3. Environment konfigurieren
+cp .env.example .env.local
+# .env.local editieren mit korrekten Umbrel URLs
+
+# 4. Entwicklungsserver starten
+npm run dev
+
+# 5. In separatem Terminal: Backend starten
+npm run server:dev
+```
+
+### Debugging mit MQTT
+
+```bash
+# MQTT Messages monitoren
+mosquitto_sub -h umbrel.local -p 1883 -t "homegrow/#" -v
+
+# Test-Message senden
+mosquitto_pub -h umbrel.local -p 1883 -t "homegrow/devices/test/sensors/ph" \
+  -m '{"timestamp":"2024-01-01T12:00:00Z","values":{"raw":650,"calibrated":6.5,"filtered":6.5},"unit":"pH"}'
+
+# Alle HomeGrow Topics anzeigen
+mosquitto_sub -h umbrel.local -p 1883 -t "homegrow/+/+/+" -v
+```
+
+## Deployment
+
+### Docker Build
+
+```dockerfile
+# Dockerfile
+FROM node:18-alpine AS builder
+
+WORKDIR /app
+
+# Dependencies installieren
+COPY package*.json ./
+RUN npm ci
+
+# App bauen
+COPY . .
+RUN npm run build
+
+# Production Image
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Production dependencies
+COPY package*.json ./
+RUN npm ci --only=production
+
+# App files kopieren
+COPY --from=builder /app/build ./build
+COPY --from=builder /app/server ./server
+COPY --from=builder /app/static ./static
+
+# Port freigeben
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000/api/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"
+
+# App starten
+CMD ["node", "server/index.js"]
+```
+
+### Umbrel Integration
+
+Die App wird automatisch mit den Umbrel Dependencies verknüpft:
+
+```yaml
+# docker-compose.yml (generiert von Umbrel)
+services:
+  bitsperity-homegrow:
+    image: bitsperity/homegrow:3.0.0
+    container_name: bitsperity-homegrow
+    restart: unless-stopped
+    stop_grace_period: 1m
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URL=mongodb://umbrel:umbrel@bitsperity-mongodb:27017/homegrow
+      - MQTT_URL=mqtt://mosquitto:1883  
+      - BEACON_URL=http://bitsperity-beacon:8097
+    depends_on:
+      - bitsperity-mongodb
+      - bitsperity-beacon
+      - mosquitto
+    networks:
+      - umbrel
+    volumes:
+      - ${APP_DATA_DIR}/data:/app/data
+      - ${APP_DATA_DIR}/logs:/app/logs
+```
+
+### App Installation auf Umbrel
+
+1. **Via Umbrel App Store** (empfohlen):
+   - In Umbrel einloggen
+   - App Store öffnen
+   - Nach "HomeGrow" suchen
+   - "Install" klicken
+
+2. **Manuelle Installation**:
+   ```bash
+   # SSH zu Umbrel
+   ssh umbrel@umbrel.local
+   
+   # App Repository hinzufügen
+   cd ~/umbrel/app-data
+   git clone https://github.com/bitsperity/bitsperity_apps.git
+   
+   # App installieren
+   ~/umbrel/scripts/app install bitsperity-homegrow
+   ```
+
+### Konfiguration nach Installation
+
+1. **ESP32 Clients konfigurieren**:
+   - MQTT Server auf `umbrel.local` setzen
+   - Port 1883 für MQTT verwenden
+   - Beacon URL: `http://umbrel.local:8097`
+
+2. **Erste Schritte**:
+   - HomeGrow Dashboard öffnen: `http://umbrel.local:3000`
+   - Auf "Geräte entdecken" klicken
+   - ESP32 Clients werden automatisch erkannt
+
+3. **Monitoring einrichten**:
+   - Sensordaten werden automatisch gespeichert
+   - Charts zeigen historische Daten
+   - Alerts können konfiguriert werden
+
+### Production Optimierungen
+
+```javascript
+// server/config/production.js
+module.exports = {
+  // MongoDB Konfiguration
+  mongodb: {
+    url: process.env.MONGODB_URL,
+    options: {
+      maxPoolSize: 20,
+      minPoolSize: 5,
+      maxIdleTimeMS: 30000,
+      compressors: ['snappy', 'zlib']
+    }
+  },
+  
+  // MQTT Konfiguration
+  mqtt: {
+    url: process.env.MQTT_URL,
+    options: {
+      clean: true,
+      keepalive: 60,
+      reconnectPeriod: 5000,
+      connectTimeout: 30000,
+      qos: 1
+    }
+  },
+  
+  // Beacon Konfiguration
+  beacon: {
+    url: process.env.BEACON_URL,
+    healthCheckInterval: 60000,
+    retryAttempts: 3,
+    retryDelay: 5000
+  },
+  
+  // Logging
+  logging: {
+    level: 'info',
+    format: 'json',
+    maxFiles: 10,
+    maxSize: '10m'
+  }
+};
 ```
 
 ## Phase 5: Migration & Deployment (Woche 15-16)
