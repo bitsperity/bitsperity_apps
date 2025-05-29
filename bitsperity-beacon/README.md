@@ -71,7 +71,7 @@ services:
       "
 ```
 
-```bash
+   ```bash
 #!/bin/bash
 # register-service.sh
 set -e
@@ -113,7 +113,7 @@ echo $SERVICE_ID > /tmp/beacon_service_id
 - **Reliable**: Works even if your app crashes
 - **Smart TTL**: Automatic TTL extension based on health status
 
-```bash
+   ```bash
 # Register with health checks
 curl -X POST http://beacon.local:8097/api/v1/services/register \
   -H "Content-Type: application/json" \
@@ -131,7 +131,7 @@ curl -X POST http://beacon.local:8097/api/v1/services/register \
 - **Custom Logic**: Implement your own health logic
 - **Lightweight**: Minimal overhead
 
-```bash
+   ```bash
 # Register without health checks
 curl -X POST http://beacon.local:8097/api/v1/services/register \
   -H "Content-Type: application/json" \
@@ -275,7 +275,7 @@ for container in $(docker ps --format "table {{.Names}}" --filter "label=beacon.
   fi
   
   curl -X POST http://beacon.local:8097/api/v1/services/register \
-    -H "Content-Type: application/json" \
+  -H "Content-Type: application/json" \
     -d "{
       \"name\": \"$NAME\",
       \"type\": \"$TYPE\", 
@@ -1015,7 +1015,7 @@ private:
         
         String json = R"({
             "name": "esp32-sensor",
-            "type": "iot",
+    "type": "iot",
             "host": ")" + WiFi.localIP().toString() + R"(",
             "port": 80,
             "protocol": "http",

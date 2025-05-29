@@ -81,7 +81,7 @@ class AvahiMDNSServer(MDNSServerBase):
         try:
             # Erstelle Service Name
             service_name = f"{service.name}"
-            service_type = f"_{service.type}._tcp"
+            service_type = service.mdns_service_type
             
             # Erstelle TXT Records (als zusätzliche Argumente, nicht --txt)
             txt_records = service.get_mdns_txt_records()

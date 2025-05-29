@@ -17,17 +17,42 @@ logger = structlog.get_logger(__name__)
 
 
 def prepare_service_doc(doc: dict) -> dict:
-    """Bereite Service-Dokument aus der DB für Pydantic-Validierung vor"""
-    if doc is None:
-        return None
+    """Bereite Service Document für Pydantic Model vor"""
+    # Convert MongoDB _id to string if present
+    if "_id" in doc:
+        doc["_id"] = str(doc["_id"])
     
-    # Erstelle eine Kopie des Dokuments
-    prepared_doc = doc.copy()
+    # Ensure expires_at is datetime object for comparison
+    if "expires_at" in doc and isinstance(doc["expires_at"], str):
+        doc["expires_at"] = datetime.fromisoformat(doc["expires_at"].replace('Z', '+00:00'))
     
-    # Entferne _id Feld, da es nicht Teil des Service-Models ist
-    prepared_doc.pop("_id", None)
+    # Ensure last_heartbeat is datetime object if present
+    if "last_heartbeat" in doc and isinstance(doc["last_heartbeat"], str):
+        doc["last_heartbeat"] = datetime.fromisoformat(doc["last_heartbeat"].replace('Z', '+00:00'))
     
-    return prepared_doc
+    # FIX: Recalculate mdns_service_type for legacy services that may have wrong values
+    if "type" in doc:
+        service_type = doc["type"].lower()
+        
+        # Standard mDNS Service Type Mappings (same as in Service model)
+        type_mappings = {
+            'mqtt': '_mqtt._tcp',
+            'http': '_http._tcp',
+            'https': '_https._tcp',
+            'iot': '_iot._tcp',
+            'api': '_http._tcp',
+            'web': '_http._tcp',
+            'database': '_db._tcp',
+            'cache': '_cache._tcp',
+            'message_queue': '_mq._tcp'
+        }
+        
+        correct_mdns_type = type_mappings.get(service_type, f'_{service_type}._tcp')
+        
+        # Always set the correct mdns_service_type (overwrites any legacy wrong values)
+        doc["mdns_service_type"] = correct_mdns_type
+    
+    return doc
 
 
 class ServiceRegistry:
@@ -193,6 +218,19 @@ class ServiceRegistry:
             # Update Cache
             self._services_cache[service_id] = service
             
+            # ⚡ Re-register to mDNS for robustness (ensures service stays in mDNS)
+            if self.mdns_server and service.status.value == "active":
+                try:
+                    print(f"🔥 DEBUG: TTL-Extend - Re-registering service {service.name} to mDNS for robustness...")
+                    mdns_success = await self.mdns_server.register_service(service)
+                    if mdns_success:
+                        print(f"🔥 DEBUG: TTL-Extend - mDNS re-registration SUCCESS for {service.name}")
+                    else:
+                        print(f"🔥 DEBUG: TTL-Extend - mDNS re-registration FAILED for {service.name}")
+                except Exception as mdns_error:
+                    logger.warning("mDNS re-registration failed during TTL extend", 
+                                 service_id=service_id, error=str(mdns_error))
+            
             print(f"🔥 DEBUG: Service TTL extended! service_id={service_id}, expires_at={service.expires_at}")
             logger.warning("🔥 MYSTERY: Service TTL verlängert", service_id=service_id, expires_at=service.expires_at)
             return service
@@ -273,6 +311,36 @@ class ServiceRegistry:
     async def get_all_active_services(self) -> List[Service]:
         """Hole alle aktiven Services"""
         return await self.discover_services(status=ServiceStatus.ACTIVE.value)
+    
+    async def get_all_services(self) -> List[Service]:
+        """Hole alle Services (unabhängig vom Status) für Startup Re-Registration"""
+        try:
+            cursor = self.database.services.find({})
+            services_docs = await cursor.to_list(length=None)
+            
+            # Prepare documents and create Service objects
+            services = []
+            for doc in services_docs:
+                try:
+                    prepared_doc = prepare_service_doc(doc)
+                    service = Service(**prepared_doc)
+                    services.append(service)
+                except Exception as e:
+                    logger.error("Fehler beim Erstellen des Service-Objekts", 
+                               doc_id=str(doc.get("_id", "unknown")), error=str(e))
+                    continue
+            
+            # Update Cache für aktive Services
+            for service in services:
+                if not service.is_expired():
+                    self._services_cache[service.service_id] = service
+            
+            logger.debug("Alle Services geladen für Startup", count=len(services))
+            return services
+            
+        except Exception as e:
+            logger.error("Fehler beim Laden aller Services", error=str(e))
+            return []
     
     async def get_expired_services(self) -> List[Service]:
         """Hole alle abgelaufenen Services"""

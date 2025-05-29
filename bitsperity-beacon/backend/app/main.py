@@ -133,6 +133,29 @@ async def lifespan(app: FastAPI):
         print("🔥 DEBUG: mDNS server started successfully")
         logger.info("mDNS Server gestartet")
         
+        # 4.5. Re-register all existing services from database to mDNS
+        print("🔥 DEBUG: Step 6.5 - Re-registering existing services to mDNS...")
+        try:
+            existing_services = await service_registry.get_all_services()
+            reregistered_count = 0
+            for service in existing_services:
+                if service.status == "active":  # Only re-register active services
+                    print(f"🔥 DEBUG: Re-registering service {service.name} to mDNS...")
+                    mdns_success = await mdns_server.register_service(service)
+                    if mdns_success:
+                        reregistered_count += 1
+                        print(f"🔥 DEBUG: mDNS re-registration SUCCESS for {service.name}")
+                    else:
+                        print(f"🔥 DEBUG: mDNS re-registration FAILED for {service.name}")
+            
+            print(f"🔥 DEBUG: Re-registered {reregistered_count}/{len(existing_services)} services to mDNS")
+            logger.info("Existing services re-registered to mDNS", 
+                       total=len(existing_services), 
+                       reregistered=reregistered_count)
+        except Exception as reregister_error:
+            print(f"🚨 DEBUG: Failed to re-register existing services: {reregister_error}")
+            logger.warning("Failed to re-register existing services to mDNS", error=str(reregister_error))
+        
         # Start Health Check Manager
         print("🔥 DEBUG: Step 7 - Starting Health Check Manager...")
         try:
