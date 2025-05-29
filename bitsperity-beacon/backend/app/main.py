@@ -25,6 +25,11 @@ from app.api.v1 import services, discovery, health, websocket, debug
 from app.api.v1.services import set_dependencies
 from app.api.v1.websocket import set_websocket_manager
 
+# 🔥 DEBUG: Print startup info
+print("🚀 DEBUG: Starting Bitsperity Beacon - main.py loaded")
+print(f"🚀 DEBUG: Python version: {os.sys.version}")
+print(f"🚀 DEBUG: Current working directory: {os.getcwd()}")
+
 # Konfiguriere Logging
 structlog.configure(
     processors=[
@@ -85,82 +90,118 @@ async def lifespan(app: FastAPI):
     """Application Lifespan Manager"""
     global service_registry, ttl_manager, mdns_server, websocket_manager, health_check_manager
     
+    print("🔥 DEBUG: Lifespan startup starting...")
     logger.info("Starte Bitsperity Beacon", version="1.0.0")
     
     try:
         # 1. Verbinde zur Database
+        print("🔥 DEBUG: Step 1 - Connecting to database...")
         await database.connect()
+        print("🔥 DEBUG: Database connection successful")
         logger.info("Database Verbindung hergestellt")
         
         # 2. Initialisiere Core Komponenten
+        print("🔥 DEBUG: Step 2 - Initializing core components...")
         websocket_manager = WebSocketManager()
+        print("🔥 DEBUG: WebSocketManager created")
+        
         mdns_server = AvahiMDNSServer()
+        print("🔥 DEBUG: AvahiMDNSServer created")
+        
         service_registry = ServiceRegistry(database, mdns_server)  # mDNS-Referenz für TTL-Cleanup
+        print("🔥 DEBUG: ServiceRegistry created")
         
         # Initialize Health Check Manager
+        print("🔥 DEBUG: Step 3 - Creating HealthCheckManager...")
         health_check_manager = HealthCheckManager(service_registry, websocket_manager)
+        print("🔥 DEBUG: HealthCheckManager created")
         
         # Initialize TTL Manager with health check support
+        print("🔥 DEBUG: Step 4 - Creating TTLManager...")
         ttl_manager = TTLManager(service_registry, health_check_manager)
+        print("🔥 DEBUG: TTLManager created")
         
         # 3. Setze Dependencies für API Endpoints
+        print("🔥 DEBUG: Step 5 - Setting dependencies...")
         set_dependencies(service_registry, mdns_server, websocket_manager)
         set_websocket_manager(websocket_manager)
+        print("🔥 DEBUG: Dependencies set")
         
         # 4. Starte mDNS Server
+        print("🔥 DEBUG: Step 6 - Starting mDNS server...")
         await mdns_server.start()
+        print("🔥 DEBUG: mDNS server started successfully")
         logger.info("mDNS Server gestartet")
         
         # Start Health Check Manager
+        print("🔥 DEBUG: Step 7 - Starting Health Check Manager...")
         try:
             await health_check_manager.start()
+            print("🔥 DEBUG: Health Check Manager started successfully")
             logger.info("Health Check Manager gestartet")
         except Exception as hc_error:
+            print(f"🚨 DEBUG: Health Check Manager failed to start: {hc_error}")
             logger.warning("Health Check Manager failed to start", error=str(hc_error))
             # Continue without health checks - not critical
         
         # 5. Starte TTL Manager
+        print("🔥 DEBUG: Step 8 - Starting TTL Manager...")
         await ttl_manager.start()
+        print("🔥 DEBUG: TTL Manager started successfully")
         logger.info("TTL Manager gestartet")
         
+        print("🔥 DEBUG: All startup steps completed successfully")
         logger.info("Bitsperity Beacon erfolgreich gestartet")
         
         yield
         
     except Exception as e:
+        print(f"🚨 DEBUG: Startup failed with error: {e}")
         logger.error("Fehler beim Starten von Bitsperity Beacon", error=str(e))
         raise
     
     finally:
         # Shutdown
+        print("🔥 DEBUG: Starting shutdown...")
         logger.info("Stoppe Bitsperity Beacon")
         
         try:
             # Stoppe TTL Manager
             if ttl_manager:
+                print("🔥 DEBUG: Stopping TTL Manager...")
                 await ttl_manager.stop()
+                print("🔥 DEBUG: TTL Manager stopped")
                 logger.info("TTL Manager gestoppt")
             
             # Stop Health Check Manager
             if health_check_manager:
                 try:
+                    print("🔥 DEBUG: Stopping Health Check Manager...")
                     await health_check_manager.stop()
+                    print("🔥 DEBUG: Health Check Manager stopped")
                     logger.info("Health Check Manager gestoppt")
                 except Exception as hc_error:
+                    print(f"🚨 DEBUG: Error stopping Health Check Manager: {hc_error}")
                     logger.warning("Error stopping Health Check Manager", error=str(hc_error))
             
             # Stoppe mDNS Server
             if mdns_server:
+                print("🔥 DEBUG: Stopping mDNS Server...")
                 await mdns_server.stop()
+                print("🔥 DEBUG: mDNS Server stopped")
                 logger.info("mDNS Server gestoppt")
             
             # Schließe Database Verbindung
+            print("🔥 DEBUG: Closing database connection...")
             await database.disconnect()
+            print("🔥 DEBUG: Database connection closed")
             logger.info("Database Verbindung geschlossen")
             
         except Exception as e:
+            print(f"🚨 DEBUG: Shutdown error: {e}")
             logger.error("Fehler beim Stoppen von Bitsperity Beacon", error=str(e))
         
+        print("🔥 DEBUG: Shutdown completed")
         logger.info("Bitsperity Beacon gestoppt")
 
 
