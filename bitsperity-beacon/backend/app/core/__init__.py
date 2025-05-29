@@ -8,6 +8,7 @@ from .mdns_base import MDNSServerBase
 from .mdns_server import MDNSServer
 from .avahi_mdns import AvahiMDNSServer
 from .websocket_manager import WebSocketManager
+from .health_check_manager import HealthCheckManager
 
 __all__ = [
     "ServiceRegistry",
@@ -15,5 +16,6 @@ __all__ = [
     "MDNSServerBase",
     "MDNSServer",
     "AvahiMDNSServer",
-    "WebSocketManager"
+    "WebSocketManager",
+    "HealthCheckManager"
 ] 

@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends
 from typing import Any, Dict
 import structlog
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.core.json_encoder import jsonable_encoder
 from app.models.base import PyObjectId
@@ -20,7 +20,7 @@ router = APIRouter()
 async def test_time(db: Database = Depends(get_database)):
     """Test Server Time and Timezone"""
     try:
-        now_utc = datetime.utcnow()
+        now_utc = datetime.now(timezone.utc)
         now_local = datetime.now()
         
         # Test MongoDB query with current time
@@ -30,7 +30,7 @@ async def test_time(db: Database = Depends(get_database)):
         return {
             "server_time_utc": now_utc.isoformat(),
             "server_time_local": now_local.isoformat(),
-            "timezone_offset_hours": (now_local - now_utc).total_seconds() / 3600,
+            "timezone_offset_hours": (now_local - now_utc.replace(tzinfo=None)).total_seconds() / 3600,
             "mongodb_query_time": now_utc.isoformat(),
             "services_found_with_current_time": services_count,
             "test_successful": True
@@ -191,9 +191,9 @@ async def get_system_info():
 async def test_service_discovery(db: Database = Depends(get_database)):
     """Test Service Discovery Logic"""
     try:
-        from datetime import datetime
+        from datetime import datetime, timezone
         
-        now_utc = datetime.utcnow()
+        now_utc = datetime.now(timezone.utc)
         
         # Test MongoDB query directly
         query = {"expires_at": {"$gt": now_utc}}

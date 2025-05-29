@@ -1,7 +1,7 @@
 """
 Service Model für Bitsperity Beacon
 """
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
 from enum import Enum
 from pydantic import Field, validator
@@ -33,12 +33,20 @@ class Service(BaseModel):
     # TTL Management
     ttl: int = Field(default=300, ge=10, le=86400)  # 10 seconds to 24 hours
     expires_at: datetime = Field(default=None)
-    last_heartbeat: Optional[datetime] = Field(default_factory=datetime.utcnow)
+    last_heartbeat: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc))
     
     # Status
     status: ServiceStatus = Field(default=ServiceStatus.ACTIVE)
     health_check_url: Optional[str] = None
     health_check_interval: Optional[int] = Field(default=60, ge=30, le=3600)
+    
+    # 🆕 NEW: Health Check Enhancement (minimal, optional fields)
+    health_check_timeout: Optional[int] = Field(default=10, ge=1, le=60)
+    health_check_retries: Optional[int] = Field(default=3, ge=1, le=10)
+    last_health_check: Optional[datetime] = None
+    consecutive_health_failures: int = Field(default=0)
+    health_check_enabled: bool = Field(default=True)  # Can disable health checks
+    fallback_to_health_check: bool = Field(default=True)  # Use health check before expiry
     
     # mDNS Information
     mdns_service_type: Optional[str] = None
@@ -49,7 +57,7 @@ class Service(BaseModel):
         """Setze expires_at basierend auf TTL"""
         if v is None:
             ttl = values.get('ttl', 300)  # Default TTL falls nicht gesetzt
-            return datetime.utcnow() + timedelta(seconds=ttl)
+            return datetime.now(timezone.utc) + timedelta(seconds=ttl)
         return v
     
     @validator('mdns_service_type', pre=True, always=True)
@@ -76,16 +84,45 @@ class Service(BaseModel):
     
     def is_expired(self) -> bool:
         """Prüfe ob Service abgelaufen ist"""
-        return datetime.utcnow() > self.expires_at
+        return datetime.now(timezone.utc) > self.expires_at
+    
+    # 🆕 NEW: Health Check Helper Methods
+    def needs_health_check(self) -> bool:
+        """Check if service needs a health check"""
+        if not self.health_check_url or not self.health_check_enabled:
+            return False
+            
+        if not self.last_health_check:
+            return True
+            
+        interval = timedelta(seconds=self.health_check_interval)
+        return datetime.now(timezone.utc) > (self.last_health_check + interval)
+    
+    def is_near_expiry(self) -> bool:
+        """Check if service is near TTL expiry (within 1.5 health check intervals)"""
+        if not self.health_check_url or not self.fallback_to_health_check:
+            return False
+            
+        grace_period = timedelta(seconds=int(self.health_check_interval * 1.5))
+        return datetime.now(timezone.utc) > (self.expires_at - grace_period)
+    
+    def can_use_health_check_fallback(self) -> bool:
+        """Check if health check can be used as TTL fallback"""
+        return (
+            self.health_check_url is not None and 
+            self.health_check_enabled and 
+            self.fallback_to_health_check and
+            self.consecutive_health_failures < self.health_check_retries
+        )
     
     def extend_ttl(self, ttl: Optional[int] = None) -> None:
         """Verlängere TTL des Services"""
         if ttl is None:
             ttl = self.ttl
         
-        self.expires_at = datetime.utcnow() + timedelta(seconds=ttl)
-        self.last_heartbeat = datetime.utcnow()
-        self.updated_at = datetime.utcnow()
+        self.expires_at = datetime.now(timezone.utc) + timedelta(seconds=ttl)
+        self.last_heartbeat = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(timezone.utc)
         
         if self.status == ServiceStatus.EXPIRED:
             self.status = ServiceStatus.ACTIVE
@@ -93,7 +130,31 @@ class Service(BaseModel):
     def mark_expired(self) -> None:
         """Markiere Service als abgelaufen"""
         self.status = ServiceStatus.EXPIRED
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(timezone.utc)
+    
+    # 🆕 NEW: Health Check Status Methods
+    def update_health_check_success(self) -> None:
+        """Update service after successful health check"""
+        self.last_health_check = datetime.now(timezone.utc)
+        self.consecutive_health_failures = 0
+        self.updated_at = datetime.now(timezone.utc)
+        
+        # Extend TTL like a heartbeat!
+        self.extend_ttl()
+        
+        # Restore to active if was unhealthy
+        if self.status == ServiceStatus.UNHEALTHY:
+            self.status = ServiceStatus.ACTIVE
+    
+    def update_health_check_failure(self) -> None:
+        """Update service after failed health check"""
+        self.last_health_check = datetime.now(timezone.utc)
+        self.consecutive_health_failures += 1
+        self.updated_at = datetime.now(timezone.utc)
+        
+        # Mark as unhealthy after retries exhausted
+        if self.consecutive_health_failures >= self.health_check_retries:
+            self.status = ServiceStatus.UNHEALTHY
     
     def get_mdns_txt_records(self) -> Dict[str, str]:
         """Erstelle TXT Records für mDNS"""
@@ -130,6 +191,9 @@ class Service(BaseModel):
                 },
                 "ttl": 300,
                 "health_check_url": "http://192.168.1.100:8080/health",
-                "health_check_interval": 60
+                "health_check_interval": 60,
+                "health_check_timeout": 10,
+                "health_check_enabled": True,
+                "fallback_to_health_check": True
             }
         } 

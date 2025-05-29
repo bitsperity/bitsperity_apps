@@ -1,374 +1,897 @@
 # Bitsperity Beacon - Service Discovery Server
 
-**Bitsperity Beacon** ist ein zentraler Service Discovery Server, der als Umbrel App implementiert wird. Er ermöglicht es Services im lokalen Netzwerk, sich zu registrieren und von anderen Geräten gefunden zu werden. Die App fungiert als "Leuchtfeuer" (Beacon) für alle Services im Bitsperity-Ökosystem.
+**Bitsperity Beacon** is a comprehensive service discovery server implemented as an Umbrel app. It provides automatic service registration and discovery for local network services using mDNS/Bonjour protocol, combined with a powerful REST API and real-time WebSocket updates.
 
-## 🎯 Features
+## 🎯 Key Features
 
-- **mDNS/Bonjour Service Discovery** - Automatische Service-Ankündigung im lokalen Netzwerk
-- **TTL-basierte Service-Verwaltung** - Automatische Cleanup abgelaufener Services
-- **Real-time Web Dashboard** - Live-Updates über WebSocket
-- **REST API + WebSocket** - Vollständige API für Service-Management
-- **MongoDB Integration** - Nutzt bitsperity-mongodb als Backend
-- **Docker-basiert** - Einfache Deployment als Umbrel App
+- **mDNS/Bonjour Service Discovery** - Automatic service announcement via Zeroconf
+- **TTL-based Service Management** - Automatic cleanup of expired services with heartbeat system
+- **Real-time Web Dashboard** - Live service monitoring with WebSocket updates
+- **Comprehensive REST API** - Full CRUD operations for service management
+- **MongoDB Integration** - Persistent storage using bitsperity-mongodb backend
+- **Docker-native** - Containerized deployment as Umbrel app
+- **Network Health Monitoring** - Service health checks and status tracking
 
-## 🏗️ Architektur
+## 🏗️ System Architecture
 
-### Backend (FastAPI + Python 3.11)
-- **Service Registry** - Zentrale Verwaltung aller Services
-- **mDNS Server** - Zeroconf/Bonjour Service Discovery
-- **TTL Manager** - Automatische Cleanup-Prozesse
-- **WebSocket Manager** - Real-time Updates
-- **MongoDB Integration** - Persistente Datenspeicherung
+### High-Level Architecture
 
-### Frontend (React 18 + TypeScript)
-- **Service Dashboard** - Übersicht aller registrierten Services
-- **Real-time Updates** - Live-Status über WebSocket
-- **Service Registration** - UI für manuelle Service-Registrierung
-- **Network Topology** - Visualisierung der Service-Landschaft
-
-## 🚀 Quick Start
-
-### Als Umbrel App
-
-1. **Abhängigkeiten installieren**
-   ```bash
-   # Installiere zuerst bitsperity-mongodb
-   umbrel app install bitsperity-mongodb
-   ```
-
-2. **Bitsperity Beacon installieren**
-   ```bash
-   umbrel app install bitsperity-beacon
-   ```
-
-3. **Zugriff auf das Dashboard**
-   - Öffne `http://umbrel.local:8080` in deinem Browser
-   - API Dokumentation: `http://umbrel.local:8080/api/docs`
-
-### Lokale Entwicklung
-
-1. **Repository klonen**
-   ```bash
-   git clone https://github.com/bitsperity/bitsperity_apps.git
-   cd bitsperity_apps/bitsperity-beacon
-   ```
-
-2. **Environment konfigurieren**
-   ```bash
-   cp env.example .env
-   # Bearbeite .env nach Bedarf
-   ```
-
-3. **Mit Docker Compose starten**
-   ```bash
-   docker-compose up -d
-   ```
-
-4. **Zugriff**
-   - Dashboard: `http://localhost:8080`
-   - API: `http://localhost:8080/api/v1`
-   - Docs: `http://localhost:8080/api/docs`
-
-## 📡 Service Registration
-
-### REST API
-
-```bash
-# Service registrieren
-curl -X POST http://localhost:8080/api/v1/services/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "homegrow-client",
-    "type": "iot",
-    "host": "192.168.1.100",
-    "port": 8080,
-    "protocol": "http",
-    "tags": ["iot", "agriculture", "sensors"],
-    "metadata": {
-      "version": "1.0.0",
-      "description": "HomegrowClient für Pflanzenüberwachung"
-    },
-    "ttl": 300
-  }'
-
-# Heartbeat senden (TTL verlängern)
-curl -X PUT http://localhost:8080/api/v1/services/{service_id}/heartbeat
-
-# Services entdecken
-curl http://localhost:8080/api/v1/services/discover?type=iot
+```mermaid
+graph TB
+    subgraph "Frontend Layer"
+        UI[React Dashboard]
+        WS[WebSocket Client]
+    end
+    
+    subgraph "API Layer"
+        API[FastAPI Server]
+        WSM[WebSocket Manager]
+        CORS[CORS Middleware]
+    end
+    
+    subgraph "Core Services"
+        SR[Service Registry]
+        TM[TTL Manager]
+        MS[mDNS Server]
+        HC[Health Checker]
+    end
+    
+    subgraph "Data Layer"
+        DB[(MongoDB)]
+        CACHE[Service Cache]
+    end
+    
+    subgraph "Network Layer"
+        MDNS[mDNS Broadcasts]
+        CLIENTS[Service Clients]
+    end
+    
+    UI --> API
+    WS --> WSM
+    API --> SR
+    API --> MS
+    WSM --> SR
+    SR --> DB
+    SR --> CACHE
+    TM --> SR
+    TM --> MS
+    MS --> MDNS
+    CLIENTS --> MDNS
+    HC --> CLIENTS
 ```
 
-### Python Client
+### Service Registration Flow
 
-```python
-import requests
-import time
-import threading
+```mermaid
+sequenceDiagram
+    participant Client as Service Client
+    participant API as REST API
+    participant SR as Service Registry
+    participant DB as MongoDB
+    participant mDNS as mDNS Server
+    participant WSM as WebSocket Manager
+    participant Network as Local Network
+    
+    Client->>API: POST /api/v1/services/register
+    API->>SR: register_service(service_data)
+    SR->>DB: store service document
+    SR->>mDNS: register_service(service)
+    mDNS->>Network: broadcast service via mDNS
+    SR-->>API: return service object
+    API->>WSM: broadcast_service_registered
+    WSM->>Network: notify WebSocket clients
+    API-->>Client: return service details
+    
+    loop Heartbeat Loop
+        Client->>API: PUT /api/v1/services/{id}/heartbeat
+        API->>SR: extend_service_ttl(service_id)
+        SR->>DB: update expires_at timestamp
+    end
+```
 
-def register_with_beacon():
-    service_data = {
-        "name": "my-service",
-        "type": "iot",
-        "host": "192.168.1.100",
-        "port": 8080,
-        "ttl": 300
+### mDNS Discovery Process
+
+```mermaid
+sequenceDiagram
+    participant Client as Client Device
+    participant mDNS as mDNS Network
+    participant Beacon as Beacon mDNS
+    participant Registry as Service Registry
+    
+    Client->>mDNS: Query _mqtt._tcp.local
+    mDNS->>Beacon: mDNS Query
+    Beacon->>Registry: lookup registered services
+    Registry-->>Beacon: service details
+    Beacon->>mDNS: mDNS Response (SRV + TXT records)
+    mDNS-->>Client: Service Info + Metadata
+    Client->>Client: Connect to discovered service
+```
+
+## 📊 Database Schema
+
+### Service Document Structure
+
+```mermaid
+erDiagram
+    SERVICE {
+        string service_id PK
+        string name
+        string type
+        string host
+        int port
+        string protocol
+        array tags
+        object metadata
+        int ttl
+        datetime expires_at
+        datetime last_heartbeat
+        enum status
+        string health_check_url
+        int health_check_interval
+        string mdns_service_type
+        object mdns_txt_records
+        datetime created_at
+        datetime updated_at
     }
     
-    response = requests.post(
-        "http://beacon.local:8080/api/v1/services/register",
-        json=service_data
-    )
+    HEALTH_CHECK {
+        string service_id FK
+        datetime timestamp
+        enum status
+        int response_time_ms
+        string error_message
+    }
     
-    service_info = response.json()
-    service_id = service_info["service_id"]
-    
-    # Heartbeat alle 60 Sekunden
-    def send_heartbeat():
-        while True:
-            time.sleep(60)
-            requests.put(f"http://beacon.local:8080/api/v1/services/{service_id}/heartbeat")
-    
-    threading.Thread(target=send_heartbeat, daemon=True).start()
-    return service_info
+    SERVICE ||--o{ HEALTH_CHECK : monitors
 ```
 
-### Arduino/ESP32 (mDNS Discovery)
+## 🔧 Core Components
+
+### Service Registry Class Architecture
+
+```mermaid
+classDiagram
+    class ServiceRegistry {
+        -Database database
+        -MDNSServerBase mdns_server
+        -Dict[str, Service] _services_cache
+        -int _cache_ttl
+        +register_service(ServiceCreate) Service
+        +get_service_by_id(str) Optional[Service]
+        +update_service(str, ServiceUpdate) Optional[Service]
+        +extend_service_ttl(str, int) Optional[Service]
+        +deregister_service(str) bool
+        +discover_services(...) List[Service]
+        +cleanup_expired_services() int
+    }
+    
+    class Service {
+        +str service_id
+        +str name
+        +str type
+        +str host
+        +int port
+        +str protocol
+        +List[str] tags
+        +Dict[str, str] metadata
+        +int ttl
+        +datetime expires_at
+        +ServiceStatus status
+        +is_expired() bool
+        +extend_ttl(int) None
+        +get_mdns_txt_records() Dict[str, str]
+    }
+    
+    class MDNSServer {
+        -AsyncZeroconf zeroconf
+        -Dict[str, ServiceInfo] registered_services
+        +register_service(Service) bool
+        +unregister_service(str) bool
+        +update_service(Service) bool
+        -_get_local_ip() str
+    }
+    
+    class TTLManager {
+        -ServiceRegistry registry
+        -int cleanup_interval
+        +start() None
+        +stop() None
+        -_cleanup_loop() None
+    }
+    
+    ServiceRegistry --> Service
+    ServiceRegistry --> MDNSServer
+    ServiceRegistry --> TTLManager
+```
+
+## 🚀 API Documentation
+
+### Service Management Endpoints
+
+#### POST /api/v1/services/register
+Register a new service with automatic mDNS announcement.
+
+**Request Body:**
+```json
+{
+  "name": "homegrow-client",
+  "type": "iot",
+  "host": "192.168.1.100",
+  "port": 8080,
+  "protocol": "http",
+  "tags": ["iot", "agriculture", "sensors"],
+  "metadata": {
+    "version": "1.0.0",
+    "description": "HomegrowClient for plant monitoring"
+  },
+  "ttl": 300,
+  "health_check_url": "http://192.168.1.100:8080/health",
+  "health_check_interval": 60
+}
+```
+
+**Response:**
+```json
+{
+  "service_id": "12345678-1234-1234-1234-123456789012",
+  "name": "homegrow-client",
+  "type": "iot",
+  "host": "192.168.1.100",
+  "port": 8080,
+  "protocol": "http",
+  "tags": ["iot", "agriculture", "sensors"],
+  "metadata": {
+    "version": "1.0.0",
+    "description": "HomegrowClient for plant monitoring"
+  },
+  "status": "active",
+  "ttl": 300,
+  "expires_at": "2024-01-01T12:05:00Z",
+  "last_heartbeat": "2024-01-01T12:00:00Z",
+  "created_at": "2024-01-01T12:00:00Z",
+  "updated_at": "2024-01-01T12:00:00Z",
+  "mdns_service_type": "_iot._tcp"
+}
+```
+
+#### PUT /api/v1/services/{service_id}/heartbeat
+Extend service TTL (keep-alive mechanism).
+
+**Query Parameters:**
+- `ttl` (optional): Custom TTL in seconds
+
+**Response:**
+```json
+{
+  "service_id": "12345678-1234-1234-1234-123456789012",
+  "status": "active",
+  "expires_at": "2024-01-01T12:10:00Z",
+  "last_heartbeat": "2024-01-01T12:05:00Z",
+  "message": "Heartbeat received successfully"
+}
+```
+
+#### GET /api/v1/services
+List and filter registered services.
+
+**Query Parameters:**
+- `type`: Filter by service type
+- `tags`: Filter by tags (array)
+- `protocol`: Filter by protocol
+- `status`: Filter by status (active, inactive, expired, unhealthy)
+- `limit`: Results limit (1-100, default: 50)
+- `skip`: Results offset (default: 0)
+
+#### GET /api/v1/services/{service_id}
+Get detailed service information.
+
+#### PUT /api/v1/services/{service_id}
+Update service configuration.
+
+#### DELETE /api/v1/services/{service_id}
+Deregister service (removes from mDNS and database).
+
+### Discovery Endpoints
+
+#### GET /api/v1/services/discover
+Legacy HTTP-based service discovery (backup to mDNS).
+
+#### GET /api/v1/services/types
+Get all available service types.
+
+#### GET /api/v1/services/tags  
+Get all available service tags.
+
+#### GET /api/v1/services/expired
+Get list of expired services.
+
+### Health & Monitoring
+
+#### GET /api/v1/health
+Beacon health status and system metrics.
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "version": "1.0.0",
+  "uptime": 3600,
+  "services": {
+    "total": 15,
+    "active": 12,
+    "expired": 2,
+    "unhealthy": 1
+  },
+  "mdns": {
+    "running": true,
+    "registered_services": 12
+  },
+  "database": {
+    "connected": true,
+    "ping_ms": 2
+  }
+}
+```
+
+#### WebSocket: /api/v1/ws
+Real-time service updates via WebSocket.
+
+**Message Types:**
+- `service_registered`: New service registered
+- `service_updated`: Service configuration changed  
+- `service_deregistered`: Service removed
+- `service_expired`: Service TTL expired
+- `health_status_changed`: Service health status changed
+
+## 📡 mDNS Integration Deep Dive
+
+### Service Type Mappings
+
+Beacon automatically maps service types to standard mDNS service types:
+
+| Service Type | mDNS Type | Description |
+|--------------|-----------|-------------|
+| `mqtt` | `_mqtt._tcp.local` | MQTT Brokers |
+| `http` | `_http._tcp.local` | HTTP Services |
+| `https` | `_https._tcp.local` | HTTPS Services |
+| `iot` | `_iot._tcp.local` | IoT Devices |
+| `api` | `_http._tcp.local` | REST APIs |
+| `database` | `_db._tcp.local` | Database Services |
+| `cache` | `_cache._tcp.local` | Cache Services |
+| `message_queue` | `_mq._tcp.local` | Message Queues |
+
+### TXT Record Structure
+
+Each mDNS service includes comprehensive TXT records:
+
+```
+service_id=12345678-1234-1234-1234-123456789012
+name=homegrow-client
+type=iot
+protocol=http
+version=1.0.0
+tags=iot,agriculture,sensors
+description=HomegrowClient for plant monitoring
+```
+
+### mDNS Query Examples
+
+**Query MQTT Brokers:**
+```bash
+# Using avahi-browse
+avahi-browse -r _mqtt._tcp
+
+# Using dns-sd
+dns-sd -B _mqtt._tcp
+
+# Using Python zeroconf
+import zeroconf
+browser = zeroconf.ServiceBrowser(zc, "_mqtt._tcp.local.", handlers=[handler])
+```
+
+**Query IoT Devices:**
+```bash
+avahi-browse -r _iot._tcp
+```
+
+## 💾 Data Models
+
+### Service Model Definition
+
+```python
+class Service(BaseModel):
+    # Identity
+    service_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str = Field(..., min_length=1, max_length=100)
+    type: str = Field(..., min_length=1, max_length=50)
+    
+    # Network Configuration
+    host: str = Field(..., min_length=1, max_length=255)
+    port: int = Field(..., ge=1, le=65535)
+    protocol: str = Field(default="http", max_length=20)
+    
+    # Metadata
+    tags: List[str] = Field(default_factory=list)
+    metadata: Dict[str, str] = Field(default_factory=dict)
+    
+    # TTL Management
+    ttl: int = Field(default=300, ge=10, le=86400)  # 10s to 24h
+    expires_at: datetime = Field(default=None)
+    last_heartbeat: Optional[datetime] = Field(default_factory=datetime.utcnow)
+    
+    # Status & Health
+    status: ServiceStatus = Field(default=ServiceStatus.ACTIVE)
+    health_check_url: Optional[str] = None
+    health_check_interval: Optional[int] = Field(default=60, ge=30, le=3600)
+    
+    # mDNS Configuration
+    mdns_service_type: Optional[str] = None
+    mdns_txt_records: Dict[str, str] = Field(default_factory=dict)
+```
+
+### Service Status Enum
+
+```python
+class ServiceStatus(str, Enum):
+    ACTIVE = "active"         # Service is running and healthy
+    INACTIVE = "inactive"     # Service is registered but not responding
+    EXPIRED = "expired"       # Service TTL has expired
+    UNHEALTHY = "unhealthy"   # Service health check is failing
+```
+
+## 🔄 TTL & Heartbeat System
+
+### TTL Management Flow
+
+```mermaid
+stateDiagram-v2
+    [*] --> Registered
+    Registered --> Active : TTL valid
+    Active --> Active : Heartbeat received
+    Active --> Expired : TTL expires
+    Expired --> [*] : Cleanup
+    Active --> Unhealthy : Health check fails
+    Unhealthy --> Active : Health restored
+    Unhealthy --> Expired : TTL expires
+```
+
+### Heartbeat Implementation
+
+**Client-side Example:**
+```python
+import asyncio
+import aiohttp
+
+class BeaconClient:
+    def __init__(self, beacon_url: str):
+        self.beacon_url = beacon_url
+        self.service_id = None
+        self.heartbeat_task = None
+    
+    async def register(self, service_data: dict):
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                f"{self.beacon_url}/api/v1/services/register",
+                json=service_data
+            ) as response:
+                result = await response.json()
+                self.service_id = result["service_id"]
+                return result
+    
+    async def start_heartbeat(self, interval: int = 60):
+        """Start automatic heartbeat every interval seconds"""
+        self.heartbeat_task = asyncio.create_task(
+            self._heartbeat_loop(interval)
+        )
+    
+    async def _heartbeat_loop(self, interval: int):
+        while True:
+            try:
+                await asyncio.sleep(interval)
+                await self.send_heartbeat()
+            except Exception as e:
+                print(f"Heartbeat failed: {e}")
+    
+    async def send_heartbeat(self):
+        if not self.service_id:
+            return
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.put(
+                f"{self.beacon_url}/api/v1/services/{self.service_id}/heartbeat"
+            ) as response:
+                return await response.json()
+```
+
+## 🧪 Integration Examples
+
+### Arduino/ESP32 mDNS Discovery
 
 ```cpp
 #include <WiFi.h>
 #include <ESPmDNS.h>
+#include <HTTPClient.h>
 
-String discoverMQTTBroker() {
-    // mDNS Query für MQTT Service
-    int n = MDNS.queryService("mqtt", "tcp");
-    
-    if (n > 0) {
-        String host = MDNS.hostname(0);
-        int port = MDNS.port(0);
-        return host + ":" + String(port);
+class BeaconClient {
+private:
+    String beacon_host = "";
+    int beacon_port = 8080;
+    String service_id = "";
+    unsigned long last_heartbeat = 0;
+    const unsigned long heartbeat_interval = 60000; // 60 seconds
+
+public:
+    void begin() {
+        // Discover Beacon via mDNS
+        discoverBeacon();
+        
+        // Register this device
+        registerService();
     }
-    return "";
-}
+    
+    void loop() {
+        // Send heartbeat if needed
+        if (millis() - last_heartbeat > heartbeat_interval) {
+            sendHeartbeat();
+            last_heartbeat = millis();
+        }
+    }
+    
+private:
+    void discoverBeacon() {
+        Serial.println("Discovering Beacon via mDNS...");
+        
+        int n = MDNS.queryService("beacon", "tcp");
+        if (n > 0) {
+            beacon_host = MDNS.hostname(0);
+            beacon_port = MDNS.port(0);
+            Serial.printf("Found Beacon: %s:%d\n", beacon_host.c_str(), beacon_port);
+        }
+    }
+    
+    void registerService() {
+        if (beacon_host.length() == 0) return;
+        
+        HTTPClient http;
+        http.begin("http://" + beacon_host + ":" + beacon_port + "/api/v1/services/register");
+        http.addHeader("Content-Type", "application/json");
+        
+        String json = R"({
+            "name": "esp32-sensor",
+            "type": "iot",
+            "host": ")" + WiFi.localIP().toString() + R"(",
+            "port": 80,
+            "protocol": "http",
+            "tags": ["sensor", "temperature", "humidity"],
+            "metadata": {
+                "device": "ESP32",
+                "firmware": "1.0.0"
+            },
+            "ttl": 300
+        })";
+        
+        int httpCode = http.POST(json);
+        if (httpCode == 201) {
+            String response = http.getString();
+            // Parse service_id from response
+            Serial.println("Service registered successfully");
+        }
+        
+        http.end();
+    }
+    
+    void sendHeartbeat() {
+        if (service_id.length() == 0 || beacon_host.length() == 0) return;
+        
+        HTTPClient http;
+        http.begin("http://" + beacon_host + ":" + beacon_port + "/api/v1/services/" + service_id + "/heartbeat");
+        
+        int httpCode = http.PUT("");
+        if (httpCode == 200) {
+            Serial.println("Heartbeat sent successfully");
+        }
+        
+        http.end();
+    }
+};
 ```
 
-## 🔧 API Endpoints
+### Python Service Integration
 
-### Service Management
-- `POST /api/v1/services/register` - Service registrieren
-- `PUT /api/v1/services/{id}/heartbeat` - TTL verlängern
-- `PUT /api/v1/services/{id}` - Service aktualisieren
-- `DELETE /api/v1/services/{id}` - Service deregistrieren
-- `GET /api/v1/services/{id}` - Service Details
+```python
+import asyncio
+import aiohttp
+from contextlib import asynccontextmanager
 
-### Discovery
-- **mDNS/Bonjour** - Automatische Service-Ankündigung (Hauptmethode)
-- `GET /api/v1/services/discover` - Services entdecken (Legacy/Backup)
-- `GET /api/v1/services/types` - Verfügbare Service-Typen
-- `GET /api/v1/services/tags` - Verfügbare Tags
+class ServiceWithBeacon:
+    def __init__(self, service_config: dict, beacon_url: str = "http://beacon.local:8080"):
+        self.config = service_config
+        self.beacon_url = beacon_url
+        self.beacon_client = BeaconClient(beacon_url)
+        self.service_id = None
+    
+    @asynccontextmanager
+    async def lifespan(self):
+        """Service lifespan manager with automatic Beacon integration"""
+        try:
+            # Register with Beacon
+            result = await self.beacon_client.register(self.config)
+            self.service_id = result["service_id"]
+            
+            # Start heartbeat
+            await self.beacon_client.start_heartbeat()
+            
+            print(f"Service registered with Beacon: {self.service_id}")
+            yield
+            
+        finally:
+            # Cleanup on shutdown
+            if self.service_id:
+                await self.beacon_client.deregister(self.service_id)
+                print("Service deregistered from Beacon")
 
-### Monitoring
-- `GET /api/v1/health` - Beacon Health Status
-- `WS /api/v1/ws` - WebSocket für Real-time Updates
+# Usage
+async def main():
+    service_config = {
+        "name": "my-microservice",
+        "type": "api",
+        "host": "192.168.1.50",
+        "port": 8000,
+        "protocol": "http",
+        "tags": ["microservice", "api", "backend"],
+        "metadata": {
+            "version": "2.1.0",
+            "environment": "production"
+        },
+        "ttl": 300,
+        "health_check_url": "http://192.168.1.50:8000/health"
+    }
+    
+    service = ServiceWithBeacon(service_config)
+    
+    async with service.lifespan():
+        # Your service logic here
+        await asyncio.sleep(3600)  # Run for 1 hour
 
-## 🌐 mDNS Service Types
+if __name__ == "__main__":
+    asyncio.run(main())
+```
 
-Beacon mappt automatisch Service-Typen zu mDNS Service Types:
-
-| Service Type | mDNS Type | Beschreibung |
-|--------------|-----------|--------------|
-| `mqtt` | `_mqtt._tcp.local` | MQTT Broker |
-| `http` | `_http._tcp.local` | HTTP Services |
-| `iot` | `_iot._tcp.local` | IoT Devices |
-| `api` | `_http._tcp.local` | REST APIs |
-| `database` | `_db._tcp.local` | Datenbanken |
-
-## 🔄 TTL & Heartbeat System
-
-Services werden automatisch nach Ablauf ihrer TTL (Time-To-Live) entfernt:
-
-1. **Service registriert sich** mit TTL (z.B. 300 Sekunden)
-2. **Beacon setzt Ablaufzeit** für Service
-3. **Service sendet Heartbeats** alle 60 Sekunden (optional)
-4. **Beacon verlängert TTL** bei jedem Heartbeat
-5. **Bei TTL-Ablauf**: Service wird automatisch deregistriert
-
-## 📊 Monitoring & Observability
-
-### Metriken
-- Anzahl registrierter Services
-- Service Health Status Distribution
-- API Request Latency
-- WebSocket Connection Count
-
-### Logging
-- Strukturierte JSON Logs
-- Service Registration/Deregistration Events
-- Health Check Results
-- API Access Logs
-
-## 🔧 Konfiguration
+## ⚙️ Configuration
 
 ### Environment Variables
 
-| Variable | Default | Beschreibung |
-|----------|---------|--------------|
-| `BEACON_PORT` | `8080` | API Server Port |
-| `BEACON_MONGODB_URL` | `mongodb://umbrel:umbrel@bitsperity-mongodb:27017/beacon` | MongoDB Connection |
-| `BEACON_TTL_CLEANUP_INTERVAL` | `30` | TTL Cleanup Interval (Sekunden) |
-| `BEACON_DEFAULT_TTL` | `300` | Default Service TTL (Sekunden) |
-| `MDNS_DOMAIN` | `local` | mDNS Domain |
-| `MDNS_INTERFACE` | auto | Network Interface für mDNS |
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `BEACON_PORT` | `8080` | API server port |
+| `BEACON_MONGODB_URL` | `mongodb://umbrel:umbrel@bitsperity-mongodb:27017/beacon` | MongoDB connection string |
+| `BEACON_TTL_CLEANUP_INTERVAL` | `30` | TTL cleanup interval (seconds) |
+| `BEACON_DEFAULT_TTL` | `300` | Default service TTL (seconds) |
+| `MDNS_DOMAIN` | `local` | mDNS domain suffix |
+| `MDNS_INTERFACE` | auto | Network interface for mDNS |
+| `CORS_ORIGINS` | `["*"]` | Allowed CORS origins |
+| `LOG_LEVEL` | `INFO` | Logging level |
 
-## 🧪 Testing
-
-```bash
-# Backend Tests
-cd backend
-python -m pytest
-
-# Frontend Tests
-cd frontend
-npm test
-
-# Integration Tests
-docker-compose -f docker-compose.test.yml up --abort-on-container-exit
-```
-
-## 📦 Deployment
-
-### Umbrel App Store
-
-Die App wird automatisch über den Umbrel App Store deployed:
+### Docker Compose Configuration
 
 ```yaml
-# umbrel-app.yml
-manifestVersion: 1
-id: "bitsperity-beacon"
-name: "Bitsperity Beacon"
-dependencies: ["bitsperity-mongodb"]
+version: '3.8'
+services:
+  bitsperity-beacon:
+    image: bitsperity/beacon:latest
+    container_name: bitsperity-beacon
+    network_mode: host  # Required for mDNS
+    environment:
+      - BEACON_MONGODB_URL=mongodb://umbrel:umbrel@bitsperity-mongodb:27017/beacon
+      - BEACON_PORT=8080
+      - MDNS_DOMAIN=local
+    depends_on:
+      - bitsperity-mongodb
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    restart: unless-stopped
 ```
 
-### Manual Docker Deployment
+## 🔍 Monitoring & Observability
 
-```bash
-# Build Image
-docker build -t bitsperity/beacon:latest .
+### System Metrics
 
-# Run Container
-docker run -d \
-  --name bitsperity-beacon \
-  --network host \
-  -e BEACON_MONGODB_URL=mongodb://localhost:27017/beacon \
-  -v ./data:/app/data \
-  -v ./logs:/app/logs \
-  bitsperity/beacon:latest
+The health endpoint provides comprehensive system metrics:
+
+```json
+{
+  "status": "healthy",
+  "version": "1.0.0",
+  "uptime": 3600,
+  "timestamp": "2024-01-01T12:00:00Z",
+  "services": {
+    "total": 25,
+    "active": 20,
+    "inactive": 2,
+    "expired": 2,
+    "unhealthy": 1
+  },
+  "mdns": {
+    "running": true,
+    "registered_services": 20,
+    "domain": "local"
+  },
+  "database": {
+    "connected": true,
+    "ping_ms": 3,
+    "collections": {
+      "services": 25,
+      "health_checks": 150
+    }
+  },
+  "memory": {
+    "used_mb": 128,
+    "cache_size": 25
+  },
+  "network": {
+    "local_ip": "192.168.1.10",
+    "interface": "eth0"
+  }
+}
 ```
 
-## 🤝 Integration Examples
+### Structured Logging
 
-### HomegrowClient Integration
+Beacon uses structured JSON logging for easy parsing:
 
-```python
-# HomegrowClient registriert sich automatisch
-from bitsperity_beacon_client import BeaconClient
-
-beacon = BeaconClient("http://beacon.local:8080")
-service_id = beacon.register({
-    "name": "homegrow-client",
-    "type": "iot",
-    "host": "192.168.1.100",
-    "port": 8080,
-    "tags": ["agriculture", "sensors"]
-})
-
-# Automatische Heartbeats
-beacon.start_heartbeat(service_id)
+```json
+{
+  "timestamp": "2024-01-01T12:00:00Z",
+  "level": "INFO",
+  "logger": "app.core.service_registry",
+  "message": "Service registered",
+  "service_id": "12345678-1234-1234-1234-123456789012",
+  "name": "homegrow-client",
+  "type": "iot",
+  "host": "192.168.1.100",
+  "port": 8080,
+  "expires_at": "2024-01-01T12:05:00Z"
+}
 ```
-
-### MQTT Broker Discovery
-
-```python
-# Andere Services finden MQTT Broker automatisch
-services = beacon.discover(type="mqtt")
-mqtt_broker = services[0]
-mqtt_client.connect(mqtt_broker["host"], mqtt_broker["port"])
-```
-
-## 🔒 Security
-
-- **Network Isolation**: Läuft im Docker Host Network für mDNS
-- **Input Validation**: Alle API Inputs werden validiert
-- **Rate Limiting**: Schutz vor API Missbrauch
-- **Health Checks**: Kontinuierliche Überwachung
-
-## 📚 Documentation
-
-- **API Docs**: `/api/docs` (Swagger UI)
-- **Requirements**: `REQUIREMENTS.md`
-- **Examples**: `docs/EXAMPLES.md`
-- **Deployment**: `docs/DEPLOYMENT.md`
 
 ## 🐛 Troubleshooting
 
-### Häufige Probleme
+### Common Issues
 
-1. **mDNS funktioniert nicht**
-   ```bash
-   # Prüfe Network Mode
-   docker inspect bitsperity-beacon | grep NetworkMode
-   # Sollte "host" sein
-   ```
-
-2. **MongoDB Verbindung fehlgeschlagen**
-   ```bash
-   # Prüfe bitsperity-mongodb Status
-   umbrel app logs bitsperity-mongodb
-   ```
-
-3. **Services werden nicht gefunden**
-   ```bash
-   # Prüfe TTL Status
-   curl http://localhost:8080/api/v1/services/expired
-   ```
-
-### Logs
-
+**1. mDNS not working**
 ```bash
-# Beacon Logs
-umbrel app logs bitsperity-beacon
+# Check network mode
+docker inspect bitsperity-beacon | grep NetworkMode
+# Should be "host"
 
-# Detaillierte Logs
-docker exec bitsperity-beacon tail -f /app/logs/beacon.log
+# Test mDNS manually
+avahi-browse -a
 ```
 
-## 🚧 Roadmap
+**2. MongoDB connection failed**
+```bash
+# Check MongoDB status
+umbrel app logs bitsperity-mongodb
 
-- [ ] **Health Check System** - Automatische Service Health Checks
-- [ ] **Service Groups** - Logische Gruppierung von Services
-- [ ] **Load Balancing** - Service Load Balancing Informationen
-- [ ] **API Gateway Integration** - Service Routing
-- [ ] **Metrics Export** - Prometheus/Grafana Integration
-- [ ] **Service Dependencies** - Dependency Management
+# Test connection
+docker exec bitsperity-beacon python -c "
+import asyncio
+from app.database import database
+asyncio.run(database.test_connection())
+"
+```
+
+**3. Services not discovered**
+```bash
+# Check service TTL status
+curl http://localhost:8080/api/v1/services/expired
+
+# Check mDNS registration
+curl http://localhost:8080/api/v1/health
+```
+
+**4. High memory usage**
+```bash
+# Check service cache size
+curl http://localhost:8080/api/v1/health | jq '.memory'
+
+# Clear expired services manually
+curl -X DELETE http://localhost:8080/api/v1/services/cleanup
+```
+
+### Debug Mode
+
+Enable debug logging for detailed troubleshooting:
+
+```bash
+docker run -e LOG_LEVEL=DEBUG bitsperity/beacon:latest
+```
+
+### Log Analysis
+
+```bash
+# Follow live logs
+docker logs -f bitsperity-beacon
+
+# Filter service registration events
+docker logs bitsperity-beacon | grep "Service registered"
+
+# Check mDNS events
+docker logs bitsperity-beacon | grep "mDNS"
+```
+
+## 🚧 Development Roadmap
+
+### Phase 1: Core Features ✅
+- [x] Basic service registration and discovery
+- [x] mDNS/Bonjour integration
+- [x] TTL-based lifecycle management
+- [x] REST API with OpenAPI documentation
+- [x] Real-time WebSocket updates
+- [x] MongoDB persistence
+
+### Phase 2: Enhanced Monitoring 🔄
+- [ ] **Service Health Checks** - Automated health monitoring
+- [ ] **Performance Metrics** - Service response time tracking
+- [ ] **Alert System** - Notifications for service failures
+- [ ] **Dashboard Analytics** - Usage statistics and trends
+
+### Phase 3: Advanced Features 🔮
+- [ ] **Service Groups** - Logical service grouping and dependencies
+- [ ] **Load Balancing** - Service load distribution information
+- [ ] **API Gateway Integration** - Automatic service routing
+- [ ] **Service Mesh** - Advanced networking features
+
+### Phase 4: Enterprise Features 🏢
+- [ ] **Authentication & Authorization** - Multi-tenant support
+- [ ] **Rate Limiting** - API quota management  
+- [ ] **Audit Logging** - Compliance and security logging
+- [ ] **High Availability** - Clustering and failover
 
 ## 🤝 Contributing
 
-1. Fork das Repository
-2. Erstelle einen Feature Branch (`git checkout -b feature/amazing-feature`)
-3. Commit deine Änderungen (`git commit -m 'Add amazing feature'`)
-4. Push zum Branch (`git push origin feature/amazing-feature`)
-5. Öffne einen Pull Request
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+### Development Setup
+
+```bash
+# Clone repository
+git clone https://github.com/bitsperity/bitsperity_apps.git
+cd bitsperity_apps/bitsperity-beacon
+
+# Setup environment
+cp env.example .env
+# Edit .env with your configuration
+
+# Start development environment
+docker-compose -f docker-compose.dev.yml up -d
+
+# Run tests
+docker-compose exec backend python -m pytest
+docker-compose exec frontend npm test
+```
+
+### Code Style
+
+- **Backend**: Follow PEP 8, use Black formatter
+- **Frontend**: Use Prettier, follow React best practices
+- **Documentation**: Use clear, concise language with examples
 
 ## 📄 License
 
-Dieses Projekt ist unter der MIT License lizenziert - siehe [LICENSE](LICENSE) für Details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
-- **Umbrel** - Für die großartige Self-Hosting Platform
-- **FastAPI** - Für das moderne Python Web Framework
-- **Zeroconf** - Für die mDNS/Bonjour Implementation
-- **React** - Für das Frontend Framework
+- **Umbrel** - For the excellent self-hosting platform
+- **FastAPI** - For the modern Python web framework
+- **Zeroconf** - For the mDNS/Bonjour implementation
+- **React** - For the frontend framework
+- **MongoDB** - For the document database
 
 ---
 
-**Bitsperity Beacon** - Macht Service Discovery im lokalen Netzwerk einfach und zuverlässig! 🚀 
+**Bitsperity Beacon** - Making service discovery in local networks simple and reliable! 🚀
+
+For more information, visit our [documentation](https://docs.bitsperity.com/beacon) or join our [community](https://community.bitsperity.com). 

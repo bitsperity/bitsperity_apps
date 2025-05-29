@@ -1,0 +1,165 @@
+# Docker Compose Example with Health Check Auto-Management
+# Shows how simple service registration becomes with health check support
+
+version: '3.8'
+
+services:
+  # Example API Service - Just register once with health endpoint!
+  api-service:
+    image: my-api-service:latest
+    container_name: api-service
+    networks:
+      - beacon-network
+    environment:
+      - PORT=8000
+    command: |
+      /bin/sh -c "
+      # Simple one-time registration with health check
+      curl -X POST http://bitsperity-beacon:8080/api/v1/services/register \
+        -H 'Content-Type: application/json' \
+        -d '{
+          \"name\": \"api-service\",
+          \"type\": \"api\",
+          \"host\": \"api-service\",
+          \"port\": 8000,
+          \"protocol\": \"http\",
+          \"tags\": [\"api\", \"microservice\"],
+          \"health_check_url\": \"http://api-service:8000/health\",
+          \"health_check_interval\": 60,
+          \"health_check_enabled\": true,
+          \"fallback_to_health_check\": true,
+          \"ttl\": 300
+        }' || true
+      
+      # Start your service - Beacon handles everything else!
+      exec /app/start.sh
+      "
+
+  # Example IoT Service with health checks
+  iot-sensor:
+    image: my-iot-sensor:latest
+    container_name: iot-sensor
+    networks:
+      - beacon-network
+    environment:
+      - SENSOR_PORT=8080
+    command: |
+      /bin/sh -c "
+      # Register with health check support
+      curl -X POST http://bitsperity-beacon:8080/api/v1/services/register \
+        -H 'Content-Type: application/json' \
+        -d '{
+          \"name\": \"iot-sensor\",
+          \"type\": \"iot\",
+          \"host\": \"iot-sensor\",
+          \"port\": 8080,
+          \"protocol\": \"http\",
+          \"tags\": [\"iot\", \"sensor\", \"temperature\"],
+          \"metadata\": {
+            \"location\": \"greenhouse-1\",
+            \"sensor_type\": \"temperature_humidity\"
+          },
+          \"health_check_url\": \"http://iot-sensor:8080/health\",
+          \"health_check_interval\": 30,
+          \"health_check_timeout\": 5,
+          \"health_check_retries\": 3,
+          \"ttl\": 180
+        }' || true
+      
+      exec /app/sensor.sh
+      "
+
+  # MQTT Broker with health checks
+  mqtt-broker:
+    image: eclipse-mosquitto:latest
+    container_name: mqtt-broker
+    networks:
+      - beacon-network
+    ports:
+      - "1883:1883"
+      - "9001:9001"  # HTTP management port
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+    command: |
+      /bin/sh -c "
+      # Start Mosquitto first
+      /usr/sbin/mosquitto -c /mosquitto/config/mosquitto.conf &
+      
+      # Wait a bit for startup
+      sleep 5
+      
+      # Register with Beacon
+      curl -X POST http://bitsperity-beacon:8080/api/v1/services/register \
+        -H 'Content-Type: application/json' \
+        -d '{
+          \"name\": \"mqtt-broker\",
+          \"type\": \"mqtt\",
+          \"host\": \"mqtt-broker\",
+          \"port\": 1883,
+          \"protocol\": \"mqtt\",
+          \"tags\": [\"mqtt\", \"broker\", \"messaging\"],
+          \"health_check_url\": \"http://mqtt-broker:9001/health\",
+          \"health_check_interval\": 60,
+          \"ttl\": 600
+        }' || true
+      
+      # Keep container running
+      wait
+      "
+
+  # Database Service (PostgreSQL) with health checks
+  postgres-db:
+    image: postgres:15
+    container_name: postgres-db
+    networks:
+      - beacon-network
+    environment:
+      - POSTGRES_DB=myapp
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+    command: |
+      /bin/sh -c "
+      # Start PostgreSQL
+      docker-entrypoint.sh postgres &
+      
+      # Wait for PostgreSQL to be ready
+      sleep 10
+      
+      # Register with Beacon
+      curl -X POST http://bitsperity-beacon:8080/api/v1/services/register \
+        -H 'Content-Type: application/json' \
+        -d '{
+          \"name\": \"postgres-db\",
+          \"type\": \"database\",
+          \"host\": \"postgres-db\",
+          \"port\": 5432,
+          \"protocol\": \"postgresql\",
+          \"tags\": [\"database\", \"postgres\", \"sql\"],
+          \"metadata\": {
+            \"database\": \"myapp\",
+            \"version\": \"15\"
+          },
+          \"health_check_url\": \"http://postgres-db:5432/health\",
+          \"health_check_interval\": 120,
+          \"ttl\": 900
+        }' || true
+      
+      wait
+      "
+
+networks:
+  beacon-network:
+    external: true
+
+# Usage:
+# 1. docker network create beacon-network
+# 2. Start Beacon: docker-compose -f ../docker-compose.yml up -d
+# 3. Start services: docker-compose -f docker-compose.health-check-example.yml up -d
+# 4. Check services: curl http://localhost:8080/api/v1/services/
+#
+# Benefits:
+# - No heartbeat code needed in services
+# - No sidecar containers required  
+# - Automatic TTL extension via health checks
+# - Services survive temporary Beacon outages
+# - Health status monitoring included 

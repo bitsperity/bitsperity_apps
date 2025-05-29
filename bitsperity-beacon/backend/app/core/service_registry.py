@@ -377,4 +377,143 @@ class ServiceRegistry:
             
         except Exception as e:
             logger.error("Fehler beim Laden der Service Tags", error=str(e))
-            return [] 
+            return []
+    
+    # 🆕 NEW: Health Check Support Methods (minimal addition)
+    async def update_service_health_status(self, service: Service) -> bool:
+        """Update service health status in database (minimal invasive)"""
+        try:
+            # Only update health-related fields to avoid conflicts
+            update_dict = {
+                "last_health_check": service.last_health_check,
+                "consecutive_health_failures": service.consecutive_health_failures,
+                "status": service.status.value,
+                "updated_at": service.updated_at,
+                # Also update TTL fields if health check was successful
+                "expires_at": service.expires_at,
+                "last_heartbeat": service.last_heartbeat
+            }
+            
+            update_dict = jsonable_encoder(update_dict)
+            
+            result = await self.database.services.update_one(
+                {"service_id": service.service_id},
+                {"$set": update_dict}
+            )
+            
+            # Update cache
+            if service.service_id in self._services_cache:
+                self._services_cache[service.service_id] = service
+            
+            return result.modified_count > 0
+            
+        except Exception as e:
+            logger.error("Error updating service health status", 
+                        service_id=service.service_id, error=str(e))
+            return False
+    
+    async def get_services_needing_health_check(self) -> List[Service]:
+        """Get services that need health checks (new method)"""
+        try:
+            services = await self.get_all_active_services()
+            
+            needs_check = []
+            for service in services:
+                if (service.health_check_url and 
+                    service.health_check_enabled and 
+                    (service.needs_health_check() or service.is_near_expiry())):
+                    needs_check.append(service)
+            
+            return needs_check
+            
+        except Exception as e:
+            logger.error("Error getting services needing health check", error=str(e))
+            return []
+    
+    async def get_services_near_expiry(self) -> List[Service]:
+        """Get services approaching TTL expiry that could use health check fallback"""
+        try:
+            # Get services expiring in the next 5 minutes
+            near_expiry_time = datetime.now(timezone.utc) + timedelta(minutes=5)
+            
+            cursor = self.database.services.find({
+                "expires_at": {
+                    "$lt": near_expiry_time.isoformat(),
+                    "$gt": datetime.now(timezone.utc).isoformat()
+                },
+                "health_check_url": {"$exists": True, "$ne": None},
+                "fallback_to_health_check": {"$ne": False}
+            })
+            
+            services_docs = await cursor.to_list(length=None)
+            
+            services = []
+            for doc in services_docs:
+                try:
+                    prepared_doc = prepare_service_doc(doc)
+                    service = Service(**prepared_doc)
+                    if service.can_use_health_check_fallback():
+                        services.append(service)
+                except Exception as e:
+                    logger.error("Error creating service object for near expiry", 
+                               doc_id=str(doc.get("_id", "unknown")), error=str(e))
+                    continue
+            
+            return services
+            
+        except Exception as e:
+            logger.error("Error getting services near expiry", error=str(e))
+            return []
+    
+    async def mark_service_unhealthy(self, service_id: str) -> bool:
+        """Mark service as unhealthy (minimal helper method)"""
+        try:
+            result = await self.database.services.update_one(
+                {"service_id": service_id},
+                {"$set": {
+                    "status": ServiceStatus.UNHEALTHY.value,
+                    "updated_at": datetime.now(timezone.utc)
+                }}
+            )
+            
+            # Update cache
+            if service_id in self._services_cache:
+                self._services_cache[service_id].status = ServiceStatus.UNHEALTHY
+                self._services_cache[service_id].updated_at = datetime.now(timezone.utc)
+            
+            return result.modified_count > 0
+            
+        except Exception as e:
+            logger.error("Error marking service as unhealthy", service_id=service_id, error=str(e))
+            return False
+    
+    async def expire_service(self, service_id: str) -> bool:
+        """Mark service as expired and handle cleanup"""
+        try:
+            service = await self.get_service_by_id(service_id)
+            if not service:
+                return False
+            
+            # Mark as expired
+            service.mark_expired()
+            
+            # Update in database
+            await self.update_service_health_status(service)
+            
+            # Remove from mDNS if available
+            if self.mdns_server:
+                try:
+                    await self.mdns_server.unregister_service(service_id)
+                except Exception as mdns_error:
+                    logger.warning("mDNS cleanup failed during service expiry", 
+                                 service_id=service_id, error=str(mdns_error))
+            
+            # Remove from database (cleanup)
+            await self.deregister_service(service_id)
+            
+            logger.info("Service expired and cleaned up", service_id=service_id)
+            return True
+            
+        except Exception as e:
+            logger.error("Error expiring service", service_id=service_id, error=str(e))
+            return False 

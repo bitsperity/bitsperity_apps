@@ -1,5 +1,6 @@
 """
 Bitsperity Beacon - FastAPI Hauptanwendung
+Enhanced with Health Check Manager Support
 """
 import asyncio
 from contextlib import asynccontextmanager
@@ -19,6 +20,7 @@ from app.config import settings
 from app.database import database
 from app.core import ServiceRegistry, TTLManager, WebSocketManager
 from app.core.avahi_mdns import AvahiMDNSServer
+from app.core.health_check_manager import HealthCheckManager
 from app.api.v1 import services, discovery, health, websocket, debug
 from app.api.v1.services import set_dependencies
 from app.api.v1.websocket import set_websocket_manager
@@ -49,6 +51,7 @@ service_registry: ServiceRegistry = None
 ttl_manager: TTLManager = None
 mdns_server: AvahiMDNSServer = None
 websocket_manager: WebSocketManager = None
+health_check_manager: HealthCheckManager = None
 
 
 class CORSHeaderMiddleware(BaseHTTPMiddleware):
@@ -80,7 +83,7 @@ class CORSHeaderMiddleware(BaseHTTPMiddleware):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application Lifespan Manager"""
-    global service_registry, ttl_manager, mdns_server, websocket_manager
+    global service_registry, ttl_manager, mdns_server, websocket_manager, health_check_manager
     
     logger.info("Starte Bitsperity Beacon", version="1.0.0")
     
@@ -93,7 +96,12 @@ async def lifespan(app: FastAPI):
         websocket_manager = WebSocketManager()
         mdns_server = AvahiMDNSServer()
         service_registry = ServiceRegistry(database, mdns_server)  # mDNS-Referenz für TTL-Cleanup
-        ttl_manager = TTLManager(service_registry)
+        
+        # Initialize Health Check Manager
+        health_check_manager = HealthCheckManager(service_registry, websocket_manager)
+        
+        # Initialize TTL Manager with health check support
+        ttl_manager = TTLManager(service_registry, health_check_manager)
         
         # 3. Setze Dependencies für API Endpoints
         set_dependencies(service_registry, mdns_server, websocket_manager)
@@ -102,6 +110,14 @@ async def lifespan(app: FastAPI):
         # 4. Starte mDNS Server
         await mdns_server.start()
         logger.info("mDNS Server gestartet")
+        
+        # Start Health Check Manager
+        try:
+            await health_check_manager.start()
+            logger.info("Health Check Manager gestartet")
+        except Exception as hc_error:
+            logger.warning("Health Check Manager failed to start", error=str(hc_error))
+            # Continue without health checks - not critical
         
         # 5. Starte TTL Manager
         await ttl_manager.start()
@@ -124,6 +140,14 @@ async def lifespan(app: FastAPI):
             if ttl_manager:
                 await ttl_manager.stop()
                 logger.info("TTL Manager gestoppt")
+            
+            # Stop Health Check Manager
+            if health_check_manager:
+                try:
+                    await health_check_manager.stop()
+                    logger.info("Health Check Manager gestoppt")
+                except Exception as hc_error:
+                    logger.warning("Error stopping Health Check Manager", error=str(hc_error))
             
             # Stoppe mDNS Server
             if mdns_server:

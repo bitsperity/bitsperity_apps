@@ -1,7 +1,7 @@
 """
 Base Model für gemeinsame Felder
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, Any
 from pydantic import BaseModel as PydanticBaseModel, Field
 from bson import ObjectId
@@ -41,8 +41,8 @@ class BaseModel(PydanticBaseModel):
     """Base Model mit gemeinsamen Feldern"""
     
     id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias="_id")
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     
     model_config = {
         "populate_by_name": True,
