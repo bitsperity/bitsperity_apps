@@ -194,4 +194,4 @@ class SensorDataModel {
   }
 }
 
-module.exports = SensorDataModel; 
+export default SensorDataModel; 

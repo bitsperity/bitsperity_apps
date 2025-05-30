@@ -1,5 +1,5 @@
-const EventEmitter = require('events');
-const WebSocket = require('ws');
+import { EventEmitter } from 'events';
+import WebSocket from 'ws';
 
 class BeaconServiceDiscovery extends EventEmitter {
   constructor(beaconUrl = 'http://bitsperity-beacon:8080') {
@@ -289,4 +289,4 @@ class BeaconServiceDiscovery extends EventEmitter {
   }
 }
 
-module.exports = BeaconServiceDiscovery;
+export default BeaconServiceDiscovery;

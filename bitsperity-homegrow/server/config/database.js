@@ -1,4 +1,4 @@
-const { MongoClient } = require('mongodb');
+import { MongoClient } from 'mongodb';
 
 class DatabaseConfig {
   constructor() {
@@ -63,7 +63,8 @@ class DatabaseConfig {
 
       console.log('✅ Database indexes created');
     } catch (error) {
-      console.error('❌ Error creating indexes:', error);
+      console.warn('⚠️ Could not create indexes (auth required):', error.message);
+      console.log('📝 Continuing without indexes for local testing...');
     }
   }
 
@@ -91,4 +92,4 @@ class DatabaseConfig {
   }
 }
 
-module.exports = DatabaseConfig; 
+export default DatabaseConfig; 

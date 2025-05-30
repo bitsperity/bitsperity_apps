@@ -1,5 +1,5 @@
-const mqtt = require('mqtt');
-const EventEmitter = require('events');
+import mqtt from 'mqtt';
+import { EventEmitter } from 'events';
 
 class MQTTBridge extends EventEmitter {
   constructor(mqttUrl, deviceModel, sensorDataModel, commandModel) {
@@ -363,4 +363,4 @@ class MQTTBridge extends EventEmitter {
   }
 }
 
-module.exports = MQTTBridge; 
+export default MQTTBridge; 

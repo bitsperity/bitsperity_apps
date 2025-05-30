@@ -1,7 +1,7 @@
-const EventEmitter = require('events');
-const programModel = require('../models/program');
-const deviceModel = require('../models/device');
-const sensorDataModel = require('../models/sensor-data');
+import { EventEmitter } from 'events';
+import ProgramModel from '../models/program.js';
+import deviceModel from '../models/device.js';
+import sensorDataModel from '../models/sensor-data.js';
 
 class ProgramEngine extends EventEmitter {
   constructor() {
@@ -10,16 +10,18 @@ class ProgramEngine extends EventEmitter {
     this.schedulerInterval = null;
     this.runningPrograms = new Map(); // programId -> execution info
     this.mqttBridge = null;
+    this.programModel = null;
   }
 
   /**
    * Initialisiert die Program Engine
    */
-  async initialize(mqttBridge) {
+  async initialize(mqttBridge, db) {
     this.mqttBridge = mqttBridge;
     
     // Initialisiere Program Model
-    await programModel.initialize();
+    this.programModel = new ProgramModel(db);
+    await this.programModel.initialize();
     
     console.log('Program Engine initialized');
   }
@@ -80,7 +82,7 @@ class ProgramEngine extends EventEmitter {
 
     try {
       // Hole Programme die ausgeführt werden sollen
-      const programsToRun = await programModel.getProgramsToRun();
+      const programsToRun = await this.programModel.getProgramsToRun();
       
       for (const program of programsToRun) {
         // Prüfe ob Programm bereits läuft
@@ -248,7 +250,7 @@ class ProgramEngine extends EventEmitter {
 
       // Programm erfolgreich abgeschlossen
       const duration = Date.now() - startTime;
-      await programModel.updateProgramStats(programId, true, duration);
+      await this.programModel.updateProgramStats(programId, true, duration);
       
       console.log(`Program completed successfully: ${program.name} (${duration}ms)`);
       this.emit('program-completed', { programId, program, duration, success: true });
@@ -256,7 +258,7 @@ class ProgramEngine extends EventEmitter {
     } catch (error) {
       // Programm fehlgeschlagen
       const duration = Date.now() - startTime;
-      await programModel.updateProgramStats(programId, false, duration, error.message);
+      await this.programModel.updateProgramStats(programId, false, duration, error.message);
       
       console.error(`Program failed: ${program.name}`, error);
       this.emit('program-failed', { programId, program, duration, error: error.message });
@@ -371,7 +373,7 @@ class ProgramEngine extends EventEmitter {
    */
   async runProgramManually(programId) {
     try {
-      const program = await programModel.getProgramById(programId);
+      const program = await this.programModel.getProgramById(programId);
       if (!program) {
         throw new Error('Program not found');
       }
@@ -406,7 +408,7 @@ class ProgramEngine extends EventEmitter {
    */
   async handleSensorTrigger(deviceId, sensorType, sensorValue) {
     try {
-      const triggeredPrograms = await programModel.getProgramsForSensorTrigger(
+      const triggeredPrograms = await this.programModel.getProgramsForSensorTrigger(
         deviceId, 
         sensorType, 
         sensorValue
@@ -497,4 +499,4 @@ class ProgramEngine extends EventEmitter {
   }
 }
 
-module.exports = new ProgramEngine();
+export default ProgramEngine;

@@ -1,4 +1,4 @@
-const express = require('express');
+import express from 'express';
 
 class SensorRoutes {
   constructor(sensorDataModel, deviceModel) {
@@ -380,4 +380,4 @@ class SensorRoutes {
   }
 }
 
-module.exports = SensorRoutes; 
+export default SensorRoutes; 

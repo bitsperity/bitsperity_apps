@@ -1,4 +1,4 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 const programModel = require('../models/program');
 const programEngine = require('../services/program-engine');
@@ -536,4 +536,4 @@ router.post('/from-template', async (req, res) => {
   }
 });
 
-module.exports = router; 
+export default router; 

@@ -1,4 +1,4 @@
-const EventEmitter = require('events');
+import { EventEmitter } from 'events';
 
 class WebSocketService extends EventEmitter {
   constructor() {
@@ -215,4 +215,4 @@ class WebSocketService extends EventEmitter {
   }
 }
 
-module.exports = WebSocketService; 
+export default WebSocketService; 

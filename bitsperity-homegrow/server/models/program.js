@@ -1,21 +1,27 @@
-const { MongoClient, ObjectId } = require('mongodb');
-const { getDatabase } = require('../config/database');
+import { MongoClient, ObjectId } from 'mongodb';
 
 class ProgramModel {
-  constructor() {
-    this.collection = null;
+  constructor(db) {
+    this.collection = db ? db.collection('programs') : null;
+    this.db = db;
   }
 
   async initialize() {
-    const db = await getDatabase();
-    this.collection = db.collection('programs');
+    if (!this.db) {
+      throw new Error('Database not provided to ProgramModel');
+    }
     
     // Erstelle Indizes
-    await this.collection.createIndex({ device_id: 1 });
-    await this.collection.createIndex({ name: 1 });
-    await this.collection.createIndex({ enabled: 1 });
-    await this.collection.createIndex({ created_at: 1 });
-    await this.collection.createIndex({ last_run: 1 });
+    try {
+      await this.collection.createIndex({ device_id: 1 });
+      await this.collection.createIndex({ name: 1 });
+      await this.collection.createIndex({ enabled: 1 });
+      await this.collection.createIndex({ created_at: 1 });
+      await this.collection.createIndex({ last_run: 1 });
+      console.log('✅ Program indexes created');
+    } catch (error) {
+      console.warn('⚠️ Could not create program indexes:', error.message);
+    }
   }
 
   /**
@@ -444,4 +450,4 @@ class ProgramModel {
   }
 }
 
-module.exports = new ProgramModel(); 
+export default ProgramModel; 

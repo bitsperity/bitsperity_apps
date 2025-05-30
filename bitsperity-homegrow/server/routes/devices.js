@@ -1,4 +1,4 @@
-const express = require('express');
+import express from 'express';
 
 class DeviceRoutes {
   constructor(deviceModel, mqttBridge, beaconClient) {
@@ -26,17 +26,18 @@ class DeviceRoutes {
           };
         });
 
-        res.json({
+        return {
           success: true,
           data: enrichedDevices,
           count: enrichedDevices.length
-        });
+        };
       } catch (error) {
         console.error('Error getting devices:', error);
-        res.status(500).json({
+        res.status(500);
+        return {
           success: false,
           error: error.message
-        });
+        };
       }
     });
 
@@ -58,16 +59,17 @@ class DeviceRoutes {
           device.beacon_info = beaconDevice;
         }
 
-        res.json({
+        return {
           success: true,
           data: device
-        });
+        };
       } catch (error) {
         console.error('Error getting device:', error);
-        res.status(500).json({
+        res.status(500);
+        return {
           success: false,
           error: error.message
-        });
+        };
       }
     });
 
@@ -100,16 +102,17 @@ class DeviceRoutes {
 
         console.log(`✅ Device created: ${device.device_id}`);
 
-        res.status(201).json({
+        return {
           success: true,
           data: device
-        });
+        };
       } catch (error) {
         console.error('Error creating device:', error);
-        res.status(500).json({
+        res.status(500);
+        return {
           success: false,
           error: error.message
-        });
+        };
       }
     });
 
@@ -144,16 +147,17 @@ class DeviceRoutes {
           console.warn(`⚠️ Failed to send config to device ${deviceId}:`, mqttError.message);
         }
 
-        res.json({
+        return {
           success: true,
           message: 'Configuration updated'
-        });
+        };
       } catch (error) {
         console.error('Error updating device config:', error);
-        res.status(500).json({
+        res.status(500);
+        return {
           success: false,
           error: error.message
-        });
+        };
       }
     });
 
@@ -195,16 +199,17 @@ class DeviceRoutes {
           { $set: updateData }
         );
 
-        res.json({
+        return {
           success: true,
           message: 'Device updated successfully'
-        });
+        };
       } catch (error) {
         console.error('Error updating device:', error);
-        res.status(500).json({
+        res.status(500);
+        return {
           success: false,
           error: error.message
-        });
+        };
       }
     });
 
@@ -227,16 +232,17 @@ class DeviceRoutes {
 
         console.log(`🗑️ Device deleted: ${deviceId}`);
 
-        res.json({
+        return {
           success: true,
           message: 'Device deleted'
-        });
+        };
       } catch (error) {
         console.error('Error deleting device:', error);
-        res.status(500).json({
+        res.status(500);
+        return {
           success: false,
           error: error.message
-        });
+        };
       }
     });
 
@@ -265,18 +271,19 @@ class DeviceRoutes {
           }
         }
 
-        res.json({
+        return {
           success: true,
           discovered: discoveredDevices.length,
           new_devices: newDevices.length,
           data: newDevices
-        });
+        };
       } catch (error) {
         console.error('Error discovering devices:', error);
-        res.status(500).json({
+        res.status(500);
+        return {
           success: false,
           error: error.message
-        });
+        };
       }
     });
 
@@ -310,17 +317,18 @@ class DeviceRoutes {
 
         await this.mqttBridge.publishCommand(deviceId, commandData);
 
-        res.json({
+        return {
           success: true,
           command_id: commandData.command_id,
           message: 'Command sent successfully'
-        });
+        };
       } catch (error) {
         console.error('Error sending command:', error);
-        res.status(500).json({
+        res.status(500);
+        return {
           success: false,
           error: error.message
-        });
+        };
       }
     });
 
@@ -341,16 +349,17 @@ class DeviceRoutes {
 
         console.log(`🚨 Emergency stop sent to ${deviceId}`);
 
-        res.json({
+        return {
           success: true,
           message: 'Emergency stop command sent'
-        });
+        };
       } catch (error) {
         console.error('Error sending emergency stop:', error);
-        res.status(500).json({
+        res.status(500);
+        return {
           success: false,
           error: error.message
-        });
+        };
       }
     });
 
@@ -367,16 +376,17 @@ class DeviceRoutes {
           });
         }
 
-        res.json({
+        return {
           success: true,
           data: device.stats
-        });
+        };
       } catch (error) {
         console.error('Error getting device stats:', error);
-        res.status(500).json({
+        res.status(500);
+        return {
           success: false,
           error: error.message
-        });
+        };
       }
     });
   }
@@ -386,4 +396,4 @@ class DeviceRoutes {
   }
 }
 
-module.exports = DeviceRoutes; 
+export default DeviceRoutes; 

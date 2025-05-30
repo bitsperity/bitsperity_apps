@@ -9,20 +9,7 @@ import fastifyWebsocket from '@fastify/websocket';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Import services and models
-import DatabaseConfig from './config/database.js';
-import DeviceModel from './models/device.js';
-import SensorDataModel from './models/sensor-data.js';
-import Command from './models/command.js';
-import BeaconServiceDiscovery from './services/beacon-client.js';
-import MQTTBridge from './services/mqtt-bridge.js';
-import ProgramEngine from './services/program-engine.js';
-import DeviceRoutes from './routes/devices.js';
-import SensorRoutes from './routes/sensors.js';
-import ProgramRoutes from './routes/programs.js';
-import CommandRoutes from './routes/commands.js';
-import { DatabaseService } from './services/database.js';
-import WebSocketService from './services/websocket.js';
+// Services and models werden dynamisch geladen in initializeServices()
 
 async function startServer() {
   const app = fastify({ logger: true });
@@ -47,6 +34,34 @@ async function startServer() {
     try {
       console.log('🚀 Initializing HomeGrow v3 services...');
 
+      // Dynamic imports for CommonJS modules
+      const DatabaseConfigModule = await import('./config/database.js');
+      const DatabaseConfig = DatabaseConfigModule.default || DatabaseConfigModule;
+      
+      const DeviceModelModule = await import('./models/device.js');
+      const DeviceModel = DeviceModelModule.default || DeviceModelModule;
+      
+      const SensorDataModelModule = await import('./models/sensor-data.js');
+      const SensorDataModel = SensorDataModelModule.default || SensorDataModelModule;
+      
+      const CommandModule = await import('./models/command.js');
+      const Command = CommandModule.default || CommandModule;
+      
+      const BeaconServiceDiscoveryModule = await import('./services/beacon-client.js');
+      const BeaconServiceDiscovery = BeaconServiceDiscoveryModule.default || BeaconServiceDiscoveryModule;
+      
+      const MQTTBridgeModule = await import('./services/mqtt-bridge.js');
+      const MQTTBridge = MQTTBridgeModule.default || MQTTBridgeModule;
+      
+      const ProgramEngineModule = await import('./services/program-engine.js');
+      const ProgramEngine = ProgramEngineModule.default || ProgramEngineModule;
+      
+      const DatabaseServiceModule = await import('./services/database.js');
+      const { DatabaseService } = DatabaseServiceModule;
+      
+      const WebSocketServiceModule = await import('./services/websocket.js');
+      const WebSocketService = WebSocketServiceModule.default || WebSocketServiceModule;
+
       // Initialize database
       const dbConfig = new DatabaseConfig();
       db = await dbConfig.connect();
@@ -56,7 +71,7 @@ async function startServer() {
       sensorDataModel = new SensorDataModel(db);
       
       // Initialize Beacon Service Discovery
-      beaconClient = new BeaconServiceDiscovery(process.env.BEACON_URL || 'http://bitsperity-beacon:8097');
+      beaconClient = new BeaconServiceDiscovery(process.env.BEACON_URL || 'http://bitsperity-beacon_web_1:80');
       await beaconClient.initialize();
       
       // Initialize MQTT Bridge
@@ -69,8 +84,8 @@ async function startServer() {
       await mqttBridge.connect();
       
       // Initialize Program Engine
-      programEngine = ProgramEngine;
-      await programEngine.initialize(mqttBridge);
+      programEngine = new ProgramEngine();
+      await programEngine.initialize(mqttBridge, db);
       programEngine.start();
       
       // Initialize Database Service
@@ -245,6 +260,19 @@ async function startServer() {
       throw new Error('Services not initialized');
     }
     
+    // Dynamic imports for routes
+    const DeviceRoutesModule = await import('./routes/devices.js');
+    const DeviceRoutes = DeviceRoutesModule.default || DeviceRoutesModule;
+    
+    const SensorRoutesModule = await import('./routes/sensors.js');
+    const SensorRoutes = SensorRoutesModule.default || SensorRoutesModule;
+    
+    const ProgramRoutesModule = await import('./routes/programs.js');
+    const ProgramRoutes = ProgramRoutesModule.default || ProgramRoutesModule;
+    
+    const CommandRoutesModule = await import('./routes/commands.js');
+    const CommandRoutes = CommandRoutesModule.default || CommandRoutesModule;
+    
     // Device routes
     const deviceRoutes = new DeviceRoutes(deviceModel, mqttBridge, beaconClient);
     fastify.register(async function (fastify) {
@@ -299,11 +327,14 @@ async function startServer() {
       // Initialize all services first
       await initializeServices();
       
+      // Get port from environment
+      const port = process.env.PORT || 3001;
+      
       // Start HTTP server
-      await app.listen({ port: 3000, host: '0.0.0.0' });
-      console.log('🌐 HomeGrow v3 server listening on port 3000');
-      console.log('🎯 Dashboard: http://localhost:3000');
-      console.log('🔧 API: http://localhost:3000/api/v1');
+      await app.listen({ port: parseInt(port), host: '0.0.0.0' });
+      console.log(`🌐 HomeGrow v3 server listening on port ${port}`);
+      console.log(`🎯 Dashboard: http://localhost:${port}`);
+      console.log(`🔧 API: http://localhost:${port}/api/v1`);
       
     } catch (err) {
       console.error('❌ Server startup failed:', err);

@@ -1,4 +1,4 @@
-const { ObjectId } = require('mongodb');
+import { ObjectId } from 'mongodb';
 
 class DeviceModel {
   constructor(db) {
@@ -7,10 +7,16 @@ class DeviceModel {
   }
 
   async createIndexes() {
-    await this.collection.createIndex({ device_id: 1 }, { unique: true });
-    await this.collection.createIndex({ status: 1 });
-    await this.collection.createIndex({ last_seen: 1 });
-    await this.collection.createIndex({ 'beacon.service_id': 1 });
+    try {
+      await this.collection.createIndex({ device_id: 1 }, { unique: true });
+      await this.collection.createIndex({ status: 1 });
+      await this.collection.createIndex({ last_seen: 1 });
+      await this.collection.createIndex({ 'beacon.service_id': 1 });
+      await this.collection.createIndex({ 'config.location': 1 });
+      console.log('✅ Device indexes created');
+    } catch (error) {
+      console.warn('⚠️ Could not create device indexes:', error.message);
+    }
   }
 
   async create(deviceData) {
@@ -213,4 +219,4 @@ class DeviceModel {
   }
 }
 
-module.exports = DeviceModel; 
+export default DeviceModel; 
