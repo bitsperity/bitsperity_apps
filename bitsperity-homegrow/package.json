@@ -2,6 +2,7 @@
   "name": "bitsperity-homegrow",
   "version": "3.0.0",
   "description": "HomeGrow v3 - Professional Hydroponic System Management",
+  "type": "module",
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
