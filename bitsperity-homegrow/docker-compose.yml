@@ -19,7 +19,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3001
-      - MONGODB_URL=mongodb://umbrel:umbrel@umbrel.local:27017
+      - MONGODB_URL=mongodb://umbrel:umbrel@bitsperity-homegrow_web_1:27017?authSource=admin
       - MQTT_URL=mqtt://mosquitto_broker_1:1883
       - BEACON_URL=http://bitsperity-beacon_web_1:80
       - HOMEGROW_HOST=bitsperity-homegrow_web_1
