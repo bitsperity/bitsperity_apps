@@ -12,7 +12,7 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
-      - MONGODB_URL=mongodb://umbrel:umbrel@bitsperity-mongodb_mongodb_1:27017/homegrow
+      - MONGODB_URL=mongodb://umbrel:umbrel@192.168.178.124:27017/homegrow
       - DATABASE_NAME=homegrow
       - MQTT_HOST=mosquitto_broker_1
       - MQTT_PORT=1883
