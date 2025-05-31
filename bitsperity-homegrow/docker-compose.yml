@@ -14,7 +14,7 @@ services:
       - NODE_ENV=production
       - MONGODB_URL=mongodb://bitsperity-mongodb_mongodb_1:27017/homegrow
       - DATABASE_NAME=homegrow
-      - MQTT_HOST=mosquitto_mosquitto_1
+      - MQTT_HOST=mosquitto_broker_1
       - MQTT_PORT=1883
     volumes:
       - ${APP_DATA_DIR}/data:/app/data
@@ -24,7 +24,7 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
-      start_period: 10s
+      start_period: 5s
 
   # Zero-code Beacon registration via health checks
   beacon-registrar:
