@@ -5,8 +5,15 @@
   
   // Load data on mount
   onMount(async () => {
-    await deviceActions.loadDevices();
-    await sensorActions.loadCurrentSensorData();
+    console.log('🔄 Dashboard loading devices...');
+    try {
+      await deviceActions.loadDevices();
+      console.log('✅ Devices loaded:', $devices);
+      await sensorActions.loadCurrentSensorData();
+      console.log('✅ Sensor data loaded:', $currentSensorData);
+    } catch (error) {
+      console.error('❌ Dashboard loading error:', error);
+    }
   });
   
   // Reactive statements for computed values
@@ -14,6 +21,15 @@
   $: onlineDevices = $deviceStats.online;
   $: offlineDevices = $deviceStats.offline;
   $: errorDevices = $deviceStats.error;
+
+  // Add reactive debugging
+  $: {
+    console.log('📊 Device stats updated:', { 
+      total: totalDevices, 
+      online: onlineDevices, 
+      devices: $devices.length 
+    });
+  }
 </script>
 
 <svelte:head>

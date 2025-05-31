@@ -1,14 +1,22 @@
-manifestVersion: 1
+manifestVersion: 1.1
 id: bitsperity-homegrow
 category: automation
 name: HomeGrow v3
-version: "3.0.0"
+version: "1.0.0"
 icon: https://raw.githubusercontent.com/bitsperity/bitsperity_apps/master/bitsperity-homegrow/applogo.svg
-tagline: Professional Hydroponic System Management with ESP32 Integration
+tagline: Professional hydroponic automation system
 description: >-
-  HomeGrow v3 is a comprehensive Umbrel app for managing hydroponic systems with 
-  Arduino/ESP32-based clients. Built for professional growers who demand reliable 
-  automation, real-time monitoring, and seamless hardware integration.
+  HomeGrow v3 is a comprehensive hydroponic automation system that monitors and controls
+  your ESP32-based hydroponic devices. Features real-time sensor monitoring (pH, TDS, 
+  temperature, water level), automated device discovery via MQTT, and a modern web dashboard.
+  
+  Key Features:
+  - Real-time monitoring of pH, TDS, temperature, and water levels
+  - Automatic ESP32 device discovery and registration
+  - MQTT communication for reliable IoT connectivity
+  - Responsive web dashboard optimized for mobile and desktop
+  - Data visualization and device status tracking
+  - Production-ready with health monitoring and automatic recovery
 
   Perfect for indoor farming, greenhouse automation, and hydroponic enthusiasts who 
   want to combine modern IoT technology with proven growing techniques.
@@ -40,57 +48,31 @@ description: >-
   • Data export capabilities for analysis and reporting
 
 releaseNotes: >-
-  🎉 HomeGrow v3.0.0 - Complete Platform Rewrite
+  Initial release of HomeGrow v3 featuring:
+  - Complete MQTT integration with ESP32 devices
+  - Real-time sensor data monitoring
+  - Automatic device discovery and registration
+  - Responsive dashboard with live updates
+  - Production-ready deployment with health monitoring
 
-  This major release establishes HomeGrow v3 as the definitive solution for 
-  professional hydroponic system management with modern IoT integration.
-
-  ✨ Revolutionary Features:
-  • Automatic Service Discovery through Bitsperity Beacon integration
-  • Mobile-first Progressive Web App with offline functionality
-  • Real-time WebSocket updates for instantaneous data streaming
-  • Advanced automation engine with intelligent program execution
-  • Comprehensive ESP32 client support with automatic detection
-  • Professional dashboard with system monitoring and analytics
-
-  🏗️ Technical Excellence:
-  • SvelteKit frontend architecture for superior performance
-  • MongoDB persistence with optimized indexing and TTL management
-  • MQTT v3 protocol implementation for reliable hardware communication
-  • Docker-containerized deployment with health checks
-  • RESTful API with comprehensive endpoint coverage
-  • WebSocket service for real-time bidirectional communication
-
-  📱 User Experience:
-  • Responsive design optimized for smartphones, tablets, and desktops
-  • Dark/Light mode support with system preference detection
-  • Offline-first PWA capabilities with background sync
-  • Push notification system for critical alerts
-  • Intuitive manual control interface with safety confirmations
-
-  🔄 Migration & Compatibility:
-  • Seamless upgrade path from HomeGrow v2 installations
-  • Backward compatibility with existing ESP32 client configurations
-  • Automatic database migration with data preservation
-  • Zero-downtime deployment process
-
-developer: Bitsperity
-website: https://bitsperity.com
+developer: Bitsperity Labs
+website: https://github.com/bitsperity/homegrow-v3
 dependencies:
   - bitsperity-mongodb
-  - bitsperity-beacon
   - mosquitto
-repo: https://github.com/bitsperity/homegrow
-support: https://github.com/bitsperity/homegrow/issues
-port: 3001
+  - bitsperity-beacon
+repo: https://github.com/bitsperity/homegrow-v3
+support: https://github.com/bitsperity/homegrow-v3/issues
+port: 3000
 gallery:
-  - https://raw.githubusercontent.com/bitsperity/homegrow/main/docs/screenshots/dashboard.png
-  - https://raw.githubusercontent.com/bitsperity/homegrow/main/docs/screenshots/devices.png
-  - https://raw.githubusercontent.com/bitsperity/homegrow/main/docs/screenshots/monitoring.png
-  - https://raw.githubusercontent.com/bitsperity/homegrow/main/docs/screenshots/programs.png
-  - https://raw.githubusercontent.com/bitsperity/homegrow/main/docs/screenshots/manual.png
+  - 1.jpg
+  - 2.jpg
+  - 3.jpg
 path: ""
 defaultUsername: ""
 defaultPassword: ""
-submitter: Bitsperity
+torOnly: false
+permissions:
+  - STORAGE_DOWNLOADS
+submitter: Bitsperity Labs
 submission: https://github.com/getumbrel/umbrel-apps 

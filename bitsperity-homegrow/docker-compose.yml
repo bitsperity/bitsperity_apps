@@ -1,0 +1,64 @@
+version: "3.8"
+
+services:
+  app_proxy:
+    environment:
+      # The format here is: <app-id>_<docker-service-name>_1
+      APP_HOST: bitsperity-homegrow_web_1
+      APP_PORT: 3000
+      PROXY_AUTH_ADD: "false"
+
+  web:
+    build: ./app
+    container_name: homegrow
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URL=mongodb://bitsperity-mongodb_mongodb_1:27017/homegrow
+      - DATABASE_NAME=homegrow
+      - MQTT_HOST=mosquitto_mosquitto_1
+      - MQTT_PORT=1883
+    depends_on:
+      - bitsperity-mongodb
+      - mosquitto
+      - bitsperity-beacon
+    volumes:
+      - ${APP_DATA_DIR}/data:/app/data
+      - ${APP_DATA_DIR}/logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/v1/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # Zero-code Beacon registration via health checks
+  beacon-registrar:
+    image: curlimages/curl:latest
+    depends_on:
+      web:
+        condition: service_healthy
+      bitsperity-beacon:
+        condition: service_started
+    restart: "no"
+    command: >
+      curl -X POST http://bitsperity-beacon_web_1:80/api/v1/services/register
+      -H "Content-Type: application/json"
+      -d '{
+        "name": "homegrow-v3",
+        "type": "iot",
+        "host": "bitsperity-homegrow_web_1",
+        "port": 3000,
+        "protocol": "http",
+        "tags": ["iot", "hydroponic", "esp32", "mqtt", "automation"],
+        "metadata": {
+          "version": "1.0.0",
+          "description": "Professional hydroponic automation system",
+          "umbrel_app": "bitsperity-homegrow"
+        },
+        "ttl": 300,
+        "health_check_url": "http://bitsperity-homegrow_web_1:3000/api/v1/health",
+        "health_check_interval": 30,
+        "health_check_timeout": 5,
+        "health_check_retries": 3
+      }' 

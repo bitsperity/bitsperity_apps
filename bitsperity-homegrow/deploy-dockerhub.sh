@@ -31,9 +31,9 @@ if ! docker info | grep -q "Username"; then
     exit 1
 fi
 
-# Build Frontend
+# Build Frontend (in app/ directory)
 echo "🎨 Baue Frontend..."
-npm run build
+cd app && npm run build && cd ..
 
 # Build Multi-Platform Images
 echo "🔨 Baue Multi-Platform Docker Images..."
@@ -41,13 +41,13 @@ echo "🔨 Baue Multi-Platform Docker Images..."
 # Erstelle Builder falls nicht vorhanden
 docker buildx create --name multiarch --use 2>/dev/null || docker buildx use multiarch
 
-# Build und Push für amd64 (Multi-Platform Build hat Probleme mit SvelteKit)
+# Build und Push für amd64 (from app/ directory as build context)
 docker buildx build \
     --platform linux/amd64 \
     --tag $NAMESPACE/$IMAGE_NAME:$VERSION \
     --tag $NAMESPACE/$IMAGE_NAME:latest \
     --push \
-    .
+    ./app
 
 # Prüfe ob Images erfolgreich gepusht wurden
 echo "🔍 Prüfe gepushte Images..."
@@ -89,15 +89,15 @@ if ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no $UMBREL_HOST "echo 'SSH O
             echo "⏳ Warte 20 Sekunden für App-Start..."
             sleep 20
             
-            # Teste Health Endpoint
+            # Teste Health Endpoint (FIXED: correct API path)
             echo "🏥 Teste Health Endpoint..."
-            if curl -s -o /dev/null -w "%{http_code}" http://umbrel.local:3000/api/health | grep -q "200"; then
+            if curl -s -o /dev/null -w "%{http_code}" http://umbrel.local:3000/api/v1/health | grep -q "200"; then
                 echo "✅ Health Check erfolgreich - App läuft!"
                 
                 # Zeige Service Status
                 echo ""
                 echo "📊 Service Status:"
-                curl -s http://umbrel.local:3000/api/v1/system/status | jq '.services' 2>/dev/null || echo "Status konnte nicht abgerufen werden"
+                curl -s http://umbrel.local:3000/api/v1/health | jq '.' 2>/dev/null || echo "Status konnte nicht abgerufen werden"
             else
                 echo "⚠️  Health Check fehlgeschlagen - prüfe App-Status"
                 echo "   Logs anzeigen: ssh $UMBREL_HOST 'docker logs bitsperity-homegrow'"
