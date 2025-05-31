@@ -1,0 +1,249 @@
+# HomeGrow v3 - Projektspezifische Cursor Rules
+
+## Projekt Kontext
+- **App Name**: HomeGrow v3
+- **Purpose**: Professional hydroponic automation system für ESP32-based IoT devices
+- **Status**: Development Planning Phase Complete
+- **Current Phase**: Phase 1 - Core Foundation (Ready to Start)
+- **Next Milestone**: MVP Dashboard mit Real-time Monitoring
+
+## Development Plan Summary
+- **Total Phases**: 4 Phases (6 Wochen total, 240 Stunden)
+- **Current Focus**: Phase 1 MVP deliverables (14 Tage)
+- **Phase 1 Goal**: Grundlegende Gerätedashboard mit Echtzeit-Sensor-Anzeige
+- **Phase 1 Timeline**: 2 Wochen (14 Arbeitstage)
+
+## Technical Architecture
+- **Tech Stack**: SvelteKit + TypeScript + MongoDB + MQTT + WebSocket
+- **Database**: 3 Collections (devices, sensor_data, program_templates)
+- **API**: RESTful + WebSocket real-time + MQTT bridge
+- **Frontend**: Svelte Components + Stores Pattern + Tailwind CSS
+- **Integration**: Umbrel Services (bitsperity-mongodb, mosquitto, bitsperity-beacon)
+- **Deployment**: Single Container Docker mit Umbrel App Manifest
+
+## Current Phase Deliverables (Phase 1)
+
+### Backend Foundation (Week 1)
+- [ ] SvelteKit projekt setup mit TypeScript + Tailwind CSS
+- [ ] MongoDB connection und Device collection (via MCP development)
+- [ ] MQTT client integration für ESP32-Kommunikation
+- [ ] WebSocket bridge für Real-time Updates
+- [ ] Device auto-discovery via MQTT registration
+- [ ] Grundlegende REST API (`/api/v1/devices`, `/api/v1/sensors/current`, `/api/v1/health`)
+
+### Frontend Core (Week 2)
+- [ ] Responsive Dashboard layout mit Device-Grid
+- [ ] `DeviceCard` Component mit Live-Status indicators
+- [ ] Real-time Sensor-Werte (pH, TDS) mit Quality-Indikatoren
+- [ ] WebSocket Store für Live-Updates
+- [ ] Mobile-responsive PWA-Grundlagen
+
+### Umbrel Integration
+- [ ] Docker-Container mit `docker-compose.yml`
+- [ ] `umbrel-app.yml` Manifest mit Dependencies
+- [ ] Service-Dependencies (bitsperity-mongodb, mosquitto, bitsperity-beacon)
+- [ ] Health-Check Endpoint (`/api/v1/health`)
+- [ ] Beacon service registration für ESP32 discovery
+
+## Phase 1 Success Criteria
+- [ ] Benutzer sieht alle Geräte im Dashboard binnen 3 Sekunden
+- [ ] Live-Sensor-Werte aktualisieren sich alle 60 Sekunden
+- [ ] Device-Status (online/offline) wird korrekt angezeigt
+- [ ] App deployed erfolgreich auf Umbrel
+- [ ] WebSocket-Verbindung stabil mit Auto-Reconnect
+- [ ] Dashboard lädt auf Smartphone binnen 2 Sekunden
+- [ ] Memory-Verbrauch unter 256MB
+
+## Projekt Standards
+- **Documentation Location**: `ai_docs/` Ordner
+- **Requirements**: `ai_docs/requirements/` (Complete)
+- **System Design**: `ai_docs/system-design/` (Complete)
+- **Development Plan**: `ai_docs/development-plan/` (Complete)
+- **Implementation**: `ai_docs/implementation/` (Next: Implementation Guide)
+
+## Development Context
+- **Target Platform**: Umbrel App
+- **Integration Services**: 
+  - bitsperity-mongodb (192.168.178.57:27017 - DEV via MCP)
+  - mosquitto MQTT broker (192.168.178.57:1883)
+  - bitsperity-beacon service registration (192.168.178.57:8097)
+
+## Tech Stack Details
+
+### Core Dependencies (Phase 1)
+```json
+{
+  "dependencies": {
+    "@sveltejs/kit": "^2.0.0",
+    "svelte": "^4.0.0", 
+    "typescript": "^5.0.0",
+    "mongodb": "^6.0.0",
+    "mqtt": "^5.0.0",
+    "ws": "^8.0.0",
+    "tailwindcss": "^3.0.0"
+  }
+}
+```
+
+### Architecture Decisions (ADRs)
+- **ADR-001**: SvelteKit Full-Stack (Single codebase für Frontend+Backend)
+- **ADR-002**: Direct MongoDB Driver (No ORM für Performance)
+- **ADR-003**: Native WebSocket (No Socket.io für Bundle size)
+- **ADR-004**: Single Container Deployment (Umbrel standards)
+- **ADR-005**: Tailwind CSS (Utility-first styling)
+- **ADR-006**: MQTT v3.1.1 (IoT communication standard)
+- **ADR-007**: TypeScript (Type safety across stack)
+- **ADR-008**: Bitsperity Service Dependencies (Shared infrastructure)
+
+## Performance Targets (Phase 1)
+- **Build Time**: <30s
+- **Dev Start**: <5s  
+- **Page Load**: <2s (Mobile)
+- **Bundle Size**: <500KB
+- **Memory Usage**: <256MB
+- **API Response**: <1s
+- **WebSocket Latency**: <5s
+
+## Database Schema (Phase 1)
+
+### devices Collection
+```typescript
+interface Device {
+  _id: ObjectId;
+  device_id: string;           // Unique identifier (e.g., "HG-001")
+  name: string;                // User-friendly name
+  status: 'online' | 'offline' | 'error' | 'unknown';
+  config: {
+    sensors: { ph: {...}, tds: {...} };
+    pumps: { water: {...}, ph_down: {...}, ... };
+    safety: { ph_min: 4.0, ph_max: 8.5, tds_max: 2000 };
+    mqtt_topics: { sensors: string, commands: string };
+  };
+  created_at: Date;
+  updated_at: Date;
+  last_seen?: Date;
+}
+```
+
+## API Structure (Phase 1)
+
+### REST Endpoints
+```typescript
+GET  /api/v1/devices           // List all devices
+POST /api/v1/devices           // Create device (auto-registration)
+GET  /api/v1/devices/{id}      // Device details
+GET  /api/v1/sensors/current   // Current sensor readings
+GET  /api/v1/health            // System health check
+```
+
+### WebSocket Events
+```typescript
+type WebSocketMessage = {
+  type: 'sensor_data' | 'device_status' | 'heartbeat';
+  device_id?: string;
+  data: any;
+  timestamp: string;
+}
+```
+
+### MQTT Topics
+```
+homegrow/devices/{device_id}/sensors/ph     # pH sensor readings
+homegrow/devices/{device_id}/sensors/tds    # TDS sensor readings
+homegrow/devices/{device_id}/status         # Device status updates
+homegrow/devices/{device_id}/config/request # Config requests from ESP32
+homegrow/devices/{device_id}/config/response # Config responses to ESP32
+```
+
+## Risk Mitigation (Phase 1 Focus)
+- **R-001 MQTT Integration**: Test broker connection Day 5, have WebSocket fallback
+- **R-002 MongoDB Connection**: Use MCP for dev, test health checks every 30min
+- **R-003 Umbrel Deployment**: Daily deployment testing from Day 11
+- **R-004 WebSocket Performance**: Implement connection resilience, mobile testing
+- **R-005 ESP32 Protocol**: Mock ESP32 simulator for message testing
+
+## File Structure
+
+### Expected Project Layout
+```
+bitsperity_apps/bitsperity-homegrow/
+├── ai_docs/
+│   ├── development-plan/     # ✅ Phase planning complete
+│   ├── requirements/         # ✅ Complete
+│   └── system-design/        # ✅ Complete
+├── src/
+│   ├── routes/               # SvelteKit pages + API routes
+│   │   ├── +layout.svelte   # Root layout
+│   │   ├── +page.svelte     # Dashboard
+│   │   └── api/v1/          # REST API endpoints
+│   ├── lib/
+│   │   ├── components/      # Svelte components
+│   │   ├── stores/          # State management
+│   │   ├── server/          # Backend services
+│   │   └── utils/           # Helper functions
+│   ├── app.html             # HTML template
+│   └── app.css              # Global styles
+├── umbrel-app.yml           # Umbrel app manifest
+├── docker-compose.yml       # Container configuration
+├── Dockerfile               # Container build
+└── package.json             # Dependencies
+```
+
+## Implementation Priority
+
+### Week 1: Backend Foundation (Days 1-7)
+1. **Days 1-2**: SvelteKit + TypeScript + Docker setup
+2. **Days 3-4**: MongoDB integration + Device API
+3. **Days 5-7**: MQTT client + WebSocket bridge + device auto-registration
+
+### Week 2: Frontend + Deployment (Days 8-14)
+1. **Days 8-10**: UI components + Dashboard + real-time integration
+2. **Days 11-12**: Umbrel integration + service registration
+3. **Days 13-14**: Testing + documentation + polish
+
+## Quality Gates
+
+### Each Development Day Must Include:
+- [ ] Daily progress update in `ai_docs/development-plan/current-phase.md`
+- [ ] Working build (no compilation errors)
+- [ ] Git commit mit clear message
+- [ ] Basic functionality testing
+- [ ] Risk assessment update
+
+### Phase 1 Completion Criteria:
+- [ ] All Phase 1 deliverables implemented and tested
+- [ ] Umbrel deployment funktioniert stabil
+- [ ] Performance targets erreicht (load time, memory, API response)
+- [ ] Mobile PWA funktioniert optimal
+- [ ] Real-time updates working reliably
+- [ ] Documentation vollständig
+
+## Next Steps
+1. **Start Day 1**: SvelteKit project initialization
+2. **Verify Dependencies**: MCP MongoDB, MQTT broker access
+3. **Follow Roadmap**: `ai_docs/development-plan/roadmap.md`
+4. **Update Progress**: Daily updates in `current-phase.md`
+5. **Risk Monitoring**: Weekly risk assessment updates
+
+## Communication mit anderen AI-Rollen
+
+### ← Requirements Analyst (Complete)
+- **Erhalten**: Feature specifications, user stories, acceptance criteria
+- **Status**: Requirements phase complete, documented in `ai_docs/requirements/`
+
+### ← System Architect (Complete)  
+- **Erhalten**: Technical architecture, component design, API specs
+- **Status**: System design complete, documented in `ai_docs/system-design/`
+
+### → Implementation Guide (Next)
+- **Übergeben**: Detailed phase plan, current phase status, deliverable specifications
+- **Erwarten**: Day-by-day implementation guidance following this phase plan
+
+### Development Guidelines
+- **Always check**: `ai_docs/development-plan/current-phase.md` für aktuellen Status
+- **Risk awareness**: Monitor high-priority risks (R-001, R-002, R-003)
+- **Quality focus**: Maintain TypeScript strict mode, test coverage >80%
+- **Mobile-first**: Always test responsive design and PWA functionality
+- **Documentation**: Update user docs parallel zu feature development
+
+**Remember**: Phase 1 ist der MVP - focus auf core functionality, defer nice-to-haves to later phases. Das Ziel ist ein funktionsfähiges, deployables System nach 2 Wochen. 
