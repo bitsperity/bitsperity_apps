@@ -5,6 +5,10 @@
 
 set -e
 
+# push changes to github
+echo "🔄 Pushing changes to GitHub..."
+git add . && git commit -m 'update' && git push
+
 # Konfiguration
 REGISTRY="docker.io"
 NAMESPACE="bitsperity"

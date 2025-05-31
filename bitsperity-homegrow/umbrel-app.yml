@@ -82,7 +82,7 @@ dependencies:
   - mosquitto
 repo: https://github.com/bitsperity/homegrow
 support: https://github.com/bitsperity/homegrow/issues
-port: 3000
+port: 3001
 gallery:
   - https://raw.githubusercontent.com/bitsperity/homegrow/main/docs/screenshots/dashboard.png
   - https://raw.githubusercontent.com/bitsperity/homegrow/main/docs/screenshots/devices.png

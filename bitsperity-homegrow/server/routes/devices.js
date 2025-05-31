@@ -11,7 +11,7 @@ class DeviceRoutes {
 
   setupRoutes() {
     // Get all devices
-    this.router.get('/', async (req, res) => {
+    this.router.get('/', async (request, reply) => {
       try {
         const devices = await this.deviceModel.findAll();
         
@@ -33,7 +33,7 @@ class DeviceRoutes {
         };
       } catch (error) {
         console.error('Error getting devices:', error);
-        res.status(500);
+        reply.status(500);
         return {
           success: false,
           error: error.message
@@ -42,19 +42,20 @@ class DeviceRoutes {
     });
 
     // Get device by ID
-    this.router.get('/:deviceId', async (req, res) => {
+    this.router.get('/:deviceId', async (request, reply) => {
       try {
-        const device = await this.deviceModel.findByDeviceId(req.params.deviceId);
+        const device = await this.deviceModel.findByDeviceId(request.params.deviceId);
         
         if (!device) {
-          return res.status(404).json({
+          reply.status(404);
+          return {
             success: false,
             error: 'Device not found'
-          });
+          };
         }
 
         // Add beacon info if available
-        const beaconDevice = this.beaconClient.getDeviceByDeviceId(req.params.deviceId);
+        const beaconDevice = this.beaconClient.getDeviceByDeviceId(request.params.deviceId);
         if (beaconDevice) {
           device.beacon_info = beaconDevice;
         }
@@ -65,7 +66,7 @@ class DeviceRoutes {
         };
       } catch (error) {
         console.error('Error getting device:', error);
-        res.status(500);
+        reply.status(500);
         return {
           success: false,
           error: error.message
@@ -74,25 +75,27 @@ class DeviceRoutes {
     });
 
     // Create new device
-    this.router.post('/', async (req, res) => {
+    this.router.post('/', async (request, reply) => {
       try {
-        const deviceData = req.body;
+        const deviceData = request.body;
         
         // Validate required fields
         if (!deviceData.device_id) {
-          return res.status(400).json({
+          reply.status(400);
+          return {
             success: false,
             error: 'device_id is required'
-          });
+          };
         }
 
         // Check if device already exists
         const existing = await this.deviceModel.findByDeviceId(deviceData.device_id);
         if (existing) {
-          return res.status(409).json({
+          reply.status(409);
+          return {
             success: false,
             error: 'Device already exists'
-          });
+          };
         }
 
         const device = await this.deviceModel.create(deviceData);
@@ -108,7 +111,7 @@ class DeviceRoutes {
         };
       } catch (error) {
         console.error('Error creating device:', error);
-        res.status(500);
+        reply.status(500);
         return {
           success: false,
           error: error.message
@@ -117,17 +120,18 @@ class DeviceRoutes {
     });
 
     // Update device configuration
-    this.router.put('/:deviceId/config', async (req, res) => {
+    this.router.put('/:deviceId/config', async (request, reply) => {
       try {
-        const deviceId = req.params.deviceId;
-        const configUpdate = req.body;
+        const deviceId = request.params.deviceId;
+        const configUpdate = request.body;
 
         const device = await this.deviceModel.findByDeviceId(deviceId);
         if (!device) {
-          return res.status(404).json({
+          reply.status(404);
+          return {
             success: false,
             error: 'Device not found'
-          });
+          };
         }
 
         await this.deviceModel.updateConfig(deviceId, configUpdate);
@@ -153,7 +157,7 @@ class DeviceRoutes {
         };
       } catch (error) {
         console.error('Error updating device config:', error);
-        res.status(500);
+        reply.status(500);
         return {
           success: false,
           error: error.message
@@ -162,17 +166,18 @@ class DeviceRoutes {
     });
 
     // Update device info
-    this.router.put('/:deviceId', async (req, res) => {
+    this.router.put('/:deviceId', async (request, reply) => {
       try {
-        const deviceId = req.params.deviceId;
-        const updates = req.body;
+        const deviceId = request.params.deviceId;
+        const updates = request.body;
 
         const device = await this.deviceModel.findByDeviceId(deviceId);
         if (!device) {
-          return res.status(404).json({
+          reply.status(404);
+          return {
             success: false,
             error: 'Device not found'
-          });
+          };
         }
 
         // Update allowed fields
@@ -186,10 +191,11 @@ class DeviceRoutes {
         });
 
         if (Object.keys(updateData).length === 0) {
-          return res.status(400).json({
+          reply.status(400);
+          return {
             success: false,
             error: 'No valid fields to update'
-          });
+          };
         }
 
         updateData.updated_at = new Date();
@@ -205,7 +211,7 @@ class DeviceRoutes {
         };
       } catch (error) {
         console.error('Error updating device:', error);
-        res.status(500);
+        reply.status(500);
         return {
           success: false,
           error: error.message
@@ -214,17 +220,18 @@ class DeviceRoutes {
     });
 
     // Delete device
-    this.router.delete('/:deviceId', async (req, res) => {
+    this.router.delete('/:deviceId', async (request, reply) => {
       try {
-        const deviceId = req.params.deviceId;
+        const deviceId = request.params.deviceId;
         
         const result = await this.deviceModel.delete(deviceId);
 
         if (result.deletedCount === 0) {
-          return res.status(404).json({
+          reply.status(404);
+          return {
             success: false,
             error: 'Device not found'
-          });
+          };
         }
 
         // Unsubscribe from MQTT topics
@@ -238,7 +245,7 @@ class DeviceRoutes {
         };
       } catch (error) {
         console.error('Error deleting device:', error);
-        res.status(500);
+        reply.status(500);
         return {
           success: false,
           error: error.message
@@ -247,7 +254,7 @@ class DeviceRoutes {
     });
 
     // Discover devices via Beacon
-    this.router.post('/discover', async (req, res) => {
+    this.router.post('/discover', async (request, reply) => {
       try {
         const discoveredDevices = await this.beaconClient.refreshDiscovery();
         
@@ -279,7 +286,7 @@ class DeviceRoutes {
         };
       } catch (error) {
         console.error('Error discovering devices:', error);
-        res.status(500);
+        reply.status(500);
         return {
           success: false,
           error: error.message
@@ -288,24 +295,26 @@ class DeviceRoutes {
     });
 
     // Send command to device
-    this.router.post('/:deviceId/commands', async (req, res) => {
+    this.router.post('/:deviceId/commands', async (request, reply) => {
       try {
-        const deviceId = req.params.deviceId;
-        const { command, params = {} } = req.body;
+        const deviceId = request.params.deviceId;
+        const { command, params = {} } = request.body;
 
         if (!command) {
-          return res.status(400).json({
+          reply.status(400);
+          return {
             success: false,
             error: 'Command is required'
-          });
+          };
         }
 
         const device = await this.deviceModel.findByDeviceId(deviceId);
         if (!device) {
-          return res.status(404).json({
+          reply.status(404);
+          return {
             success: false,
             error: 'Device not found'
-          });
+          };
         }
 
         const commandData = {
@@ -324,7 +333,7 @@ class DeviceRoutes {
         };
       } catch (error) {
         console.error('Error sending command:', error);
-        res.status(500);
+        reply.status(500);
         return {
           success: false,
           error: error.message
@@ -333,16 +342,17 @@ class DeviceRoutes {
     });
 
     // Emergency stop
-    this.router.post('/:deviceId/emergency-stop', async (req, res) => {
+    this.router.post('/:deviceId/emergency-stop', async (request, reply) => {
       try {
-        const deviceId = req.params.deviceId;
+        const deviceId = request.params.deviceId;
 
         const device = await this.deviceModel.findByDeviceId(deviceId);
         if (!device) {
-          return res.status(404).json({
+          reply.status(404);
+          return {
             success: false,
             error: 'Device not found'
-          });
+          };
         }
 
         await this.mqttBridge.publishEmergencyStop(deviceId);
@@ -355,7 +365,7 @@ class DeviceRoutes {
         };
       } catch (error) {
         console.error('Error sending emergency stop:', error);
-        res.status(500);
+        reply.status(500);
         return {
           success: false,
           error: error.message
@@ -364,16 +374,17 @@ class DeviceRoutes {
     });
 
     // Get device statistics
-    this.router.get('/:deviceId/stats', async (req, res) => {
+    this.router.get('/:deviceId/stats', async (request, reply) => {
       try {
-        const deviceId = req.params.deviceId;
+        const deviceId = request.params.deviceId;
         
         const device = await this.deviceModel.findByDeviceId(deviceId);
         if (!device) {
-          return res.status(404).json({
+          reply.status(404);
+          return {
             success: false,
             error: 'Device not found'
-          });
+          };
         }
 
         return {
@@ -382,17 +393,13 @@ class DeviceRoutes {
         };
       } catch (error) {
         console.error('Error getting device stats:', error);
-        res.status(500);
+        reply.status(500);
         return {
           success: false,
           error: error.message
         };
       }
     });
-  }
-
-  getRouter() {
-    return this.router;
   }
 }
 
