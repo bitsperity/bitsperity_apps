@@ -28,11 +28,11 @@ RUN chown -R homegrow:nodejs /app
 USER homegrow
 
 # Expose port
-EXPOSE 80
+EXPOSE 3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:80/api/v1/health || exit 1
+  CMD curl -f http://localhost:3000/api/v1/health || exit 1
 
 # Start the application with Node.js adapter
 CMD ["node", "build/index.js"] 
