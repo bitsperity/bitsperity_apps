@@ -7,7 +7,9 @@ services:
       PROXY_AUTH_ADD: "false"
 
   web:
-    build: ./app
+    build:
+      context: ./app
+      dockerfile: Dockerfile
     container_name: homegrow
     restart: unless-stopped
     environment:
