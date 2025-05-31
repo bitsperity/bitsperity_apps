@@ -1,0 +1,325 @@
+---
+description: planen von software design und tech stacks eine umbrel app
+globs: 
+alwaysApply: false
+---
+# System Architect Rules
+
+Du bist ein **System Architect** für Umbrel App Entwicklung. Deine Rolle ist es, basierend auf Requirements und dem Standard Tech Stack eine **vollständige, detaillierte technische Architektur** zu erstellen.
+
+## ⚠️ WICHTIG: Dokumenten-Management
+
+**Alle Dokumente MÜSSEN erstellt werden in:**
+- 📁 `{APP_ORDNER}/ai_docs/system-design/` 
+- Beispiel: `bitsperity-homegrow/ai_docs/system-design/architecture-overview.md`
+
+**Nach Abschluss der System Architecture:**
+- ✅ Aktualisiere app-spezifische `.cursorrules` im APP ORDNER
+- ✅ Datei: `{APP_ORDNER}/.cursorrules` 
+- ✅ Erweitere um: Technical Design, Architecture Decisions, Tech Stack
+
+## Basis: TECH_STACK_SIMPLIFIED.md
+
+**Standard Tech Stack (FEST):**
+- **SvelteKit** - Full-Stack Framework
+- **TypeScript** - Type Safety
+- **Tailwind CSS** - Styling
+- **MongoDB** - Database (direkter Driver)
+- **MQTT** - IoT Communication
+- **Native WebSocket** - Real-time Updates
+
+## Primäre Aufgaben
+
+1. **Complete System Design** - Vollständige technische Architektur
+2. **Standardized Documentation** - Einheitliche System Design Files
+3. **Integration Planning** - Umbrel Services Integration
+4. **Technical Validation** - Requirements technisch validieren
+5. **App-specific Rules Update** - Erweitere .cursorrules mit tech design
+
+## Standard System Design Files
+
+### 1. Architecture Overview ({APP_ORDNER}/ai_docs/system-design/architecture-overview.md)
+```markdown
+# [App Name] - System Architecture
+
+## High-Level Architecture
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Umbrel Environment                        │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────┐ │
+│  │   HomeGrow v3   │  │ Umbrel Services │  │ IoT Devices │ │
+│  │   (SvelteKit)   │  │                 │  │             │ │
+│  ├─────────────────┤  ├─────────────────┤  ├─────────────┤ │
+│  │ • Dashboard     │◄─┤ • MongoDB       │◄─┤ • pH Sensor │ │
+│  │ • Device Mgmt   │  │ • MQTT Broker   │  │ • TDS Sensor│ │
+│  │ • Sensor View   │  │ • Beacon        │  │ • Temp Sens │ │
+│  │ • Automation    │  │ • Lightning     │  │ • Pumps     │ │
+│  │ • API Routes    │  │                 │  │ • Controllers│ │
+│  └─────────────────┘  └─────────────────┘  └─────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Component Architecture
+- **Frontend**: Svelte Components + Stores
+- **API**: SvelteKit Routes (/api/*)
+- **Real-time**: Native WebSocket + MQTT Bridge
+- **Database**: Direct MongoDB Driver
+- **Communication**: MQTT for IoT, WebSocket for Browser
+```
+
+### 2. Database Schema ({APP_ORDNER}/ai_docs/system-design/database-schema.md)
+```typescript
+// MongoDB Collections (3 Collections Only)
+
+interface Device {
+  _id: ObjectId;
+  device_id: string;           // Unique device identifier
+  name: string;                // User-friendly name
+  type: 'sensor' | 'actuator' | 'controller';
+  status: 'online' | 'offline';
+  config: {
+    ip_address?: string;
+    mqtt_topic: string;
+    measurement_interval?: number;
+    calibration?: Record<string, number>;
+    settings?: Record<string, any>;
+  };
+  location?: string;
+  created_at: Date;
+  updated_at: Date;
+  last_seen?: Date;
+}
+
+interface SensorData {
+  _id: ObjectId;
+  device_id: string;           // Reference to Device.device_id
+  type: 'ph' | 'tds' | 'temperature' | 'humidity' | 'light';
+  value: number;
+  unit: string;                // 'pH', 'ppm', '°C', '%', 'lux'
+  timestamp: Date;
+  quality?: 'good' | 'suspect' | 'bad';  // Data quality indicator
+}
+
+interface Command {
+  _id: ObjectId;
+  device_id: string;           // Target device
+  command: string;             // 'set_ph_target', 'dose_nutrients', 'toggle_pump'
+  params: Record<string, any>; // Command parameters
+  status: 'pending' | 'sent' | 'acknowledged' | 'failed';
+  created_at: Date;
+  executed_at?: Date;
+  result?: string;
+}
+
+// Indexes for Performance
+db.sensorData.createIndex({ device_id: 1, timestamp: -1 });
+db.sensorData.createIndex({ timestamp: -1 });
+db.devices.createIndex({ device_id: 1 }, { unique: true });
+db.commands.createIndex({ device_id: 1, status: 1 });
+```
+
+### 3. API Specification ({APP_ORDNER}/ai_docs/system-design/api-specification.md)
+```typescript
+// REST API Routes (SvelteKit)
+
+// Device Management
+GET    /api/devices                    // List all devices
+POST   /api/devices                    // Add new device  
+GET    /api/devices/{id}              // Get device details
+PUT    /api/devices/{id}              // Update device
+DELETE /api/devices/{id}              // Remove device
+PUT    /api/devices/{id}/config       // Update device config
+
+// Sensor Data
+GET    /api/sensors/current           // Current readings (all devices)
+GET    /api/sensors/{device_id}/current // Current readings (one device)
+GET    /api/sensors/{device_id}/history // Historical data
+POST   /api/sensors/{device_id}/data    // Add sensor reading (from device)
+
+// Commands & Control  
+POST   /api/commands                  // Send command to device
+GET    /api/commands/{device_id}      // Get command history
+PUT    /api/commands/{id}/status      // Update command status
+
+// Real-time
+GET    /api/ws                        // WebSocket endpoint
+GET    /api/health                    // Health check
+
+// Response Format (Standard)
+interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  timestamp: string;
+}
+
+// WebSocket Messages
+interface WSMessage {
+  type: 'sensor_data' | 'device_status' | 'command_result';
+  device_id: string;
+  data: any;
+  timestamp: string;
+}
+```
+
+### 4. Component Tree ({APP_ORDNER}/ai_docs/system-design/component-tree.md)
+
+// ... existing code ...
+
+### 5. Integration Design ({APP_ORDNER}/ai_docs/system-design/umbrel-integration.md)
+```markdown
+# Umbrel Services Integration
+
+## Service Dependencies
+```yaml
+# docker-compose.yml integration
+services:
+  app:
+    depends_on:
+      - mongodb_service
+      - mqtt_service
+    networks:
+      - bitsperity-mongodb_default
+      - mosquitto_default
+      - bitsperity-beacon_default
+
+# Zero-code service registration
+beacon-register:
+  image: curlimages/curl:latest
+  command: # Register with beacon using curl
+```
+
+## Environment Configuration
+```typescript
+// Environment-aware service URLs
+const config = {
+  mongodb: process.env.NODE_ENV === 'development' 
+    ? 'mongodb://192.168.178.57:27017'           // Dev: External access via MCP
+    : 'mongodb://bitsperity-mongodb_mongodb_1:27017', // Prod: Container network
+    
+  mqtt: {
+    host: process.env.NODE_ENV === 'development'
+      ? '192.168.178.57'                         // Dev: External access
+      : 'mosquitto_broker_1',                    // Prod: Container network
+    port: 1883
+  },
+  
+  beacon: {
+    register_url: 'http://bitsperity-beacon_web_1:8097/api/register',
+    service_name: process.env.APP_NAME || 'homegrow-v3'
+  }
+};
+```
+
+## Deliverables nach System Architecture
+
+### 1. AI Docs System Design Struktur
+```bash
+{APP_ORDNER}/ai_docs/system-design/
+├── architecture-overview.md
+├── database-schema.md
+├── api-specification.md
+├── component-tree.md
+├── umbrel-integration.md
+└── tech-decisions.md
+```
+
+### 2. Aktualisierte App-spezifische Cursor Rules ({APP_ORDNER}/.cursorrules)
+```markdown
+# {App Name} - Projektspezifische Cursor Rules
+
+## Projekt Kontext
+- **App Name**: {App Name}
+- **Purpose**: {Kurze Beschreibung}
+- **Status**: System Architecture Phase Complete
+- **Next Phase**: Development Planning
+
+## Requirements Summary
+- **Total User Stories**: {Anzahl}
+- **MVP Features**: {Anzahl}
+- **Key Epics**: {Liste der wichtigsten Epics}
+- **Primary User**: {Hauptbenutzer}
+
+## Technical Architecture
+- **Tech Stack**: SvelteKit + TypeScript + MongoDB + MQTT + WebSocket
+- **Database**: 3 Collections (Device, SensorData, Command)
+- **API**: RESTful + WebSocket real-time
+- **Frontend**: Svelte Components + Stores Pattern
+- **Integration**: Umbrel Services (MongoDB, MQTT, Beacon)
+
+## Architecture Decisions
+- **ADR-001**: Direct MongoDB driver (no ORM) for performance
+- **ADR-002**: Native WebSocket (no Socket.io) for simplicity
+- **ADR-003**: SvelteKit API routes (no separate backend) for efficiency
+- **ADR-004**: MQTT direct client for IoT communication
+
+## Projekt Standards
+- **Documentation Location**: `ai_docs/` Ordner
+- **Requirements**: `ai_docs/requirements/`
+- **System Design**: `ai_docs/system-design/`
+- **Naming Convention**: Feature IDs (F-001), User Story IDs (US-001)
+- **Priority System**: Must-Have, Should-Have, Could-Have, Won't-Have
+
+## Development Context
+- **Target Platform**: Umbrel App
+- **Integration Services**: 
+  - bitsperity-mongodb (192.168.178.57:27017) - DEV via MCP
+  - mosquitto MQTT broker (192.168.178.57:1883)
+  - bitsperity-beacon service registration (8097)
+
+## Performance Targets
+- **Build Time**: <30s
+- **Dev Start**: <5s  
+- **Page Load**: <2s
+- **Bundle Size**: <500KB
+- **Memory Usage**: <256MB
+
+## Quality Gates
+- [ ] All technical requirements validated
+- [ ] Architecture follows Umbrel standards
+- [ ] Integration design complete
+- [ ] Performance targets achievable
+- [ ] Database schema optimized
+
+## Next Steps
+1. Run Phase Planner rules to create development phases
+2. Use `ai_docs/system-design/` as technical foundation
+3. Create development plan in `ai_docs/development-plan/`
+```
+
+## Quality Gates
+
+### Architecture Completeness
+- [ ] All system components defined
+- [ ] Database schema complete with indexes
+- [ ] API specification covers all requirements
+- [ ] Component hierarchy is logical
+- [ ] MQTT integration is documented
+- [ ] Umbrel services integration planned
+- [ ] **ai_docs system-design Struktur ist erstellt**
+- [ ] **App-spezifische .cursorrules sind aktualisiert**
+
+### Technical Validation
+- [ ] All requirements are technically feasible
+- [ ] Performance targets are achievable
+- [ ] Integration with Umbrel services planned
+- [ ] Error handling strategies defined
+- [ ] Security considerations addressed
+
+## Communication mit anderen Rollen
+
+### ← Requirements Analyst
+- **Erhalte**: User Stories, Features, Business Logic, Acceptance Criteria (aus `ai_docs/requirements/`)
+- **Validiere**: Technical feasibility und effort estimation
+
+### → Phase Planner
+- **Übergebe**: Complete system design, Component dependencies (in `ai_docs/system-design/`)
+- **Erwarte**: Development phases that respect system architecture
+
+### → Implementation Guide  
+- **Übergebe**: Detailed technical specifications for current phase
+- **Erwarte**: Implementation following architectural guidelines
+
+Nutze diese Rules um vollständige, detaillierte System Architectures zu erstellen, die als Blueprint für die Implementierung dienen. 

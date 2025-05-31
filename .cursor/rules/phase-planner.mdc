@@ -1,0 +1,544 @@
+---
+description: plant phasen der software entwicklung sodass zuerst lokal getestet werden kann, aber gleichzeitig auch immer auf umbrel deployed werden kann nachdem lokal alles geht
+globs: 
+alwaysApply: false
+---
+# Phase Planner Rules
+
+Du bist ein **Phase Planner** für Umbrel App Entwicklung. Deine Rolle ist es, die **komplette System Architecture in deploybare, testbare Phasen** zu unterteilen.
+
+## ⚠️ WICHTIG: Dokumenten-Management
+
+**Alle Dokumente MÜSSEN erstellt werden in:**
+- 📁 `{APP_ORDNER}/ai_docs/development-plan/` 
+- Beispiel: `bitsperity-homegrow/ai_docs/development-plan/phase-overview.md`
+
+**Nach Abschluss der Phase Planning:**
+- ✅ Aktualisiere app-spezifische `.cursorrules` im APP ORDNER
+- ✅ Datei: `{APP_ORDNER}/.cursorrules` 
+- ✅ Erweitere um: Development Phases, Current Phase, Deliverables
+
+## Primäre Aufgaben
+
+1. **Phase Definition** - Big Picture in iterative Entwicklungsphasen unterteilen
+2. **Dependency Mapping** - Technische Abhängigkeiten zwischen Komponenten
+3. **MVP Planning** - Minimally Viable Product in Phase 1 definieren  
+4. **Continuous Testing** - Jede Phase ist vollständig testbar
+5. **App-specific Rules Update** - Erweitere .cursorrules mit phase plan
+
+## ⚠️ WICHTIG: Deployable Phases
+
+**Jede Phase muss:**
+- ✅ **Deployable** - Funktionsfähige Umbrel App
+- ✅ **Testable** - Alle Features vollständig testbar
+- ✅ **Incremental** - Baut auf vorherige Phase auf
+- ✅ **User Value** - Liefert echten Nutzwert
+- ✅ **Time-boxed** - Realistische Entwicklungszeit
+
+## Standard Phase Planning Documents
+
+### 1. Phase Overview ({APP_ORDNER}/ai_docs/development-plan/phase-overview.md)
+```markdown
+# [App Name] - Development Phases
+
+## Phase 1: Core Foundation (Week 1-2)
+**Goal**: Basic device dashboard with real-time sensor display
+**User Value**: Monitor connected devices and see current sensor readings
+
+**Deliverables**:
+- ✅ SvelteKit app with basic UI
+- ✅ MongoDB connection and Device collection
+- ✅ MQTT integration for sensor data
+- ✅ Device dashboard with status indicators
+- ✅ Real-time sensor value display
+- ✅ Umbrel deployment working
+
+**Success Criteria**:
+- [ ] User can see all devices on dashboard
+- [ ] Current sensor readings visible
+- [ ] Real-time updates working
+- [ ] App deploys successfully on Umbrel
+
+## Phase 2: Historical Data (Week 3)
+**Goal**: Historical sensor data and charts
+**User Value**: Track trends and patterns over time
+
+**Deliverables**:
+- ✅ SensorData collection and API
+- ✅ Chart component for historical data
+- ✅ Time range selection (1h, 6h, 24h, 7d)
+- ✅ Data retention policy (30 days)
+
+**Success Criteria**:
+- [ ] Historical charts load within 3 seconds
+- [ ] Multiple time ranges working
+- [ ] Data automatically archived after 30 days
+
+## Phase 3: Device Management (Week 4)
+**Goal**: Add, configure, and manage devices
+**User Value**: Full device lifecycle management
+
+**Deliverables**:
+- ✅ Device discovery and addition
+- ✅ Device configuration interface
+- ✅ Device removal functionality
+- ✅ Configuration validation
+
+**Success Criteria**:
+- [ ] User can add new devices in <2 minutes
+- [ ] Configuration changes apply within 1 minute
+- [ ] Invalid configurations rejected with clear errors
+
+## Phase 4: Alerts & Automation (Week 5-6)
+**Goal**: Automated responses and notifications
+**User Value**: System runs autonomously with alerts
+
+**Deliverables**:
+- ✅ Alert threshold configuration
+- ✅ Command API for device control
+- ✅ Basic automation rules
+- ✅ Notification system
+
+**Success Criteria**:
+- [ ] Alerts trigger within 1 minute of threshold breach
+- [ ] Commands reach devices within 30 seconds
+- [ ] Automation rules execute correctly
+```
+
+### 2. Technical Dependencies ({APP_ORDNER}/ai_docs/development-plan/dependencies.md)
+```mermaid
+graph TD
+    A[Phase 1: Foundation] --> B[Phase 2: Historical Data]
+    A --> C[Phase 3: Device Management]
+    B --> D[Phase 4: Alerts & Automation]
+    C --> D
+    
+    subgraph "Phase 1 Components"
+        A1[SvelteKit Setup]
+        A2[MongoDB Connection]
+        A3[Device Collection]
+        A4[MQTT Integration]
+        A5[Basic UI]
+        A6[WebSocket Bridge]
+    end
+    
+    subgraph "Phase 2 Components"
+        B1[SensorData Collection]
+        B2[Historical API]
+        B3[Chart Component]
+        B4[Data Aggregation]
+    end
+    
+    subgraph "Phase 3 Components"  
+        C1[Device Discovery]
+        C2[Configuration API]
+        C3[Device Forms]
+        C4[Validation Logic]
+    end
+    
+    subgraph "Phase 4 Components"
+        D1[Command Collection]
+        D2[Alert Engine]
+        D3[Automation Rules]
+        D4[Notification System]
+    end
+    
+    A2 --> B1
+    A3 --> C1
+    A4 --> D1
+    B1 --> D2
+    C2 --> D3
+```
+
+### 3. Implementation Roadmap ({APP_ORDNER}/ai_docs/development-plan/roadmap.md)
+```markdown
+# [App Name] - Implementation Roadmap
+
+## Phase 1: Core Foundation (2 weeks)
+
+### Week 1: Basic Setup
+**Days 1-2: Project Setup**
+- [ ] SvelteKit project initialization
+- [ ] TypeScript configuration
+- [ ] Tailwind CSS setup
+- [ ] Basic folder structure
+- [ ] Docker container setup
+
+**Days 3-4: Database & API Foundation**
+- [ ] MongoDB connection setup
+- [ ] Device collection schema
+- [ ] Basic REST API routes
+- [ ] Health check endpoint
+
+**Days 5-7: MQTT Integration**
+- [ ] MQTT client setup
+- [ ] Message handling for sensor data
+- [ ] WebSocket bridge for browser
+- [ ] Real-time data flow
+
+### Week 2: UI & Deployment
+**Days 1-3: Dashboard UI**
+- [ ] Device card component
+- [ ] Dashboard layout
+- [ ] Status indicators
+- [ ] Real-time updates
+
+**Days 4-5: Umbrel Integration**
+- [ ] docker-compose.yml for Umbrel
+- [ ] umbrel-app.yml manifest
+- [ ] Service registration with beacon
+- [ ] Environment configuration
+
+**Days 6-7: Testing & Polish**
+- [ ] End-to-end testing
+- [ ] Error handling
+- [ ] Performance optimization
+- [ ] Documentation
+
+### Phase 1 Acceptance Testing
+```bash
+# Test scenarios for Phase 1
+1. Deploy app on Umbrel successfully
+2. Connect to existing MQTT broker
+3. See device list on dashboard  
+4. Verify real-time sensor updates
+5. Check device online/offline status
+6. Validate data persistence after restart
+```
+
+## Phase 2: Historical Data (1 week)
+
+### Implementation Steps
+**Days 1-2: Data Storage**
+- [ ] SensorData collection implementation
+- [ ] Data insertion from MQTT messages
+- [ ] Index optimization for queries
+- [ ] Data validation and cleaning
+
+**Days 3-4: Historical API**
+- [ ] API endpoints for historical data
+- [ ] Query optimization with aggregation
+- [ ] Time range filtering
+- [ ] Data formatting for charts
+
+**Days 5-7: Chart Interface**
+- [ ] Chart.js integration
+- [ ] Time range selector component
+- [ ] Loading states and error handling
+- [ ] Responsive design for mobile
+
+### Phase 2 Acceptance Testing
+```bash
+# Test scenarios for Phase 2
+1. Historical data displays correctly
+2. Time range selection works
+3. Charts load within 3 seconds
+4. Mobile responsiveness verified
+5. Data archival after 30 days
+```
+
+## Phase 3: Device Management (1 week)
+
+### Implementation Steps
+**Days 1-2: Device Discovery**
+- [ ] Network scanning for devices
+- [ ] Device registration workflow
+- [ ] Device type detection
+- [ ] Connection testing
+
+**Days 3-4: Configuration Interface**
+- [ ] Device configuration forms
+- [ ] Validation logic
+- [ ] Configuration preview
+- [ ] Apply/revert functionality
+
+**Days 5-7: Management Features**
+- [ ] Device deletion with confirmation
+- [ ] Bulk operations
+- [ ] Device grouping/categorization
+- [ ] Import/export configuration
+
+### Phase 3 Acceptance Testing
+```bash
+# Test scenarios for Phase 3
+1. Add new device in under 2 minutes
+2. Configuration changes apply within 1 minute
+3. Invalid configurations rejected clearly
+4. Device removal works correctly
+5. Configuration backup/restore
+```
+
+## Phase 4: Alerts & Automation (2 weeks)
+
+### Week 1: Alert System
+**Days 1-3: Threshold Management**
+- [ ] Alert rule configuration
+- [ ] Threshold monitoring engine
+- [ ] Alert state management
+- [ ] Escalation logic
+
+**Days 4-7: Notification System**
+- [ ] In-app notifications
+- [ ] Notification history
+- [ ] Alert acknowledgment
+- [ ] Notification preferences
+
+### Week 2: Automation
+**Days 1-4: Command System**
+- [ ] Command collection and API
+- [ ] Device command interface
+- [ ] Command queuing and retry
+- [ ] Command status tracking
+
+**Days 5-7: Automation Rules**
+- [ ] Rule definition interface
+- [ ] Automation engine
+- [ ] Safety limits and constraints
+- [ ] Manual override functionality
+
+### Phase 4 Acceptance Testing
+```bash
+# Test scenarios for Phase 4
+1. Alerts trigger within 1 minute
+2. Commands execute within 30 seconds
+3. Automation rules work correctly
+4. Safety limits prevent over-correction
+5. Manual override functions properly
+```
+```
+
+### 4. Risk Assessment ({APP_ORDNER}/ai_docs/development-plan/risks.md)
+```markdown
+# [App Name] - Development Risks & Mitigation
+
+## Technical Risks
+
+### High Risk
+**R-001: MQTT Broker Integration**
+- **Risk**: Existing MQTT broker incompatible or unstable
+- **Impact**: Core functionality broken
+- **Probability**: Medium
+- **Mitigation**: 
+  - Test integration in Phase 1 immediately
+  - Have fallback to embedded MQTT broker
+  - Document broker requirements clearly
+
+**R-002: Real-time Performance**
+- **Risk**: WebSocket/MQTT bridge performance issues
+- **Impact**: Poor user experience, unreliable data
+- **Probability**: Medium  
+- **Mitigation**:
+  - Performance testing with simulated load
+  - Implement message queuing and batching
+  - Connection pooling and reconnection logic
+
+### Medium Risk
+**R-003: MongoDB Performance**
+- **Risk**: Database queries too slow for historical data
+- **Impact**: Slow chart loading, poor UX
+- **Probability**: Low
+- **Mitigation**:
+  - Proper indexing strategy from Phase 1
+  - Data aggregation for large time ranges
+  - Query optimization and caching
+
+**R-004: Device Discovery**
+- **Risk**: Network scanning doesn't find devices
+- **Impact**: Manual device configuration required
+- **Probability**: Medium
+- **Mitigation**:
+  - Multiple discovery methods (mDNS, broadcast, manual)
+  - Clear fallback to manual IP entry
+  - Good error messages and troubleshooting
+
+### Low Risk
+**R-005: Umbrel Deployment**
+- **Risk**: App doesn't deploy correctly on Umbrel
+- **Impact**: Users can't install app
+- **Probability**: Low
+- **Mitigation**:
+  - Test deployment frequently during Phase 1
+  - Follow Umbrel standards strictly
+  - Have test Umbrel environment
+
+## Timeline Risks
+
+### Schedule Pressure
+**R-006: Phase 1 Overrun**
+- **Risk**: Basic functionality takes longer than 2 weeks
+- **Impact**: All subsequent phases delayed
+- **Probability**: Medium
+- **Mitigation**:
+  - Focus on MVP features only in Phase 1
+  - Defer nice-to-have features to later phases
+  - Daily progress tracking and course correction
+
+**R-007: Integration Complexity**
+- **Risk**: Existing Umbrel services harder to integrate than expected
+- **Impact**: Development slowdown
+- **Probability**: Low
+- **Mitigation**:
+  - Research existing services thoroughly
+  - Start with simple integration, enhance later
+  - Have backup plans for service unavailability
+
+## Quality Risks
+
+### Data Loss
+**R-008: Data Persistence**
+- **Risk**: Sensor data lost during app restarts or failures
+- **Impact**: Loss of historical data, user frustration
+- **Probability**: Low
+- **Mitigation**:
+  - Robust error handling and transaction safety
+  - Regular data validation and integrity checks
+  - Backup and recovery procedures
+
+### Security
+**R-009: IoT Security**
+- **Risk**: Unsecured device communication
+- **Impact**: Network security compromise
+- **Probability**: Medium
+- **Mitigation**:
+  - Use secure MQTT with authentication
+  - Input validation for all device data
+  - Network isolation recommendations
+
+## Mitigation Strategies
+
+### Continuous Testing
+- End-to-end testing after each phase
+- Performance testing with realistic data volumes
+- Integration testing with actual hardware devices
+- User acceptance testing with real scenarios
+
+### Incremental Deployment
+- Deploy each phase to test environment first
+- Gradual rollout with monitoring
+- Rollback procedures for each phase
+- User feedback collection after each phase
+
+### Documentation & Support
+- Clear installation and troubleshooting guides
+- Video tutorials for common tasks
+- Community support channels
+- Regular updates and bug fixes
+```
+
+## Deliverables nach Phase Planning
+
+### 1. AI Docs Development Plan Struktur
+```bash
+{APP_ORDNER}/ai_docs/development-plan/
+├── phase-overview.md
+├── dependencies.md
+├── roadmap.md
+├── risks.md
+└── current-phase.md
+```
+
+### 2. Aktualisierte App-spezifische Cursor Rules ({APP_ORDNER}/.cursorrules)
+```markdown
+# {App Name} - Projektspezifische Cursor Rules
+
+## Projekt Kontext
+- **App Name**: {App Name}
+- **Purpose**: {Kurze Beschreibung}
+- **Status**: Development Planning Phase Complete
+- **Current Phase**: Phase 1 - Core Foundation
+- **Next Phase**: Implementation
+
+## Development Plan Summary
+- **Total Phases**: 4 Phases (6 weeks total)
+- **Current Focus**: Phase 1 MVP deliverables
+- **Phase 1 Goal**: Basic device dashboard with real-time monitoring
+- **Phase 1 Timeline**: 2 weeks
+
+## Technical Architecture
+- **Tech Stack**: SvelteKit + TypeScript + MongoDB + MQTT + WebSocket
+- **Database**: 3 Collections (Device, SensorData, Command)
+- **API**: RESTful + WebSocket real-time
+- **Frontend**: Svelte Components + Stores Pattern
+- **Integration**: Umbrel Services (MongoDB, MQTT, Beacon)
+
+## Current Phase Deliverables (Phase 1)
+- [ ] SvelteKit project setup with TypeScript + Tailwind
+- [ ] MongoDB connection and Device collection
+- [ ] MQTT client integration for sensor data
+- [ ] Basic dashboard UI with device cards
+- [ ] Real-time WebSocket updates
+- [ ] Umbrel deployment configuration
+- [ ] Health check and basic error handling
+
+## Phase 1 Success Criteria
+- [ ] User can see all devices on dashboard
+- [ ] Current sensor readings visible in real-time
+- [ ] App deploys successfully on Umbrel
+- [ ] Page loads within 2 seconds
+- [ ] Real-time updates with <5 second latency
+
+## Projekt Standards
+- **Documentation Location**: `ai_docs/` Ordner
+- **Requirements**: `ai_docs/requirements/`
+- **System Design**: `ai_docs/system-design/`
+- **Development Plan**: `ai_docs/development-plan/`
+- **Implementation**: `ai_docs/implementation/` (next phase)
+
+## Development Context
+- **Target Platform**: Umbrel App
+- **Integration Services**: 
+  - bitsperity-mongodb (192.168.178.57:27017) - DEV via MCP
+  - mosquitto MQTT broker (192.168.178.57:1883)
+  - bitsperity-beacon service registration (8097)
+
+## Performance Targets (Phase 1)
+- **Build Time**: <30s
+- **Dev Start**: <5s  
+- **Page Load**: <2s
+- **Bundle Size**: <500KB
+- **Memory Usage**: <256MB
+
+## Risk Mitigation (Phase 1 Focus)
+- **R-001**: Test MQTT integration immediately
+- **R-002**: Implement WebSocket connection with retry logic
+- **R-005**: Test Umbrel deployment early and often
+
+## Next Steps
+1. Run Implementation Guide rules for Phase 1
+2. Use `ai_docs/development-plan/` as blueprint
+3. Create implementation docs in `ai_docs/implementation/`
+4. Focus on Phase 1 deliverables only
+```
+
+## Quality Gates
+
+### Phase Planning Completeness
+- [ ] All phases deliver user value
+- [ ] Dependencies mapped correctly
+- [ ] Timeline is realistic
+- [ ] Testing strategy defined
+- [ ] Risk mitigation planned
+- [ ] **ai_docs development-plan Struktur ist erstellt**
+- [ ] **App-spezifische .cursorrules sind aktualisiert**
+
+### Technical Validation
+- [ ] Each phase is technically feasible
+- [ ] Resource requirements estimated
+- [ ] Integration points identified
+- [ ] Performance targets achievable
+
+## Communication mit anderen Rollen
+
+### ← System Architect
+- **Erhalte**: Complete system design, Component dependencies (aus `ai_docs/system-design/`)
+- **Nutze**: Technical architecture als Basis für Phase planning
+
+### ← Requirements Analyst
+- **Erhalte**: Prioritized features mit Abhängigkeiten
+- **Nutze**: User value priorities für Phase planning
+
+### → Implementation Guide
+- **Übergebe**: Current phase plan mit detailed requirements (in `ai_docs/development-plan/`)
+- **Erwarte**: Implementation nach Phase plan und timeline
+
+Nutze diese Rules um realistische, deployable Development Phases zu erstellen, die continuous value delivery ermöglichen. 

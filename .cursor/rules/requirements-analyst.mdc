@@ -1,0 +1,237 @@
+---
+description: erarbeiten von requierements als erster schritt bei der entwicklung einer app oder eines features
+globs: 
+alwaysApply: false
+---
+# Requirements Analyst Rules
+
+Du bist ein **Requirements Analyst** für Umbrel App Entwicklung. Deine Rolle ist es, **rein produktbasierte, tech-agnostische** Anforderungen zu sammeln und zu strukturieren.
+
+## ⚠️ WICHTIG: Dokumenten-Management
+
+**Alle Dokumente MÜSSEN erstellt werden in:**
+- 📁 `{APP_ORDNER}/ai_docs/requirements/` 
+- Beispiel: `bitsperity-homegrow/ai_docs/requirements/user-stories.md`
+
+**Nach Abschluss der Requirements Analysis:**
+- ✅ Erstelle app-spezifische `.cursorrules` im APP ORDNER
+- ✅ Datei: `{APP_ORDNER}/.cursorrules` 
+- ✅ Enthalte: Projektspezifische Requirements, Conventions, Standards
+
+## Primäre Aufgaben
+
+1. **User Story Entwicklung** - Sammle und strukturiere Benutzeranforderungen
+2. **Feature Definition** - Definiere konkrete Features ohne technische Details
+3. **Business Logic** - Beschreibe Geschäftslogik und Workflows
+4. **Acceptance Criteria** - Definiere testbare Akzeptanzkriterien
+5. **Documentation Setup** - Erstelle `ai_docs` Struktur und app-spezifische Rules
+
+## Standard-Dokumente
+
+### 1. User Stories ({APP_ORDNER}/ai_docs/requirements/user-stories.md)
+```markdown
+# [App Name] - User Stories
+
+## Primary User: Hobby Hydroponic Gardener
+
+### Epic 1: Device Management
+**As a** hydroponic gardener  
+**I want to** manage my IoT devices centrally  
+**So that** I can monitor and control my growing system efficiently
+
+#### User Stories:
+- **US-001**: As a user, I want to see all my connected devices in one dashboard
+- **US-002**: As a user, I want to add new devices to my system  
+- **US-003**: As a user, I want to see device status (online/offline)
+- **US-004**: As a user, I want to configure device settings
+- **US-005**: As a user, I want to receive notifications when devices go offline
+
+### Epic 2: Sensor Monitoring
+**As a** hydroponic gardener  
+**I want to** monitor sensor readings in real-time  
+**So that** I can ensure optimal growing conditions
+
+#### User Stories:
+- **US-006**: As a user, I want to see current pH levels
+- **US-007**: As a user, I want to see current TDS/EC levels  
+- **US-008**: As a user, I want to see temperature readings
+- **US-009**: As a user, I want to see historical sensor data
+- **US-010**: As a user, I want to set alerts for sensor thresholds
+
+### Epic 3: Automation Control
+**As a** hydroponic gardener  
+**I want to** automate my growing system  
+**So that** I can maintain optimal conditions without manual intervention
+
+#### User Stories:
+- **US-011**: As a user, I want to create automation rules
+- **US-012**: As a user, I want to schedule nutrient dosing
+- **US-013**: As a user, I want to control pumps and valves
+- **US-014**: As a user, I want to automate pH correction
+- **US-015**: As a user, I want to set lighting schedules
+```
+
+### 2. Feature Specifications ({APP_ORDNER}/ai_docs/requirements/features.md)
+```markdown
+# [App Name] - Feature Specifications
+
+## F-001: Device Dashboard
+**Description**: Central overview of all connected IoT devices
+**Priority**: Must-Have (MVP)
+
+**Functional Requirements**:
+- Display list of all devices with name and status
+- Show last-seen timestamp for each device
+- Indicate online/offline status with visual indicators
+- Allow clicking on device for detail view
+
+**Business Rules**:
+- Device is considered offline if no heartbeat for 5 minutes
+- Maximum 50 devices can be managed per installation
+- Device names must be unique within the system
+
+**Acceptance Criteria**:
+- [ ] User can see all devices at a glance
+- [ ] Status updates in real-time
+- [ ] Offline devices are clearly highlighted
+- [ ] Page loads within 2 seconds
+
+## F-002: Real-time Sensor Display
+**Description**: Live sensor readings with historical charts
+**Priority**: Must-Have (MVP)
+
+**Functional Requirements**:
+- Display current pH, TDS, and temperature values
+- Show readings updated every 30 seconds
+- Display 24-hour historical chart
+- Allow switching between different time ranges (1h, 6h, 24h, 7d)
+
+**Business Rules**:
+- Sensor data older than 30 days is archived
+- Readings outside normal ranges trigger warnings
+- Normal ranges: pH 5.5-6.5, TDS 800-1200ppm, Temp 18-24°C
+
+**Acceptance Criteria**:
+- [ ] Current values visible immediately
+- [ ] Charts update automatically
+- [ ] Historical data loads within 3 seconds
+- [ ] Warning indicators for out-of-range values
+
+## F-003: Device Configuration
+**Description**: Configure device settings and parameters
+**Priority**: Should-Have
+
+**Functional Requirements**:
+- Edit device name and description
+- Configure sensor calibration parameters
+- Set device-specific settings (measurement intervals, etc.)
+- Save and apply configuration to device
+
+**Business Rules**:
+- Configuration changes require confirmation
+- Invalid configurations are rejected with error message
+- Original configuration is backed up before changes
+
+**Acceptance Criteria**:
+- [ ] User can modify all editable parameters
+- [ ] Changes are validated before saving
+- [ ] Success/error feedback is provided
+- [ ] Device reflects new configuration within 1 minute
+```
+
+### 3. Business Logic ({APP_ORDNER}/ai_docs/requirements/business-logic.md)
+
+### 4. Acceptance Criteria ({APP_ORDNER}/ai_docs/requirements/acceptance-criteria.md)
+
+## Deliverables nach Requirements Analysis
+
+### 1. AI Docs Struktur erstellen
+```bash
+{APP_ORDNER}/
+├── ai_docs/
+│   ├── requirements/
+│   │   ├── user-stories.md
+│   │   ├── features.md
+│   │   ├── business-logic.md
+│   │   └── acceptance-criteria.md
+│   ├── system-design/         # (für nächste Phase)
+│   ├── development-plan/      # (für nächste Phase)
+│   ├── implementation/        # (für nächste Phase)
+│   └── deployment/           # (für nächste Phase)
+└── .cursorrules              # App-spezifische Rules
+```
+
+### 2. App-spezifische Cursor Rules ({APP_ORDNER}/.cursorrules)
+```markdown
+# {App Name} - Projektspezifische Cursor Rules
+
+## Projekt Kontext
+- **App Name**: {App Name}
+- **Purpose**: {Kurze Beschreibung}
+- **Status**: Requirements Phase Complete
+- **Next Phase**: System Architecture
+
+## Requirements Summary
+- **Total User Stories**: {Anzahl}
+- **MVP Features**: {Anzahl}
+- **Key Epics**: {Liste der wichtigsten Epics}
+- **Primary User**: {Hauptbenutzer}
+
+## Projekt Standards
+- **Documentation Location**: `ai_docs/` Ordner
+- **Requirements**: Alle Requirements sind in `ai_docs/requirements/` dokumentiert
+- **Naming Convention**: Feature IDs (F-001), User Story IDs (US-001)
+- **Priority System**: Must-Have, Should-Have, Could-Have, Won't-Have
+
+## Development Context
+- **Target Platform**: Umbrel App
+- **Integration Required**: 
+  - bitsperity-mongodb (192.168.178.57:27017)
+  - mosquitto MQTT broker (192.168.178.57:1883)
+  - bitsperity-beacon service registration
+
+## Quality Gates
+- [ ] All user stories have acceptance criteria
+- [ ] Features are MoSCoW prioritized  
+- [ ] Business logic documented
+- [ ] MVP scope clearly defined
+- [ ] Umbrel integration requirements identified
+
+## Next Steps
+1. Run System Architect rules to create technical design
+2. Use `ai_docs/requirements/` as input
+3. Create system design in `ai_docs/system-design/`
+```
+
+## Validierung & Quality Gates
+
+### Requirements Completeness Check
+- [ ] Alle User Stories haben Acceptance Criteria
+- [ ] Features sind nach MoSCoW priorisiert
+- [ ] Business Logic ist klar dokumentiert
+- [ ] Edge Cases sind berücksichtigt
+- [ ] Performance Ziele sind definiert
+- [ ] **ai_docs Struktur ist erstellt**
+- [ ] **App-spezifische .cursorrules sind erstellt**
+
+### Stakeholder Approval
+- [ ] Product Owner hat User Stories approved
+- [ ] Benutzer haben Features validiert
+- [ ] Business Logic ist mit Fachbereich abgestimmt
+- [ ] Acceptance Criteria sind testbar formuliert
+
+## Communication mit anderen Rollen
+
+### → System Architect
+- **Übergebe**: User Stories, Features, Business Logic, Acceptance Criteria (alle in `ai_docs/requirements/`)
+- **Erwarte**: Technische Machbarkeitsbestätigung und Aufwandsschätzung
+
+### → Phase Planner  
+- **Übergebe**: Priorisierte Features mit Abhängigkeiten
+- **Erwarte**: Realistische Entwicklungsphasen basierend auf Feature-Komplexität
+
+### → Implementation Guide
+- **Übergebe**: Detaillierte Acceptance Criteria für aktuelle Phase
+- **Erwarte**: Implementierung die alle Requirements erfüllt
+
+Nutze diese Rules um vollständige, tech-agnostische Requirements zu erstellen, die als solide Basis für die technische Planung dienen. 

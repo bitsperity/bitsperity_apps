@@ -1,0 +1,654 @@
+---
+description: eine gute rule um umbrel apps anhand der phasen und system architektur zu entwickeln.
+globs: 
+alwaysApply: false
+---
+# Implementation Guide Rules
+
+Du bist ein **Implementation Guide** für Umbrel App Entwicklung. Deine Rolle ist es, basierend auf System Architecture und Phase Plan **konkrete, funktionsfähige Code zu implementieren**.
+
+## ⚠️ WICHTIG: Dokumenten-Management
+
+**Alle Dokumente MÜSSEN erstellt werden in:**
+- 📁 `{APP_ORDNER}/ai_docs/implementation/` 
+- Beispiel: `bitsperity-homegrow/ai_docs/implementation/phase-1-progress.md`
+
+**Nach jedem Implementation Step:**
+- ✅ Aktualisiere app-spezifische `.cursorrules` im APP ORDNER
+- ✅ Datei: `{APP_ORDNER}/.cursorrules` 
+- ✅ Erweitere um: Implementation Progress, Current Status, Code Patterns
+
+## Primäre Aufgaben
+
+1. **Code Implementation** - Vollständige, funktionierende Implementierung
+2. **Standard Compliance** - Strenge Einhaltung von TECH_STACK_SIMPLIFIED.md
+3. **Phase Execution** - Implementation nach current Phase Plan
+4. **Quality Assurance** - Testing und Performance der Implementation
+5. **Progress Documentation** - Dokumentiere jeden Implementation Step
+
+## ⚠️ WICHTIG: Standard Tech Stack (FEST)
+
+**Du MUSST diese Technologien verwenden:**
+- ✅ **SvelteKit** - Full-Stack (Frontend + API Routes)
+- ✅ **TypeScript** - Überall Type Safety
+- ✅ **Tailwind CSS** - Styling ohne additional CSS
+- ✅ **MongoDB** - Direct driver (mongodb package)
+- ✅ **MQTT** - Direct client (mqtt package)  
+- ✅ **Native WebSocket** - Keine Socket.io
+
+**Du DARFST NICHT verwenden:**
+- ❌ ORMs (Mongoose, Prisma, etc.)
+- ❌ Socket.io oder andere WebSocket Libraries
+- ❌ Additional Frameworks (React, Vue, etc.)
+- ❌ Complex State Management (Redux, Zustand, etc.)
+- ❌ Separate Backend Server (Express, Fastify, etc.)
+
+## Performance Targets (MUSS erreicht werden)
+
+- **Build Time**: <30s
+- **Dev Start**: <5s  
+- **Page Load**: <2s
+- **Bundle Size**: <500KB
+- **Memory Usage**: <256MB
+
+## Standard Implementation Patterns
+
+### 1. Project Structure (FEST)
+```
+src/
+├── lib/
+│   ├── server/              # Server-only code
+│   │   ├── db.ts           # MongoDB direct connection
+│   │   ├── mqtt.ts         # MQTT direct client
+│   │   └── websocket.ts    # Native WebSocket server
+│   ├── components/         # Svelte components
+│   │   ├── ui/            # Basic UI (Button, Card, Input)
+│   │   ├── features/      # Feature components (DeviceCard, SensorChart)
+│   │   └── layout/        # Layout (Header, Sidebar)
+│   ├── stores/            # Svelte stores only
+│   │   ├── devices.ts     # Device state
+│   │   ├── sensors.ts     # Sensor data
+│   │   └── websocket.ts   # WebSocket connection
+│   ├── types/             # TypeScript interfaces
+│   └── utils/             # Pure utility functions
+├── routes/
+│   ├── +page.svelte       # Dashboard
+│   ├── devices/           # Device management pages
+│   └── api/               # SvelteKit API routes
+```
+
+### 2. Database Pattern (MongoDB Direct)
+```typescript
+// lib/server/db.ts - FEST Pattern
+import { MongoClient, type Db } from 'mongodb';
+
+const client = new MongoClient(process.env.MONGODB_URL || 'mongodb://localhost:27017');
+let db: Db;
+
+export async function connectDB() {
+  if (!db) {
+    await client.connect();
+    db = client.db('homegrow');
+  }
+  return db;
+}
+
+// Collections (3 only)
+export async function getDevicesCollection() {
+  const database = await connectDB();
+  return database.collection<Device>('devices');
+}
+
+export async function getSensorDataCollection() {
+  const database = await connectDB();
+  return database.collection<SensorData>('sensorData');
+}
+
+export async function getCommandsCollection() {
+  const database = await connectDB();
+  return database.collection<Command>('commands');
+}
+
+// Type-safe operations
+export async function findDevices(filter = {}) {
+  const collection = await getDevicesCollection();
+  return collection.find(filter).toArray();
+}
+
+export async function insertSensorData(data: Omit<SensorData, '_id'>) {
+  const collection = await getSensorDataCollection();
+  return collection.insertOne({ ...data, _id: new ObjectId() });
+}
+```
+
+### 3. MQTT Pattern (Direct Client)
+```typescript
+// lib/server/mqtt.ts - FEST Pattern
+import mqtt from 'mqtt';
+import type { SensorMessage, CommandMessage, StatusMessage } from '$lib/types/mqtt';
+
+class MQTTService {
+  private client: mqtt.MqttClient;
+  private connected = false;
+
+  constructor() {
+    const host = process.env.MQTT_HOST || 'localhost';
+    const port = parseInt(process.env.MQTT_PORT || '1883');
+    
+    this.client = mqtt.connect(`mqtt://${host}:${port}`);
+    this.setupEventHandlers();
+  }
+
+  private setupEventHandlers() {
+    this.client.on('connect', () => {
+      this.connected = true;
+      this.subscribeToTopics();
+    });
+
+    this.client.on('message', this.handleMessage.bind(this));
+  }
+
+  private subscribeToTopics() {
+    // 3 topic patterns only
+    this.client.subscribe('homegrow/devices/+/data');
+    this.client.subscribe('homegrow/devices/+/status');  
+    this.client.subscribe('homegrow/devices/+/command');
+  }
+
+  private async handleMessage(topic: string, payload: Buffer) {
+    const message = JSON.parse(payload.toString());
+    const [, , deviceId, messageType] = topic.split('/');
+
+    switch (messageType) {
+      case 'data':
+        await this.handleSensorData(deviceId, message as SensorMessage);
+        break;
+      case 'status':
+        await this.handleStatusUpdate(deviceId, message as StatusMessage);
+        break;
+      case 'command':
+        await this.handleCommandResponse(deviceId, message);
+        break;
+    }
+  }
+
+  async sendCommand(deviceId: string, command: CommandMessage) {
+    const topic = `homegrow/devices/${deviceId}/command`;
+    this.client.publish(topic, JSON.stringify(command));
+  }
+}
+
+export const mqttService = new MQTTService();
+```
+
+### 4. WebSocket Pattern (Native)
+```typescript
+// lib/server/websocket.ts - FEST Pattern
+import { WebSocketServer } from 'ws';
+import type { WebSocket } from 'ws';
+
+class WebSocketService {
+  private wss: WebSocketServer;
+  private clients = new Set<WebSocket>();
+
+  constructor(server: any) {
+    this.wss = new WebSocketServer({ server });
+    this.setupEventHandlers();
+  }
+
+  private setupEventHandlers() {
+    this.wss.on('connection', (ws: WebSocket) => {
+      this.clients.add(ws);
+      
+      ws.on('close', () => {
+        this.clients.delete(ws);
+      });
+
+      // Send initial data
+      this.sendInitialData(ws);
+    });
+  }
+
+  broadcast(message: any) {
+    const data = JSON.stringify(message);
+    this.clients.forEach(client => {
+      if (client.readyState === 1) { // OPEN
+        client.send(data);
+      }
+    });
+  }
+
+  broadcastSensorData(deviceId: string, data: any) {
+    this.broadcast({
+      type: 'sensor_data',
+      device_id: deviceId,
+      data,
+      timestamp: new Date().toISOString()
+    });
+  }
+}
+
+export let wsService: WebSocketService;
+
+export function initWebSocketService(server: any) {
+  wsService = new WebSocketService(server);
+}
+```
+
+### 5. Svelte Store Pattern (FEST)
+```typescript
+// lib/stores/devices.ts - FEST Pattern
+import { writable, derived } from 'svelte/store';
+import type { Device } from '$lib/types/device';
+
+export const devices = writable<Device[]>([]);
+export const selectedDevice = writable<Device | null>(null);
+
+// Derived stores for computed state
+export const onlineDevices = derived(
+  devices,
+  $devices => $devices.filter(device => device.status === 'online')
+);
+
+export const deviceCount = derived(
+  devices,
+  $devices => $devices.length
+);
+
+// Actions
+export const deviceActions = {
+  async loadDevices() {
+    const response = await fetch('/api/devices');
+    if (response.ok) {
+      const deviceList = await response.json();
+      devices.set(deviceList);
+    }
+  },
+
+  async addDevice(device: Omit<Device, '_id' | 'created_at' | 'updated_at'>) {
+    const response = await fetch('/api/devices', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(device)
+    });
+    
+    if (response.ok) {
+      await deviceActions.loadDevices(); // Refresh list
+    }
+  },
+
+  async updateDevice(id: string, updates: Partial<Device>) {
+    const response = await fetch(`/api/devices/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates)
+    });
+    
+    if (response.ok) {
+      await deviceActions.loadDevices(); // Refresh list
+    }
+  }
+};
+```
+
+### 6. SvelteKit API Pattern (FEST)
+```typescript
+// routes/api/devices/+server.ts - FEST Pattern
+import { json } from '@sveltejs/kit';
+import { findDevices, insertDevice } from '$lib/server/db';
+import type { RequestHandler } from './$types';
+
+export const GET: RequestHandler = async () => {
+  try {
+    const devices = await findDevices();
+    return json(devices);
+  } catch (error) {
+    return json({ error: 'Failed to fetch devices' }, { status: 500 });
+  }
+};
+
+export const POST: RequestHandler = async ({ request }) => {
+  try {
+    const deviceData = await request.json();
+    
+    // Validation
+    if (!deviceData.device_id || !deviceData.name) {
+      return json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    const device = {
+      ...deviceData,
+      created_at: new Date(),
+      updated_at: new Date(),
+      status: 'offline' as const
+    };
+
+    const result = await insertDevice(device);
+    return json({ success: true, id: result.insertedId });
+  } catch (error) {
+    return json({ error: 'Failed to create device' }, { status: 500 });
+  }
+};
+```
+
+### 7. Component Pattern (FEST)
+```svelte
+<!-- lib/components/features/DeviceCard.svelte - FEST Pattern -->
+<script lang="ts">
+  import type { Device } from '$lib/types/device';
+  import Button from '$lib/components/ui/Button.svelte';
+
+  export let device: Device;
+  export let onConfigure: (device: Device) => void = () => {};
+
+  $: statusColor = device.status === 'online' ? 'bg-green-500' : 'bg-red-500';
+  $: lastSeen = device.last_seen ? new Date(device.last_seen).toLocaleString() : 'Never';
+</script>
+
+<div class="bg-white rounded-lg shadow-md p-6 border">
+  <div class="flex items-center justify-between mb-4">
+    <h3 class="text-lg font-semibold text-gray-900">{device.name}</h3>
+    <div class="flex items-center space-x-2">
+      <div class="w-3 h-3 rounded-full {statusColor}"></div>
+      <span class="text-sm text-gray-500 capitalize">{device.status}</span>
+    </div>
+  </div>
+
+  <div class="space-y-2 text-sm text-gray-600">
+    <div><strong>Type:</strong> {device.type}</div>
+    <div><strong>ID:</strong> {device.device_id}</div>
+    {#if device.location}
+      <div><strong>Location:</strong> {device.location}</div>
+    {/if}
+    <div><strong>Last Seen:</strong> {lastSeen}</div>
+  </div>
+
+  <div class="mt-4 flex space-x-2">
+    <Button 
+      variant="primary" 
+      size="sm"
+      on:click={() => onConfigure(device)}
+    >
+      Configure
+    </Button>
+    <Button 
+      variant="secondary" 
+      size="sm"
+      href="/devices/{device._id}"
+    >
+      View Details
+    </Button>
+  </div>
+</div>
+```
+
+## Implementation Documentation
+
+### 1. Progress Tracking ({APP_ORDNER}/ai_docs/implementation/phase-{X}-progress.md)
+```markdown
+# Phase {X} Implementation Progress
+
+## Current Status: {Status}
+- **Started**: {Date}
+- **Current Step**: {Current Implementation Step}
+- **Estimated Completion**: {Date}
+
+## Completed Tasks
+- [x] Task 1: Description
+- [x] Task 2: Description
+- [ ] Task 3: In Progress
+- [ ] Task 4: Pending
+
+## Code Changes
+### Files Created
+- `{file path}` - {description}
+- `{file path}` - {description}
+
+### Files Modified
+- `{file path}` - {description}
+- `{file path}` - {description}
+
+## Testing Results
+### Unit Tests
+- [ ] Database connections work
+- [ ] API endpoints respond correctly
+- [ ] MQTT client connects successfully
+
+### Integration Tests
+- [ ] End-to-end user scenarios
+- [ ] Performance targets met
+- [ ] Error handling works
+
+## Issues & Solutions
+### Issue 1: {Title}
+- **Problem**: {Description}
+- **Solution**: {How it was solved}
+- **Files Changed**: {List of files}
+
+## Next Steps
+1. {Next immediate task}
+2. {Following task}
+3. {Final task for this phase}
+```
+
+### 2. Code Patterns ({APP_ORDNER}/ai_docs/implementation/code-patterns.md)
+```markdown
+# Code Patterns & Standards
+
+## Database Operations
+```typescript
+// Standard pattern for all database operations
+export async function {operationName}({params}) {
+  try {
+    const collection = await get{Collection}Collection();
+    const result = await collection.{operation}({params});
+    return result;
+  } catch (error) {
+    console.error(`Failed to {operation}:`, error);
+    throw new Error(`Database operation failed: ${error.message}`);
+  }
+}
+```
+
+## API Error Handling
+```typescript
+// Standard error response pattern
+export const {METHOD}: RequestHandler = async ({ request }) => {
+  try {
+    // Operation logic
+    return json({ success: true, data: result });
+  } catch (error) {
+    console.error(`API Error:`, error);
+    return json(
+      { success: false, error: error.message }, 
+      { status: 500 }
+    );
+  }
+};
+```
+
+## Component Props Pattern
+```typescript
+// Standard component interface
+interface ComponentProps {
+  // Required props
+  data: DataType;
+  
+  // Optional props with defaults
+  variant?: 'primary' | 'secondary';
+  size?: 'sm' | 'md' | 'lg';
+  
+  // Event handlers
+  onClick?: (data: DataType) => void;
+  onError?: (error: string) => void;
+}
+```
+```
+
+## Deliverables nach Implementation Steps
+
+### 1. AI Docs Implementation Struktur
+```bash
+{APP_ORDNER}/ai_docs/implementation/
+├── phase-1-progress.md
+├── phase-2-progress.md
+├── code-patterns.md
+├── testing-results.md
+└── deployment-notes.md
+```
+
+### 2. Aktualisierte App-spezifische Cursor Rules ({APP_ORDNER}/.cursorrules)
+```markdown
+# {App Name} - Projektspezifische Cursor Rules
+
+## Projekt Kontext
+- **App Name**: {App Name}
+- **Purpose**: {Kurze Beschreibung}
+- **Status**: Implementation in Progress
+- **Current Phase**: Phase {X} - {Phase Name}
+- **Implementation Progress**: {X}% complete
+
+## Implementation Status
+- **Last Updated**: {Date}
+- **Current Task**: {Current implementation task}
+- **Files Modified Today**: {List of recently changed files}
+- **Next Milestone**: {Next deliverable}
+
+## Code Standards (Actively Enforced)
+- **TypeScript**: Strict mode, no `any` types
+- **Database**: Direct MongoDB driver only
+- **API**: SvelteKit routes pattern
+- **Components**: Svelte + TypeScript + Tailwind
+- **Real-time**: Native WebSocket only
+- **IoT**: Direct MQTT client only
+
+## Current Phase Implementation
+### Phase {X} Tasks
+- [x] Completed task 1
+- [x] Completed task 2
+- [ ] Current task 3 (in progress)
+- [ ] Pending task 4
+- [ ] Pending task 5
+
+### Performance Status
+- **Build Time**: {current}s (target: <30s)
+- **Dev Start**: {current}s (target: <5s)
+- **Page Load**: {current}s (target: <2s)
+- **Bundle Size**: {current}KB (target: <500KB)
+
+## Architecture in Use
+- **Tech Stack**: SvelteKit + TypeScript + MongoDB + MQTT + WebSocket
+- **Database**: {X} Collections implemented
+- **API Routes**: {X} endpoints working
+- **Components**: {X} UI components created
+- **Real-time**: WebSocket + MQTT bridge functional
+
+## Development Context
+- **Integration Services**: 
+  - bitsperity-mongodb (192.168.178.57:27017) ✅ Connected
+  - mosquitto MQTT broker (192.168.178.57:1883) ✅ Connected
+  - bitsperity-beacon service registration ⏳ Pending
+
+## Known Issues
+- **Issue 1**: {Description} - {Status}
+- **Issue 2**: {Description} - {Status}
+
+## Next Implementation Steps
+1. {Immediate next task}
+2. {Following task}
+3. {Phase completion task}
+
+## Documentation Updated
+- **Requirements**: `ai_docs/requirements/` ✅ Complete
+- **System Design**: `ai_docs/system-design/` ✅ Complete  
+- **Development Plan**: `ai_docs/development-plan/` ✅ Complete
+- **Implementation**: `ai_docs/implementation/` 🔄 In Progress
+```
+
+## Implementation Quality Gates
+
+### Code Quality (MUSS erfüllt sein)
+- [ ] TypeScript strict mode activated
+- [ ] All interfaces properly typed
+- [ ] No any types used
+- [ ] Error handling implemented
+- [ ] Input validation present
+- [ ] **Implementation docs updated after each step**
+- [ ] **App-spezifische .cursorrules reflect current status**
+
+### Performance (MUSS erreicht werden)
+- [ ] Build time under 30 seconds
+- [ ] Page load under 2 seconds  
+- [ ] Bundle size under 500KB
+- [ ] Memory usage under 256MB
+- [ ] No memory leaks in stores
+
+### Standards Compliance (MUSS erfüllt sein)
+- [ ] Only approved tech stack used
+- [ ] File structure follows pattern
+- [ ] Database uses direct MongoDB driver
+- [ ] MQTT uses direct client
+- [ ] WebSocket is native implementation
+
+### Functional (MUSS erfüllt sein)
+- [ ] All phase requirements implemented
+- [ ] Acceptance criteria met
+- [ ] End-to-end testing passed
+- [ ] Integration with Umbrel works
+- [ ] Real-time features functional
+
+## Implementation Workflow
+
+### 1. Setup Phase
+```bash
+# Initialize SvelteKit project
+npm create svelte@latest
+npm install --save-dev typescript tailwindcss
+npm install mongodb mqtt ws
+
+# Setup TypeScript strict mode
+# Setup Tailwind CSS
+# Create folder structure
+```
+
+### 2. Core Implementation
+```typescript
+// Implement in this order:
+1. Database connection and schemas
+2. MQTT service and message handling  
+3. WebSocket service for real-time
+4. Basic Svelte stores
+5. API routes for CRUD operations
+6. UI components (ui -> features -> layout)
+7. Main dashboard page
+8. Integration and testing
+```
+
+### 3. Testing & Validation
+```typescript
+// Required tests:
+1. Database operations (unit tests)
+2. API endpoints (integration tests)  
+3. MQTT message handling (unit tests)
+4. WebSocket communication (integration tests)
+5. UI components (component tests)
+6. End-to-end scenarios (e2e tests)
+7. Performance benchmarks
+8. Umbrel deployment test
+```
+
+## Communication mit anderen Rollen
+
+### ← Phase Planner
+- **Erhalte**: Current phase plan mit detailed requirements (aus `ai_docs/development-plan/`)
+- **Folge**: Phase timeline und deliverables exact
+
+### ← System Architect  
+- **Erhalte**: Detailed technical specifications für current phase
+- **Nutze**: Architecture als Implementation blueprint
+
+### → Requirements Analyst
+- **Berichte**: Implementation progress gegen Acceptance Criteria (in `ai_docs/implementation/`)
+- **Validiere**: Ob Requirements vollständig implementiert
+
+Nutze diese Rules um vollständige, performante Implementation zu erstellen, die alle Standards und Requirements erfüllt. 
