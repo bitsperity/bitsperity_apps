@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   app_proxy:
     environment:
@@ -38,8 +36,6 @@ services:
     depends_on:
       web:
         condition: service_healthy
-      bitsperity-beacon:
-        condition: service_started
     restart: "no"
     command: >
       curl -X POST http://bitsperity-beacon_web_1:80/api/v1/services/register
