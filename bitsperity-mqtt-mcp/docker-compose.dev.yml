@@ -1,0 +1,47 @@
+# Docker Compose für bitsperity-mqtt-mcp Development
+# Phase 1: Local development mit SSH access simulation
+
+services:
+  mcp-server:
+    build:
+      context: .
+      target: development
+    container_name: bitsperity-mqtt-mcp-dev
+    restart: unless-stopped
+    
+    # Host network für SSH simulation (wie in Umbrel)
+    network_mode: host
+    
+    # STDIO support für MCP protocol
+    stdin_open: true
+    tty: true
+    
+    environment:
+      - NODE_ENV=development
+      - LOG_LEVEL=debug
+      - MQTT_HOST=192.168.178.57  # Test MQTT broker
+      - MQTT_PORT=1883
+    
+    volumes:
+      # Development code mounting
+      - ./src:/app/src:ro
+      - ./tests:/app/tests:ro
+      - ./ai_docs:/app/ai_docs:ro
+      
+      # Data persistence
+      - mqtt-mcp-data:/app/data
+      - mqtt-mcp-logs:/app/logs
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  mqtt-mcp-data:
+    driver: local
+  mqtt-mcp-logs:
+    driver: local 

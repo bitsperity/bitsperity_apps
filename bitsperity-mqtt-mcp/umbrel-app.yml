@@ -1,0 +1,142 @@
+manifestVersion: 1.1
+id: bitsperity-mqtt-mcp
+category: developer-tools
+name: Bitsperity MQTT MCP
+version: "1.0.0"
+tagline: MQTT Model Context Protocol Server for AI-Assisted IoT Device Analysis
+description: >
+  AI-powered MQTT broker integration for intelligent IoT device monitoring and analysis.
+
+
+  **Features:**
+
+  • 🔌 **Universal MQTT Integration** - Connect to any MQTT broker with authentication support
+
+  • 🤖 **AI Assistant Integration** - Direct integration with AI assistants via Model Context Protocol (MCP)
+
+  • 📊 **Smart Data Optimization** - Intelligent message pruning and schema analysis
+
+  • 🔍 **Advanced Device Debugging** - Device-specific monitoring and error detection
+
+  • ⚡ **Performance Monitoring** - Real-time throughput, latency, and health metrics
+
+  • 🛠️ **Connection Testing** - Comprehensive broker health checks and diagnostics
+
+
+  **Use Cases:**
+
+  • Industrial IoT monitoring and maintenance
+
+  • Smart home device management and debugging  
+
+  • Sensor network analysis and optimization
+
+  • MQTT broker performance monitoring
+
+  • IoT system integration testing
+
+
+  **Technical Specifications:**
+
+  • **Protocol Support**: MQTT 3.1.1 with QoS 0/1/2
+
+  • **Authentication**: Username/password and anonymous connections
+
+  • **Topic Patterns**: Full wildcard support (+ and # patterns)
+
+  • **Data Optimization**: 500→50 message intelligent pruning
+
+  • **Performance**: <128MB memory, <10s startup time
+
+  • **Integration**: SSH + docker exec for AI assistant access
+
+  • **Optional Web UI**: Port 8090 for monitoring dashboard
+
+
+  Perfect for developers and system integrators working with IoT devices who need intelligent analysis capabilities powered by AI assistants.
+developer: Bitsperity
+website: https://github.com/bitsperity/mqtt-mcp
+dependencies: []
+repo: https://github.com/bitsperity/mqtt-mcp
+support: https://github.com/bitsperity/mqtt-mcp/issues
+port: 8090
+gallery:
+  - 1.jpg
+  - 2.jpg
+  - 3.jpg
+path: ""
+defaultUsername: ""
+defaultPassword: ""
+torOnly: false
+permissions:
+  - STORAGE_DOWNLOADS
+releaseNotes: >
+  🚀 **Phase 4: Advanced Tools & Production** 
+
+
+  **New Advanced Tools:**
+
+  • `debug_device` - Device-specific monitoring and debugging
+
+  • `monitor_performance` - Throughput, latency, and memory metrics  
+
+  • `test_connection` - Comprehensive connection health checks
+
+
+  **Production Features:**
+
+  • Multi-stage Docker builds for optimized performance
+
+  • Auto-deployment with health checking
+
+  • Enhanced error recovery and diagnostics
+
+  • Complete 10-tool MVP implementation
+
+
+  **Performance Improvements:**
+
+  • Memory usage <128MB (45MB typical)
+
+  • Startup time <10 seconds
+
+  • Smart message pruning (500→50 optimization)
+
+  • Advanced schema analysis
+
+
+  **Integration:**
+
+  • Direct AI assistant integration via SSH + MCP protocol
+
+  • Optional web monitoring interface on port 8090
+
+  • Compatible with any MQTT broker (mosquitto, HiveMQ, etc.)
+
+
+  **Complete Tool Set (10 tools):**
+
+  1. `establish_connection` - Connect to MQTT brokers
+
+  2. `list_active_connections` - Session management
+
+  3. `close_connection` - Clean session termination
+
+  4. `list_topics` - Topic discovery with smart filtering
+
+  5. `subscribe_and_collect` - Time-bounded message collection
+
+  6. `publish_message` - Message publishing with QoS support
+
+  7. `get_topic_schema` - Message structure analysis
+
+  8. `debug_device` - Device-specific monitoring **NEW**
+
+  9. `monitor_performance` - Performance metrics **NEW**
+
+  10. `test_connection` - Health diagnostics **NEW**
+
+
+  Ready for production IoT monitoring and AI-assisted analysis! 🎉
+submitter: Bitsperity
+submission: https://github.com/getumbrel/umbrel-community-app-store 

@@ -1,0 +1,65 @@
+version: "3.8"
+
+services:
+  app_proxy:
+    environment:
+      APP_HOST: bitsperity-mqtt-mcp_server_1
+      APP_PORT: 8090
+      PROXY_AUTH_ADD: "false"
+
+  server:
+    image: bitsperity/mqtt-mcp:latest
+    container_name: bitsperity-mqtt-mcp
+    restart: on-failure
+    stop_grace_period: 1m
+    
+    # Host network mode für SSH + MCP access
+    network_mode: host
+    
+    # STDIO für MCP communication
+    stdin_open: true
+    tty: true
+    
+    environment:
+      # Production environment
+      - NODE_ENV=production
+      - LOG_LEVEL=info
+      - MCP_SERVER_PORT=stdio
+      - WEB_INTERFACE_PORT=8090
+      
+    volumes:
+      # Persistent storage für logs and session data
+      - ${APP_DATA_DIR}/logs:/app/logs
+      - ${APP_DATA_DIR}/data:/app/data
+      
+    # Health check für container monitoring
+    healthcheck:
+      test: ["CMD", "python3", "-c", "
+        import subprocess, json, sys;
+        proc = subprocess.Popen(['python3', '/app/src/simple_mcp_server.py'], 
+                               stdin=subprocess.PIPE, stdout=subprocess.PIPE, 
+                               stderr=subprocess.PIPE, text=True, cwd='/app');
+        proc.stdin.write(json.dumps({'jsonrpc': '2.0', 'method': 'list_active_connections', 'params': {}, 'id': 1}) + '\n');
+        proc.stdin.flush();
+        try:
+          proc.wait(timeout=5);
+          response = proc.stdout.readline().strip();
+          result = json.loads(response) if response else {};
+          sys.exit(0 if result.get('jsonrpc') == '2.0' and 'result' in result else 1);
+        except: sys.exit(1);
+        finally: proc.terminate()
+      "]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+      
+    # Resource limits für production
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 64M
+          cpus: '0.1' 

@@ -1,0 +1,28 @@
+# bitsperity-mqtt-mcp Production Dependencies
+# Phase 1: MCP Foundation dependencies
+
+# Core Security & Encryption
+cryptography>=41.0.0,<42.0.0
+
+# Async MQTT Client (für Phase 2 bereit)
+aiomqtt>=2.0.0,<3.0.0
+
+# JSON-RPC & Protocol Support
+jsonrpc-base>=2.2.0
+pydantic>=2.5.0
+
+# Async utilities
+asyncio-mqtt==0.16.2
+
+# Environment & Configuration
+python-dotenv>=1.0.0
+
+# Phase 4: Performance Monitoring
+psutil>=5.9.0,<6.0.0
+
+# Optional: FastAPI für Web Monitoring (Phase 4)
+fastapi>=0.104.0,<1.0.0
+uvicorn>=0.24.0,<1.0.0
+
+# Production Logging
+python-json-logger>=2.0.0,<3.0.0 
