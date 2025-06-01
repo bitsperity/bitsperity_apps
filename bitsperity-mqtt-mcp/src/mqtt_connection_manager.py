@@ -3,6 +3,7 @@ bitsperity-mqtt-mcp - MQTT Connection Manager
 Phase 2: Real MQTT Integration mit aiomqtt
 
 Verwaltet MQTT Connections mit sicherer Session-basierter Verwaltung
++ Phase 4 Fix: MongoDB Session Persistence mit Umbrel MongoDB
 """
 
 import uuid
@@ -17,8 +18,16 @@ import json
 # Phase 2: aiomqtt import für real MQTT integration
 import aiomqtt
 
+# Phase 4 Fix: MongoDB for session persistence instead of files
+from pymongo import MongoClient
+from pymongo.errors import PyMongoError
+
 logger = logging.getLogger(__name__)
 
+# MongoDB connection for session persistence
+MONGODB_CONNECTION_STRING = "mongodb://umbrel:umbrel@umbrel.local:27017/"
+MONGODB_DATABASE = "mqtt_mcp_sessions"
+MONGODB_COLLECTION = "sessions"
 
 class MQTTSession:
     """
@@ -155,6 +164,21 @@ class MQTTSession:
             'connection_error': self.connection_error,
             'subscribed_topics': list(self.subscribed_topics)
         }
+    
+    def to_mongodb_doc(self) -> Dict[str, Any]:
+        """Convert session to MongoDB document for persistence"""
+        return {
+            '_id': self.session_id,
+            'broker': self.parsed_connection['broker'],
+            'port': self.parsed_connection['port'],
+            'client_id': self.parsed_connection.get('client_id'),
+            'created_at': self.created_at,
+            'last_accessed': self.last_accessed,
+            'is_connected': self.is_connected,
+            'connection_error': self.connection_error,
+            'subscribed_topics': list(self.subscribed_topics)
+            # Note: encrypted credentials not persisted for security
+        }
 
 
 class MQTTConnectionManager:
@@ -167,6 +191,8 @@ class MQTTConnectionManager:
     - Credential encryption mit Fernet
     - Automatic session cleanup
     - Max 5 concurrent connections
+    
+    Phase 4 Fix: MongoDB session persistence
     """
     
     def __init__(self, max_connections: int = 5):
@@ -179,7 +205,121 @@ class MQTTConnectionManager:
         # Background cleanup task
         self._cleanup_task: Optional[asyncio.Task] = None
         
+        # Phase 4 Fix: MongoDB client for session persistence
+        self.mongodb_client: Optional[MongoClient] = None
+        self._init_mongodb_connection()
+        
+        # Load existing sessions from MongoDB
+        self._load_sessions_from_mongodb()
+        
         logger.info(f"MQTTConnectionManager initialized (max_connections={max_connections})")
+    
+    def _init_mongodb_connection(self):
+        """Initialize MongoDB connection for session persistence"""
+        try:
+            self.mongodb_client = MongoClient(
+                MONGODB_CONNECTION_STRING,
+                serverSelectionTimeoutMS=5000,  # 5 second timeout
+                connectTimeoutMS=5000
+            )
+            
+            # Test connection
+            self.mongodb_client.admin.command('ping')
+            
+            # Get database and collection
+            self.db = self.mongodb_client[MONGODB_DATABASE]
+            self.sessions_collection = self.db[MONGODB_COLLECTION]
+            
+            # Create TTL index for automatic session cleanup (1 hour)
+            self.sessions_collection.create_index(
+                "created_at",
+                expireAfterSeconds=3600  # 1 hour TTL
+            )
+            
+            logger.info(f"MongoDB connection established: {MONGODB_CONNECTION_STRING}")
+            
+        except PyMongoError as e:
+            logger.warning(f"MongoDB connection failed, falling back to memory-only sessions: {e}")
+            self.mongodb_client = None
+        except Exception as e:
+            logger.warning(f"Unexpected error connecting to MongoDB: {e}")
+            self.mongodb_client = None
+    
+    def _save_session_to_mongodb(self, session: MQTTSession):
+        """Save session to MongoDB for persistence"""
+        if not self.mongodb_client:
+            return
+            
+        try:
+            doc = session.to_mongodb_doc()
+            self.sessions_collection.replace_one(
+                {'_id': session.session_id},
+                doc,
+                upsert=True
+            )
+            logger.debug(f"Saved session {session.session_id} to MongoDB")
+            
+        except PyMongoError as e:
+            logger.error(f"Failed to save session to MongoDB: {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error saving session: {e}")
+    
+    def _load_sessions_from_mongodb(self):
+        """Load sessions from MongoDB for persistence"""
+        if not self.mongodb_client:
+            return
+            
+        try:
+            # Find all non-expired sessions
+            cutoff_time = datetime.now() - timedelta(hours=1)
+            cursor = self.sessions_collection.find({
+                'created_at': {'$gt': cutoff_time}
+            })
+            
+            restored_count = 0
+            for doc in cursor:
+                try:
+                    session_id = doc['_id']
+                    
+                    # Create a minimal connection string (without credentials for security)
+                    connection_string = f"mqtt://{doc['broker']}:{doc['port']}"
+                    if doc.get('client_id'):
+                        connection_string += f"/{doc['client_id']}"
+                    
+                    # Create session object (will be disconnected, needs reconnection)
+                    session = MQTTSession(session_id, connection_string, self.cipher_suite)
+                    session.created_at = doc['created_at']
+                    session.last_accessed = doc['last_accessed']
+                    session.is_connected = False  # Will need to reconnect
+                    session.connection_error = "Session restored from persistence, need to reconnect"
+                    
+                    self.sessions[session_id] = session
+                    restored_count += 1
+                    
+                except Exception as e:
+                    logger.warning(f"Failed to restore session {session_id}: {e}")
+            
+            if restored_count > 0:
+                logger.info(f"Restored {restored_count} sessions from MongoDB")
+                
+        except PyMongoError as e:
+            logger.error(f"Failed to load sessions from MongoDB: {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error loading sessions: {e}")
+    
+    def _remove_session_from_mongodb(self, session_id: str):
+        """Remove session from MongoDB"""
+        if not self.mongodb_client:
+            return
+            
+        try:
+            self.sessions_collection.delete_one({'_id': session_id})
+            logger.debug(f"Removed session {session_id} from MongoDB")
+            
+        except PyMongoError as e:
+            logger.error(f"Failed to remove session from MongoDB: {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error removing session: {e}")
     
     def _start_cleanup_task(self):
         """Start background task für session cleanup"""
@@ -242,6 +382,9 @@ class MQTTConnectionManager:
             if session.is_connected:
                 self.sessions[session_id] = session
                 logger.info(f"Established MQTT connection: {session_id}")
+                
+                # Phase 4 Fix: Save session to MongoDB for persistence
+                self._save_session_to_mongodb(session)
             else:
                 # Cleanup failed connection
                 await session.disconnect()
@@ -360,8 +503,11 @@ class MQTTConnectionManager:
             # Phase 2: Real MQTT disconnect
             await session.disconnect()
             
-            # Remove session
+            # Remove session from memory
             del self.sessions[session_id]
+            
+            # Phase 4 Fix: Remove session from MongoDB
+            self._remove_session_from_mongodb(session_id)
             
             logger.info(f"Closed MQTT session: {session_id}")
             
@@ -417,5 +563,10 @@ class MQTTConnectionManager:
         # Cancel cleanup task
         if self._cleanup_task and not self._cleanup_task.done():
             self._cleanup_task.cancel()
+        
+        # Close MongoDB connection
+        if self.mongodb_client:
+            self.mongodb_client.close()
+            logger.info("MongoDB connection closed")
         
         logger.info("All MQTT sessions cleaned up") 
