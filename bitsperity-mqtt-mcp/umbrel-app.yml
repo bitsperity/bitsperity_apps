@@ -2,13 +2,26 @@ manifestVersion: 1.1
 id: bitsperity-mqtt-mcp
 category: developer-tools
 name: Bitsperity MQTT MCP
-version: "1.0.0"
-tagline: MQTT Model Context Protocol Server for AI-Assisted IoT Device Analysis
+version: "1.1.0"
+tagline: MQTT Model Context Protocol Server with Web Frontend for AI-Assisted IoT Analysis
 description: >
-  AI-powered MQTT broker integration for intelligent IoT device monitoring and analysis.
+  AI-powered MQTT broker integration with web interface for intelligent IoT device monitoring and analysis.
 
 
-  **Features:**
+  **🚀 NEW: Web Frontend on Port 8091!**
+
+  • 🌐 **Web Interface** - Modern dashboard at http://umbrel.local:8091
+
+  • 📚 **Tool Documentation** - Interactive MCP tool explorer with copy-paste examples
+
+  • 📊 **Live Monitoring** - Real-time tool call monitoring and performance tracking
+
+  • 🔗 **Session Management** - Overview of active MQTT connections and sessions
+
+  • ❤️ **Health Dashboard** - System performance and health monitoring with charts
+
+
+  **Core Features:**
 
   • 🔌 **Universal MQTT Integration** - Connect to any MQTT broker with authentication support
 
@@ -35,6 +48,17 @@ description: >
 
   • IoT system integration testing
 
+  • MCP tool learning and development
+
+
+  **Access Options:**
+
+  • **Web Interface**: http://umbrel.local:8091 (Tool docs, live monitoring, health dashboard)
+
+  • **SSH + MCP**: Direct AI assistant integration for automated analysis
+
+  • **API Access**: RESTful API for custom integrations
+
 
   **Technical Specifications:**
 
@@ -46,15 +70,14 @@ description: >
 
   • **Data Optimization**: 500→50 message intelligent pruning
 
-  • **Performance**: <128MB memory, <10s startup time
+  • **Performance**: <256MB memory total, <10s startup time
+
+  • **Frontend**: Port 8091 with real-time WebSocket updates
 
   • **Integration**: SSH + docker exec for AI assistant access
 
 
-  **Important:** This is a headless MCP server without web interface. Access via SSH and AI assistants only.
-
-
-  Perfect for developers and system integrators working with IoT devices who need intelligent analysis capabilities powered by AI assistants.
+  Perfect for developers and system integrators working with IoT devices who need both visual monitoring and intelligent AI-powered analysis capabilities.
 developer: Bitsperity
 website: https://github.com/bitsperity/mqtt-mcp
 dependencies: []
@@ -71,50 +94,49 @@ torOnly: false
 permissions:
   - STORAGE_DOWNLOADS
 releaseNotes: >
-  🚀 **Phase 4: Advanced Tools & Production** 
+  🚀 **Version 1.1.0: Web Frontend Launch** 
 
 
-  **New Advanced Tools:**
+  **🌐 NEW: Complete Web Interface (Port 8091)**
 
-  • `debug_device` - Device-specific monitoring and debugging
+  • **Tool Documentation Dashboard** - Interactive explorer for all 10 MCP tools
 
-  • `monitor_performance` - Throughput, latency, and memory metrics  
+  • **Live Tool Call Monitoring** - Real-time visualization of MCP tool executions
 
-  • `test_connection` - Comprehensive connection health checks
+  • **Session Management** - Monitor active MQTT connections and sessions
 
+  • **Health Dashboard** - Performance charts and system monitoring
 
-  **Production Features:**
+  • **Optional System Logs** - Power user debugging features (hidden by default)
 
-  • Multi-stage Docker builds for optimized performance
-
-  • Auto-deployment with health checking
-
-  • Enhanced error recovery and diagnostics
-
-  • Complete 10-tool MVP implementation
+  • **Copy-Paste Ready Examples** - Code snippets optimized for AI assistants
 
 
-  **Performance Improvements:**
+  **🔧 Enhanced Features:**
 
-  • Memory usage <128MB (45MB typical)
+  • MongoDB integration for tool call history and performance metrics
 
-  • Startup time <10 seconds
+  • WebSocket real-time updates for live monitoring
 
-  • Smart message pruning (500→50 optimization)
+  • Responsive design for desktop and mobile access
 
-  • Advanced schema analysis
+  • Interactive tutorial system for new users
 
-
-  **Integration:**
-
-  • Direct AI assistant integration via SSH + MCP protocol
-
-  • Headless operation - no web interface
-
-  • Compatible with any MQTT broker (mosquitto, HiveMQ, etc.)
+  • Export functionality for tool call data and analytics
 
 
-  **Complete Tool Set (10 tools):**
+  **🏗️ Architecture Improvements:**
+
+  • Multi-container deployment (MCP Server + Web Frontend)
+
+  • Optimized resource usage (<256MB total memory)
+
+  • Enhanced health monitoring and auto-recovery
+
+  • Production-ready logging and error handling
+
+
+  **📊 Complete Tool Set (10 tools):**
 
   1. `establish_connection` - Connect to MQTT brokers
 
@@ -130,13 +152,24 @@ releaseNotes: >
 
   7. `get_topic_schema` - Message structure analysis
 
-  8. `debug_device` - Device-specific monitoring **NEW**
+  8. `debug_device` - Device-specific monitoring
 
-  9. `monitor_performance` - Performance metrics **NEW**
+  9. `monitor_performance` - Performance metrics
 
-  10. `test_connection` - Health diagnostics **NEW**
+  10. `test_connection` - Health diagnostics
 
 
-  Ready for production IoT monitoring and AI-assisted analysis! 🎉
+  **🎯 Perfect For:**
+
+  • IoT developers learning MCP tools
+
+  • System administrators monitoring MQTT infrastructure  
+
+  • AI assistant developers building automation workflows
+
+  • DevOps teams managing IoT deployments
+
+
+  **Access your dashboard at:** http://umbrel.local:8091 🎉
 submitter: Bitsperity
 submission: https://github.com/getumbrel/umbrel-community-app-store 

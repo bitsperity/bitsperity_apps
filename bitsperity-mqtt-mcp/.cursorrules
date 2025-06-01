@@ -4,17 +4,44 @@
 - **App Name**: bitsperity-mqtt-mcp
 - **Purpose**: MQTT Model Context Protocol Server für AI-gestützte IoT Device Analysis
 - **Status**: Phase 4 Complete ✅ - Production Ready! 🚀
-- **Current Phase**: COMPLETED - All 4 Phases Successfully Implemented
+- **Current Phase**: FRONTEND REQUIREMENTS COMPLETE - Ready for Implementation 🎯
 - **Target Platform**: Umbrel App Store + Docker Hub
 
-## 🎉 ALL PHASES COMPLETE ✅
+## 🎉 MCP SERVER COMPLETE + FRONTEND REQUIREMENTS READY ✅
 
-### Status Update - Project Completed Successfully!
+### Status Update - Project + Frontend Planning Complete!
 - **Phase 1 Complete**: ✅ MCP Foundation (1 day - ahead of schedule)
 - **Phase 2 Complete**: ✅ MQTT Core Integration (1 day - ahead of schedule)  
 - **Phase 3 Complete**: ✅ Simple Data Optimization (1 day - ahead of schedule)
 - **Phase 4 Complete**: ✅ Advanced Tools & Production (1 day - ahead of schedule)
-- **Total Duration**: 4 days (planned: 4 weeks) - **4x faster than planned!**
+- **Frontend Requirements**: ✅ Complete Requirements Analysis (ai_docs/frontend/)
+- **Total Duration**: 4 days MCP + Frontend Planning ready
+
+## 🚀 NEW: Frontend Requirements Complete!
+
+### Frontend Features Defined
+- ✅ **F-001**: MCP Tool Documentation Dashboard (Must-Have)
+- ✅ **F-002**: Live Tool Call Monitoring (Must-Have)
+- ✅ **F-003**: Optional System Logs Viewer (Should-Have)
+- ✅ **F-004**: MCP Session Management (Should-Have)
+- ✅ **F-005**: Performance & Health Dashboard (Should-Have)
+- ✅ **F-006**: Interactive Tutorial & Help (Could-Have)
+- ✅ **F-007**: Data Export & Analytics (Could-Have)
+
+### Frontend User Stories Complete
+- ✅ **33 User Stories** (US-001 bis US-033) across 6 Epics
+- ✅ **Primary User**: AI Assistant Developer (Cursor/Claude User)
+- ✅ **Secondary User**: DevOps/System Administrator
+- ✅ **Key Focus**: MCP Tool Utility, NOT MQTT itself
+- ✅ **MongoDB Integration**: Tool Call + System Log Persistence
+
+### Frontend Architecture Planned
+- ✅ **Technology**: Vanilla HTML/CSS/JavaScript (like MongoDB MCP)
+- ✅ **Port**: 8091 (MongoDB MCP uses 8090)
+- ✅ **Real-time**: WebSocket für Live Updates
+- ✅ **Storage**: MongoDB für Tool Calls, System Logs, Performance Metrics
+- ✅ **Design**: Optional Logs (default hidden), utility-focused
+- ✅ **Integration**: Extends existing docker-compose.yml
 
 ### Implementation Achieved - 10 Tool MVP Complete! 🎯
 - ✅ **10 Functional Tools**: All MVP tools implemented and tested
@@ -106,12 +133,33 @@ sequenceDiagram
 
 **Total: 4 days instead of 4 weeks - 700% ahead of schedule!**
 
-## Requirements Summary ✅ ALL IMPLEMENTED
+## Requirements Summary ✅ MCP IMPLEMENTED + FRONTEND PLANNED
+
+### MCP Server Requirements (COMPLETE) ✅
 - **Total User Stories**: 35 (US-001 bis US-035) - ✅ All implemented
 - **MVP Features**: 6 Features (F-001, F-002, F-003, F-004, F-009, F-010) - ✅ All complete
 - **10 Tool MVP**: All tools functional and tested - ✅ Complete
 - **Primary User**: IoT Developer / System Integrator - ✅ Ready to use
 - **Secondary User**: AI Assistant (Cursor/Claude) - ✅ Full integration
+
+### Frontend Requirements (PLANNED) 🎯
+- **Total User Stories**: 33 (US-001 bis US-033) across 6 Epics
+- **MVP Features**: 7 Features (F-001 bis F-007) with MoSCoW Prioritization
+- **Primary User**: AI Assistant Developer (Cursor/Claude User)
+- **Secondary User**: DevOps/System Administrator
+- **Key Goal**: MCP Tool Education & Monitoring (NOT MQTT debugging)
+- **Integration**: MongoDB Logging + WebSocket Real-time Updates
+
+### Frontend Business Logic Complete
+- **BL-001**: Tool Call Logging zu MongoDB (TTL 24h)
+- **BL-002**: Optional System Logs (default hidden, TTL 7d)
+- **BL-003**: Real-time WebSocket Updates (tool_call_*, system_log, health_update)
+- **BL-004**: Frontend State Management (vanilla JS, no frameworks)
+- **BL-005**: Performance Optimization (virtual scrolling, memory management)
+- **BL-006**: Error Handling & User Feedback (toast notifications)
+- **BL-007**: MongoDB Integration (3 collections with TTL indexes)
+- **BL-008**: Security & Privacy (local network only, no authentication)
+- **BL-009**: Umbrel Integration (port 8091, Docker network, resource limits)
 
 ## Technical Architecture ✅ PRODUCTION READY
 
@@ -362,3 +410,39 @@ umbreld client apps.install.mutate --appId bitsperity-mqtt-mcp
 - **MQTT MCP**: Port 8091 ✅ (Konflikt vermieden!)
 - **Web Interface**: http://umbrel.local:8091 ✅
 - **MCP Protocol**: SSH + docker exec :stdio ✅ 
+
+## NEW: Frontend Standards
+
+### Frontend Documentation Location
+- **Frontend Docs**: `ai_docs/frontend/` Ordner mit vollständiger Frontend Dokumentation ✅
+- **User Stories**: `ai_docs/frontend/user-stories.md` ✅ Complete
+- **Features**: `ai_docs/frontend/features.md` ✅ Complete
+- **Business Logic**: `ai_docs/frontend/business-logic.md` ✅ Complete
+- **Acceptance Criteria**: `ai_docs/frontend/acceptance-criteria.md` ✅ Complete
+
+### Frontend Technical Context
+- **Analog zu**: bitsperity-mongodb-mcp Web Frontend (port 8090)
+- **Port**: 8091 (conflict avoidance)
+- **MongoDB Integration**: Shared MongoDB instance für Tool Call Logging
+- **WebSocket**: Real-time Updates für Live Monitoring
+- **Design Pattern**: Simple, clean, utility-focused (not feature-heavy)
+
+### Frontend Business Rules WICHTIG ⚠️
+
+#### MCP Tool Utility Focus
+- **NOT an MQTT client/browser** - Das Frontend ist für MCP Tool Usage
+- **Zweck**: Zeigen wie man MCP Tools nutzt, Tool Calls monitoring
+- **Zielgruppe**: AI Assistant Developers, nicht MQTT Engineers
+- **Kern Features**: Tool Documentation, Call Monitoring, Optional Logs
+
+#### System Logs Design
+- **Default State**: System Logs sind NICHT sichtbar
+- **User Choice**: Toggle "Show System Logs" muss explizit aktiviert werden
+- **Unauffällig**: Logs nehmen max. 25% Bildschirmhöhe, dezente Darstellung
+- **Zweck**: Debugging für Power Users, nicht primärer Use Case
+
+#### MongoDB Logging Integration
+- **Collections**: `mcp_tool_calls`, `mcp_system_logs`, `mcp_performance_metrics`
+- **TTL Policy**: Tool Calls 24h, System Logs 7d, Performance 7d
+- **Performance**: Logging darf MCP Server Performance nicht beeinträchtigen
+- **Real-time**: WebSocket Updates für Live Frontend Synchronization 

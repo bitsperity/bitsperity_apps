@@ -45,6 +45,56 @@ services:
           memory: 64M
           cpus: '0.1'
 
+  # Web Frontend Service
+  frontend:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: bitsperity-mqtt-mcp-frontend
+    restart: on-failure
+    stop_grace_period: 30s
+    
+    # Use umbrel main network for MongoDB access
+    networks:
+      - default
+      - umbrel_main_network
+    
+    # Expose frontend on port 8091
+    ports:
+      - "8091:8091"
+    
+    environment:
+      - NODE_ENV=production
+      - PORT=8091
+      - MONGODB_URL=mongodb://192.168.178.57:27017/bitsperity_mqtt_mcp
+      
+    volumes:
+      # Persistent storage für frontend logs
+      - ${APP_DATA_DIR}/frontend-logs:/app/logs
+      
+    # Frontend health check
+    healthcheck:
+      test: ["CMD", "node", "-e", "const http = require('http'); const options = { hostname: 'localhost', port: 8091, path: '/health', timeout: 5000 }; const req = http.request(options, (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }); req.on('error', () => process.exit(1)); req.on('timeout', () => process.exit(1)); req.end();"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+      
+    # Resource limits für frontend
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.3'
+        reservations:
+          memory: 32M
+          cpus: '0.1'
+          
+    # Depend on MCP server
+    depends_on:
+      server:
+        condition: service_healthy
+
 # External networks for MongoDB access
 networks:
   umbrel_main_network:

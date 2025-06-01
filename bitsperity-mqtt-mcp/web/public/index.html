@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MQTT MCP Server - Tool Documentation & Monitoring</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    
+    <!-- Chart.js für Performance Visualisierung -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    
+    <!-- Socket.io für Real-time Updates -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    
+    <!-- Prism.js für Syntax Highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="header-left">
+                    <h1 class="logo">
+                        🔌 MQTT MCP Server
+                    </h1>
+                    <span class="tagline">Tool Documentation & Live Monitoring</span>
+                </div>
+                <div class="header-right">
+                    <div class="connection-status" id="connectionStatus">
+                        <span class="status-indicator" id="statusIndicator"></span>
+                        <span id="statusText">Connecting...</span>
+                    </div>
+                    <button class="btn btn-outline" id="tutorialBtn">
+                        📚 Tutorial
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="container">
+            <div class="nav-items">
+                <button class="nav-item active" data-tab="tools">
+                    🛠️ MCP Tools
+                </button>
+                <button class="nav-item" data-tab="monitor">
+                    📊 Live Monitor
+                </button>
+                <button class="nav-item" data-tab="sessions">
+                    🔗 Sessions
+                </button>
+                <button class="nav-item" data-tab="health">
+                    ❤️ Health
+                </button>
+                <button class="nav-item optional" data-tab="logs" id="logsTab" style="display: none;">
+                    📝 System Logs
+                </button>
+            </div>
+            <div class="nav-controls">
+                <label class="toggle-logs" id="toggleLogs">
+                    <input type="checkbox" id="showLogsCheckbox">
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-label">Show System Logs</span>
+                </label>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- MCP Tools Tab -->
+            <section class="tab-content active" id="toolsTab">
+                <div class="section-header">
+                    <h2>🛠️ MCP Tool Documentation</h2>
+                    <p>Entdecke alle verfügbaren MQTT MCP Tools mit Copy-Paste-Ready Beispielen</p>
+                    <div class="search-container">
+                        <input type="text" id="toolSearch" placeholder="🔍 Tools durchsuchen..." class="search-input">
+                        <select id="categoryFilter" class="filter-select">
+                            <option value="">Alle Kategorien</option>
+                            <option value="connection">Connection</option>
+                            <option value="discovery">Discovery</option>
+                            <option value="data">Data</option>
+                            <option value="analysis">Analysis</option>
+                            <option value="debugging">Debugging</option>
+                            <option value="monitoring">Monitoring</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="tools-grid" id="toolsGrid">
+                    <!-- Tool cards werden hier dynamisch geladen -->
+                </div>
+            </section>
+
+            <!-- Live Monitor Tab -->
+            <section class="tab-content" id="monitorTab">
+                <div class="section-header">
+                    <h2>📊 Live Tool Call Monitoring</h2>
+                    <p>Echtzeit-Überwachung aller MCP Tool Calls</p>
+                    <div class="monitor-filters">
+                        <select id="toolFilter" class="filter-select">
+                            <option value="">Alle Tools</option>
+                        </select>
+                        <select id="statusFilter" class="filter-select">
+                            <option value="">Alle Status</option>
+                            <option value="success">Success</option>
+                            <option value="error">Error</option>
+                        </select>
+                        <button class="btn btn-outline" id="clearMonitor">🗑️ Clear</button>
+                        <button class="btn btn-outline" id="exportCalls">📁 Export</button>
+                    </div>
+                </div>
+                
+                <div class="performance-stats" id="performanceStats">
+                    <!-- Performance Statistiken -->
+                </div>
+                
+                <div class="tool-calls-stream" id="toolCallsStream">
+                    <!-- Tool Calls werden hier live angezeigt -->
+                </div>
+            </section>
+
+            <!-- Sessions Tab -->
+            <section class="tab-content" id="sessionsTab">
+                <div class="section-header">
+                    <h2>🔗 MCP Session Management</h2>
+                    <p>Übersicht aller aktiven MQTT Connections und Sessions</p>
+                </div>
+                
+                <div class="sessions-grid" id="sessionsGrid">
+                    <!-- Session Cards werden hier angezeigt -->
+                </div>
+            </section>
+
+            <!-- Health Tab -->
+            <section class="tab-content" id="healthTab">
+                <div class="section-header">
+                    <h2>❤️ Performance & Health Dashboard</h2>
+                    <p>Live Performance Monitoring des MCP Servers</p>
+                </div>
+                
+                <div class="health-overview" id="healthOverview">
+                    <!-- Health Score und Summary -->
+                </div>
+                
+                <div class="charts-container">
+                    <div class="chart-card">
+                        <h3>Response Times (24h)</h3>
+                        <canvas id="responseTimeChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Error Rate (24h)</h3>
+                        <canvas id="errorRateChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>System Resources</h3>
+                        <canvas id="resourceChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- System Logs Tab (Optional) -->
+            <section class="tab-content" id="logsTabContent">
+                <div class="section-header">
+                    <h2>📝 System Logs</h2>
+                    <p>Optional System Logs für Power Users (standardmäßig ausgeblendet)</p>
+                    <div class="log-filters">
+                        <select id="logLevelFilter" class="filter-select">
+                            <option value="">Alle Level</option>
+                            <option value="DEBUG">Debug</option>
+                            <option value="INFO">Info</option>
+                            <option value="WARN">Warning</option>
+                            <option value="ERROR">Error</option>
+                        </select>
+                        <input type="text" id="logSearch" placeholder="🔍 In Logs suchen..." class="search-input">
+                        <button class="btn btn-outline" id="clearLogs">🗑️ Clear</button>
+                    </div>
+                </div>
+                
+                <div class="logs-container" id="logsContainer">
+                    <!-- System Logs werden hier angezeigt -->
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Tutorial Overlay -->
+    <div class="tutorial-overlay" id="tutorialOverlay" style="display: none;">
+        <div class="tutorial-content">
+            <div class="tutorial-header">
+                <h3 id="tutorialTitle">MQTT MCP Tutorial</h3>
+                <button class="btn-close" id="closeTutorial">✕</button>
+            </div>
+            <div class="tutorial-body" id="tutorialBody">
+                <!-- Tutorial content wird hier angezeigt -->
+            </div>
+            <div class="tutorial-footer">
+                <button class="btn btn-outline" id="skipTutorial">Skip</button>
+                <div class="tutorial-progress">
+                    <span id="tutorialStep">1</span> / <span id="tutorialTotal">5</span>
+                </div>
+                <button class="btn btn-primary" id="nextTutorial">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container für Notifications -->
+    <div class="toast-container" id="toastContainer">
+        <!-- Toast notifications werden hier angezeigt -->
+    </div>
+
+    <!-- Loading Spinner -->
+    <div class="loading-spinner" id="loadingSpinner" style="display: none;">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+    </div>
+
+    <!-- JavaScript Modules -->
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/api-client.js"></script>
+    <script src="js/websocket-client.js"></script>
+    <script src="js/state-manager.js"></script>
+    <script src="js/ui-components.js"></script>
+    <script src="js/tool-dashboard.js"></script>
+    <script src="js/live-monitor.js"></script>
+    <script src="js/session-manager.js"></script>
+    <script src="js/health-dashboard.js"></script>
+    <script src="js/system-logs.js"></script>
+    <script src="js/tutorial.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html> 
