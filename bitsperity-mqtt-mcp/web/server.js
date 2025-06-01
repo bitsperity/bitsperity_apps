@@ -68,8 +68,8 @@ async function connectMongoDB() {
     // Ensure TTL indexes exist
     await ensureTTLIndexes();
     
-    // Start watching for changes
-    startChangeStreams();
+    // Note: Change streams removed - not supported in standalone MongoDB
+    logger.info('MongoDB connection established without change streams');
     
   } catch (error) {
     logger.error('MongoDB connection failed:', error);
@@ -101,47 +101,6 @@ async function ensureTTLIndexes() {
     logger.info('TTL indexes ensured');
   } catch (error) {
     logger.error('Failed to create TTL indexes:', error);
-  }
-}
-
-// Watch MongoDB changes for real-time updates
-function startChangeStreams() {
-  if (!db) return;
-  
-  try {
-    // Watch tool calls
-    const toolCallsStream = db.collection('mcp_tool_calls').watch();
-    toolCallsStream.on('change', (change) => {
-      io.emit('tool_call_update', {
-        operationType: change.operationType,
-        document: change.fullDocument,
-        timestamp: new Date()
-      });
-    });
-    
-    // Watch system logs
-    const systemLogsStream = db.collection('mcp_system_logs').watch();
-    systemLogsStream.on('change', (change) => {
-      io.emit('system_log_update', {
-        operationType: change.operationType,
-        document: change.fullDocument,
-        timestamp: new Date()
-      });
-    });
-    
-    // Watch performance metrics
-    const metricsStream = db.collection('mcp_performance_metrics').watch();
-    metricsStream.on('change', (change) => {
-      io.emit('performance_update', {
-        operationType: change.operationType,
-        document: change.fullDocument,
-        timestamp: new Date()
-      });
-    });
-    
-    logger.info('Change streams started');
-  } catch (error) {
-    logger.error('Failed to start change streams:', error);
   }
 }
 
@@ -386,14 +345,37 @@ app.get('/api/connections', async (req, res) => {
 io.on('connection', (socket) => {
   logger.info(`Client connected: ${socket.id}`);
   
-  socket.on('disconnect', () => {
-    logger.info(`Client disconnected: ${socket.id}`);
-  });
-  
-  // Send initial data to new clients
+  // Send initial connection confirmation
   socket.emit('connected', {
     message: 'Connected to MQTT MCP Frontend',
-    timestamp: new Date()
+    timestamp: new Date(),
+    realTimeUpdates: false // No change streams available
+  });
+  
+  // Simple heartbeat every 30 seconds
+  const heartbeat = setInterval(() => {
+    socket.emit('heartbeat', { timestamp: new Date() });
+  }, 30000);
+  
+  socket.on('disconnect', () => {
+    logger.info(`Client disconnected: ${socket.id}`);
+    clearInterval(heartbeat);
+  });
+  
+  // Handle manual refresh requests
+  socket.on('refresh_data', async (type) => {
+    try {
+      if (type === 'tool_calls') {
+        const toolCalls = await db.collection('mcp_tool_calls')
+          .find({})
+          .sort({ timestamp: -1 })
+          .limit(50)
+          .toArray();
+        socket.emit('tool_calls_data', toolCalls);
+      }
+    } catch (error) {
+      logger.error('Error handling refresh request:', error);
+    }
   });
 });
 
