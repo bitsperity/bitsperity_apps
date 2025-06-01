@@ -66,31 +66,31 @@ class SimpleMCPServer:
         self.connection_manager = MQTTConnectionManager()
         self.mqtt_tools = MQTTTools(self.connection_manager)
         
-        # Phase 3: Register all 10 tools
+        # Phase 3: Register all 10 tools with unique MQTT prefixes
         self.tools = {
             # Phase 1: Session Management Tools ✅
-            'establish_connection': self.mqtt_tools.establish_connection,
-            'list_active_connections': self.mqtt_tools.list_active_connections,
-            'close_connection': self.mqtt_tools.close_connection,
+            'mqtt_establish_connection': self.mqtt_tools.establish_connection,
+            'mqtt_list_active_connections': self.mqtt_tools.list_active_connections,
+            'mqtt_close_connection': self.mqtt_tools.close_connection,
             
             # Phase 2: MQTT Core Tools ✅
-            'list_topics': self.mqtt_tools.list_topics,
-            'subscribe_and_collect': self.mqtt_tools.subscribe_and_collect,
-            'publish_message': self.mqtt_tools.publish_message,
+            'mqtt_list_topics': self.mqtt_tools.list_topics,
+            'mqtt_subscribe_and_collect': self.mqtt_tools.subscribe_and_collect,
+            'mqtt_publish_message': self.mqtt_tools.publish_message,
             
             # Phase 3: Data Optimization Tools 🚀
-            'get_topic_schema': self.mqtt_tools.get_topic_schema,
+            'mqtt_get_topic_schema': self.mqtt_tools.get_topic_schema,
             
             # Phase 4: Advanced Tools
-            'debug_device': self.mqtt_tools.debug_device,
-            'monitor_performance': self.mqtt_tools.monitor_performance,
-            'test_connection': self.mqtt_tools.test_connection
+            'mqtt_debug_device': self.mqtt_tools.debug_device,
+            'mqtt_monitor_performance': self.mqtt_tools.monitor_performance,
+            'mqtt_test_connection': self.mqtt_tools.test_connection
         }
         
-        # MCP Tool Definitions for discovery
+        # MCP Tool Definitions for discovery with unique names
         self.tool_definitions = {
-            'establish_connection': {
-                'name': 'establish_connection',
+            'mqtt_establish_connection': {
+                'name': 'mqtt_establish_connection',
                 'description': 'Establishes a new MQTT broker connection with session management',
                 'inputSchema': {
                     'type': 'object',
@@ -103,16 +103,16 @@ class SimpleMCPServer:
                     'required': ['connection_string']
                 }
             },
-            'list_active_connections': {
-                'name': 'list_active_connections',
+            'mqtt_list_active_connections': {
+                'name': 'mqtt_list_active_connections',
                 'description': 'Lists all currently active MQTT connections',
                 'inputSchema': {
                     'type': 'object',
                     'properties': {}
                 }
             },
-            'close_connection': {
-                'name': 'close_connection',
+            'mqtt_close_connection': {
+                'name': 'mqtt_close_connection',
                 'description': 'Closes an active MQTT connection and cleans up the session',
                 'inputSchema': {
                     'type': 'object',
@@ -125,8 +125,8 @@ class SimpleMCPServer:
                     'required': ['session_id']
                 }
             },
-            'list_topics': {
-                'name': 'list_topics',
+            'mqtt_list_topics': {
+                'name': 'mqtt_list_topics',
                 'description': 'Discovers available MQTT topics on the broker by subscribing to wildcard patterns',
                 'inputSchema': {
                     'type': 'object',
@@ -144,8 +144,8 @@ class SimpleMCPServer:
                     'required': ['session_id']
                 }
             },
-            'subscribe_and_collect': {
-                'name': 'subscribe_and_collect',
+            'mqtt_subscribe_and_collect': {
+                'name': 'mqtt_subscribe_and_collect',
                 'description': 'Subscribes to MQTT topic pattern and collects messages for a specified duration',
                 'inputSchema': {
                     'type': 'object',
@@ -169,8 +169,8 @@ class SimpleMCPServer:
                     'required': ['session_id', 'topic_pattern']
                 }
             },
-            'publish_message': {
-                'name': 'publish_message',
+            'mqtt_publish_message': {
+                'name': 'mqtt_publish_message',
                 'description': 'Publishes a message to an MQTT topic with specified QoS and retain settings',
                 'inputSchema': {
                     'type': 'object',
@@ -202,8 +202,8 @@ class SimpleMCPServer:
                     'required': ['session_id', 'topic', 'payload']
                 }
             },
-            'get_topic_schema': {
-                'name': 'get_topic_schema',
+            'mqtt_get_topic_schema': {
+                'name': 'mqtt_get_topic_schema',
                 'description': 'Analyzes message structures for a topic pattern to detect schema patterns',
                 'inputSchema': {
                     'type': 'object',
@@ -220,8 +220,8 @@ class SimpleMCPServer:
                     'required': ['session_id', 'topic_pattern']
                 }
             },
-            'debug_device': {
-                'name': 'debug_device',
+            'mqtt_debug_device': {
+                'name': 'mqtt_debug_device',
                 'description': 'Device-specific monitoring and debugging for MQTT IoT devices',
                 'inputSchema': {
                     'type': 'object',
@@ -238,8 +238,8 @@ class SimpleMCPServer:
                     'required': ['session_id', 'device_id']
                 }
             },
-            'monitor_performance': {
-                'name': 'monitor_performance',
+            'mqtt_monitor_performance': {
+                'name': 'mqtt_monitor_performance',
                 'description': 'Monitors MQTT connection and broker performance metrics',
                 'inputSchema': {
                     'type': 'object',
@@ -252,8 +252,8 @@ class SimpleMCPServer:
                     'required': ['session_id']
                 }
             },
-            'test_connection': {
-                'name': 'test_connection',
+            'mqtt_test_connection': {
+                'name': 'mqtt_test_connection',
                 'description': 'Comprehensive connection health check and diagnostics for MQTT broker',
                 'inputSchema': {
                     'type': 'object',
