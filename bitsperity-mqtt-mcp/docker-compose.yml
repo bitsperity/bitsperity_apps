@@ -1,6 +1,14 @@
 version: "3.8"
 
 services:
+  # App Proxy für Umbrel Web Interface
+  app_proxy:
+    environment:
+      # Frontend container name + port
+      APP_HOST: bitsperity-mqtt-mcp_web_1
+      APP_PORT: 8091
+
+  # MCP Server Service (Backend)
   server:
     image: bitsperity/mqtt-mcp:latest
     container_name: bitsperity-mqtt-mcp
@@ -46,10 +54,8 @@ services:
           cpus: '0.1'
 
   # Web Frontend Service
-  frontend:
-    build:
-      context: ./web
-      dockerfile: Dockerfile
+  web:
+    image: bitsperity/mqtt-mcp-frontend:latest
     container_name: bitsperity-mqtt-mcp-frontend
     restart: on-failure
     stop_grace_period: 30s
@@ -59,9 +65,7 @@ services:
       - default
       - umbrel_main_network
     
-    # Expose frontend on port 8091
-    ports:
-      - "8091:8091"
+    # NO port exposure - handled by app_proxy
     
     environment:
       - NODE_ENV=production

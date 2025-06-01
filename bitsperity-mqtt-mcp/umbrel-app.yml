@@ -8,9 +8,9 @@ description: >
   AI-powered MQTT broker integration with web interface for intelligent IoT device monitoring and analysis.
 
 
-  **🚀 NEW: Web Frontend on Port 8091!**
+  **🚀 NEW: Web Frontend Dashboard!**
 
-  • 🌐 **Web Interface** - Modern dashboard at http://umbrel.local:8091
+  • 🌐 **Web Interface** - Modern dashboard accessible through Umbrel
 
   • 📚 **Tool Documentation** - Interactive MCP tool explorer with copy-paste examples
 
@@ -53,7 +53,7 @@ description: >
 
   **Access Options:**
 
-  • **Web Interface**: http://umbrel.local:8091 (Tool docs, live monitoring, health dashboard)
+  • **Web Interface**: Click on the app icon to access the dashboard
 
   • **SSH + MCP**: Direct AI assistant integration for automated analysis
 
@@ -72,7 +72,7 @@ description: >
 
   • **Performance**: <256MB memory total, <10s startup time
 
-  • **Frontend**: Port 8091 with real-time WebSocket updates
+  • **Frontend**: Web dashboard with real-time WebSocket updates
 
   • **Integration**: SSH + docker exec for AI assistant access
 
@@ -88,6 +88,7 @@ gallery:
   - 2.jpg
   - 3.jpg
 path: ""
+port: 8091
 defaultUsername: ""
 defaultPassword: ""
 torOnly: false
@@ -97,7 +98,7 @@ releaseNotes: >
   🚀 **Version 1.1.0: Web Frontend Launch** 
 
 
-  **🌐 NEW: Complete Web Interface (Port 8091)**
+  **🌐 NEW: Complete Web Interface**
 
   • **Tool Documentation Dashboard** - Interactive explorer for all 10 MCP tools
 
@@ -170,6 +171,6 @@ releaseNotes: >
   • DevOps teams managing IoT deployments
 
 
-  **Access your dashboard at:** http://umbrel.local:8091 🎉
+  **Access your dashboard by clicking on the app icon! 🎉**
 submitter: Bitsperity
 submission: https://github.com/getumbrel/umbrel-community-app-store 
