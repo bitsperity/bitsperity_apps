@@ -34,24 +34,27 @@ const io = socketIo(server, {
 
 // Middleware
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "ws:", "wss:"]
-    }
-  }
+  contentSecurityPolicy: false // Disable CSP for debugging
 }));
 app.use(compression());
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+
+// Serve static files with proper headers
+app.use(express.static(path.join(__dirname, 'public'), {
+  setHeaders: (res, path) => {
+    if (path.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css');
+    }
+    if (path.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript');
+    }
+  }
+}));
 
 // MongoDB connection
-const MONGODB_URL = process.env.MONGODB_URL || 'mongodb://192.168.178.57:27017';
-const DATABASE_NAME = 'bitsperity_mqtt_mcp';
+const MONGODB_URL = process.env.MONGODB_URL || 'mongodb://umbrel:umbrel@192.168.178.124:27017';
+const DATABASE_NAME = 'mqtt_mcp_sessions'; // Same as MCP server
 
 let db = null;
 let isConnected = false;
