@@ -315,13 +315,10 @@ class SimpleMCPServer:
                 }
             
             elif method == "notifications/initialized":
-                # Notifications don't need a response, but return empty success for compatibility
+                # Notifications should not have responses per JSON-RPC 2.0 spec
                 logger.debug("Received initialized notification")
-                return {
-                    "jsonrpc": "2.0",
-                    "result": {},
-                    "id": request_id
-                }
+                # Return None to indicate no response should be sent
+                return None
                 
             elif method == "tools/list":
                 return {
@@ -438,10 +435,10 @@ class SimpleMCPServer:
                     # Handle request
                     response = await self.handle_request(request)
                     
-                    # Send JSON response to STDOUT
-                    response_json = json.dumps(response)
-                    print(response_json, flush=True)
-                    logger.debug(f"Sent response: {response}")
+                    # Send response to stdout (same as MongoDB MCP)
+                    if response:
+                        print(json.dumps(response), flush=True)
+                        logger.debug(f"Sent response: {response}")
                     
                 except json.JSONDecodeError as e:
                     logger.error(f"JSON decode error: {e}")
