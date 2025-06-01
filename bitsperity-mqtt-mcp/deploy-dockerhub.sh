@@ -7,16 +7,17 @@ set -e
 
 # push changes to github
 echo "🔄 Pushing changes to GitHub..."
-git add . && git commit -m 'Phase 4: Advanced Tools & Production deployment' && git push
+git add . && git commit -m 'Frontend + Server: Both images ready for deployment' && git push
 
 # Konfiguration
 REGISTRY="docker.io"
 NAMESPACE="bitsperity"
-IMAGE_NAME="mqtt-mcp"
+MCP_IMAGE_NAME="mqtt-mcp"
+FRONTEND_IMAGE_NAME="mqtt-mcp-frontend"
 VERSION=${1:-"latest"}
 UMBREL_HOST=${UMBREL_HOST:-"umbrel@umbrel.local"}
 
-echo "🚀 Deploying Bitsperity MQTT MCP to Docker Hub..."
+echo "🚀 Deploying Bitsperity MQTT MCP (Server + Frontend) to Docker Hub..."
 
 # Prüfe Docker
 if ! docker info > /dev/null 2>&1; then
@@ -37,18 +38,31 @@ echo "🔨 Baue Multi-Platform Docker Images..."
 # Erstelle Builder falls nicht vorhanden
 docker buildx create --name multiarch --use 2>/dev/null || docker buildx use multiarch
 
-# Build und Push für amd64 (MCP Server für AI Assistant)
+# Build und Push MCP Server (Root Dockerfile)
+echo "📦 Baue MCP Server Image..."
 docker buildx build \
-    --platform linux/amd64 \
-    --tag $NAMESPACE/$IMAGE_NAME:$VERSION \
-    --tag $NAMESPACE/$IMAGE_NAME:latest \
+    --platform linux/amd64,linux/arm64 \
+    --tag $NAMESPACE/$MCP_IMAGE_NAME:$VERSION \
+    --tag $NAMESPACE/$MCP_IMAGE_NAME:latest \
     --push \
     .
 
+# Build und Push Frontend Web Interface (web/Dockerfile)
+echo "🌐 Baue Frontend Web Interface..."
+docker buildx build \
+    --platform linux/amd64,linux/arm64 \
+    --tag $NAMESPACE/$FRONTEND_IMAGE_NAME:$VERSION \
+    --tag $NAMESPACE/$FRONTEND_IMAGE_NAME:latest \
+    --push \
+    --file web/Dockerfile \
+    web/
+
 # Prüfe ob Images erfolgreich gepusht wurden
 echo "🔍 Prüfe gepushte Images..."
-docker manifest inspect $NAMESPACE/$IMAGE_NAME:$VERSION > /dev/null
-docker manifest inspect $NAMESPACE/$IMAGE_NAME:latest > /dev/null
+docker manifest inspect $NAMESPACE/$MCP_IMAGE_NAME:$VERSION > /dev/null
+docker manifest inspect $NAMESPACE/$MCP_IMAGE_NAME:latest > /dev/null
+docker manifest inspect $NAMESPACE/$FRONTEND_IMAGE_NAME:$VERSION > /dev/null
+docker manifest inspect $NAMESPACE/$FRONTEND_IMAGE_NAME:latest > /dev/null
 
 # Tag für Release
 if [ "$VERSION" != "latest" ]; then
@@ -138,15 +152,23 @@ finally:
             if echo "$MCP_TEST_RESULT" | grep -q "MCP_SERVER_OK"; then
                 echo "✅ MCP Server Test erfolgreich - Server läuft!"
                 
-                # Teste Web Interface (falls implementiert)
+                # Teste Web Interface
                 echo "🌐 Teste Web Interface..."
                 if curl -s -o /dev/null -w "%{http_code}" http://umbrel.local:8091/health 2>/dev/null | grep -q "200"; then
                     echo "✅ Web Interface erreichbar auf Port 8091"
+                    
+                    # Teste Frontend API Endpunkte
+                    echo "🔌 Teste Frontend API..."
+                    if curl -s http://umbrel.local:8091/api/tools > /dev/null 2>&1; then
+                        echo "✅ Frontend API funktional"
+                    else
+                        echo "⚠️  Frontend API Probleme"
+                    fi
                 else
-                    echo "⚠️  Web Interface nicht erreichbar (optional in Phase 4)"
+                    echo "❌ Web Interface nicht erreichbar auf Port 8091"
                 fi
                 
-                # Zeige Container Status
+                # Zeige Container Status für beide Services
                 echo ""
                 echo "📊 Container Status:"
                 ssh $UMBREL_HOST "docker ps --filter name=bitsperity-mqtt-mcp --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'" 2>/dev/null || echo "Status konnte nicht abgerufen werden"
@@ -154,7 +176,9 @@ finally:
             else
                 echo "❌ MCP Server Test fehlgeschlagen"
                 echo "   Debug: $MCP_TEST_RESULT"
-                echo "   Logs anzeigen: ssh $UMBREL_HOST 'docker logs bitsperity-mqtt-mcp'"
+                echo "   Logs anzeigen:"
+                echo "   - MCP Server: ssh $UMBREL_HOST 'docker logs bitsperity-mqtt-mcp_mcp-server_1'"
+                echo "   - Frontend: ssh $UMBREL_HOST 'docker logs bitsperity-mqtt-mcp_web_1'"
             fi
         else
             echo "❌ App-Installation fehlgeschlagen"
@@ -170,18 +194,30 @@ else
 fi
 
 echo ""
-echo "📦 Image: $NAMESPACE/$IMAGE_NAME:$VERSION"
-echo "🌐 Docker Hub: https://hub.docker.com/r/$NAMESPACE/$IMAGE_NAME"
+echo "📦 Images erfolgreich deployed:"
+echo "   🔧 MCP Server: $NAMESPACE/$MCP_IMAGE_NAME:$VERSION"
+echo "   🌐 Frontend: $NAMESPACE/$FRONTEND_IMAGE_NAME:$VERSION"
+echo ""
+echo "🌐 Docker Hub:"
+echo "   - https://hub.docker.com/r/$NAMESPACE/$MCP_IMAGE_NAME"
+echo "   - https://hub.docker.com/r/$NAMESPACE/$FRONTEND_IMAGE_NAME"
 echo ""
 echo "🚀 Verwendung:"
-echo "   docker pull $NAMESPACE/$IMAGE_NAME:$VERSION"
-echo "   docker run -d --name mqtt-mcp --network host $NAMESPACE/$IMAGE_NAME:$VERSION"
+echo "   # MCP Server"
+echo "   docker pull $NAMESPACE/$MCP_IMAGE_NAME:$VERSION"
+echo "   docker run -d --name mqtt-mcp --network host $NAMESPACE/$MCP_IMAGE_NAME:$VERSION"
+echo ""
+echo "   # Frontend Web Interface"
+echo "   docker pull $NAMESPACE/$FRONTEND_IMAGE_NAME:$VERSION"
+echo "   docker run -d --name mqtt-mcp-frontend -p 8091:8091 $NAMESPACE/$FRONTEND_IMAGE_NAME:$VERSION"
 echo ""
 echo "🔗 Dependencies:"
 echo "   - mosquitto (MQTT Broker zum testing)"
+echo "   - mongodb (für Tool Call Logging)"
 echo ""
 echo "🏗️  Unterstützte Architekturen:"
 echo "   - linux/amd64 (x86_64)"
+echo "   - linux/arm64 (ARM64)"
 echo ""
 echo "📱 MCP Server: SSH + docker exec für AI Assistant integration"
-echo "🌐 Web Interface: http://umbrel.local:8091 (optional)" 
+echo "🌐 Web Interface: http://umbrel.local:8091" 

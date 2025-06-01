@@ -70,7 +70,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=8091
-      - MONGODB_URL=mongodb://192.168.178.57:27017/bitsperity_mqtt_mcp
+      - MONGODB_URL=mongodb://192.168.178.124:27017/mqtt_mcp_sessions
       
     volumes:
       # Persistent storage für frontend logs

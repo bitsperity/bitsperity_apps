@@ -417,6 +417,25 @@ app.get('/api/connections', async (req, res) => {
   }
 });
 
+// Direct health check endpoint (like MongoDB MCP)
+app.get('/health', async (req, res) => {
+  try {
+    res.json({
+      status: 'healthy',
+      service: 'mqtt-mcp-web-api',
+      timestamp: new Date(),
+      database_connected: isConnected
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'unhealthy',
+      service: 'mqtt-mcp-web-api', 
+      error: error.message,
+      timestamp: new Date()
+    });
+  }
+});
+
 // Health check with real data
 app.get('/api/health', async (req, res) => {
   try {
