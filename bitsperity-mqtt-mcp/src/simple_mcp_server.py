@@ -66,7 +66,7 @@ class SimpleMCPServer:
         self.connection_manager = MQTTConnectionManager()
         self.mqtt_tools = MQTTTools(self.connection_manager)
         
-        # Phase 3: Register all 7 tools
+        # Phase 3: Register all 10 tools
         self.tools = {
             # Phase 1: Session Management Tools ✅
             'establish_connection': self.mqtt_tools.establish_connection,
@@ -81,13 +81,194 @@ class SimpleMCPServer:
             # Phase 3: Data Optimization Tools 🚀
             'get_topic_schema': self.mqtt_tools.get_topic_schema,
             
-            # Phase 4: Advanced Tools (future)
+            # Phase 4: Advanced Tools
             'debug_device': self.mqtt_tools.debug_device,
             'monitor_performance': self.mqtt_tools.monitor_performance,
             'test_connection': self.mqtt_tools.test_connection
         }
         
-        logger.info(f"SimpleMCPServer initialized with {len(self.tools)} tools (Phase 3)")
+        # MCP Tool Definitions for discovery
+        self.tool_definitions = {
+            'establish_connection': {
+                'name': 'establish_connection',
+                'description': 'Establishes a new MQTT broker connection with session management',
+                'inputSchema': {
+                    'type': 'object',
+                    'properties': {
+                        'connection_string': {
+                            'type': 'string',
+                            'description': 'MQTT connection string (mqtt://[username:password@]broker:port[/client_id])'
+                        }
+                    },
+                    'required': ['connection_string']
+                }
+            },
+            'list_active_connections': {
+                'name': 'list_active_connections',
+                'description': 'Lists all currently active MQTT connections',
+                'inputSchema': {
+                    'type': 'object',
+                    'properties': {}
+                }
+            },
+            'close_connection': {
+                'name': 'close_connection',
+                'description': 'Closes an active MQTT connection and cleans up the session',
+                'inputSchema': {
+                    'type': 'object',
+                    'properties': {
+                        'session_id': {
+                            'type': 'string',
+                            'description': 'Session ID of the connection to close'
+                        }
+                    },
+                    'required': ['session_id']
+                }
+            },
+            'list_topics': {
+                'name': 'list_topics',
+                'description': 'Discovers available MQTT topics on the broker by subscribing to wildcard patterns',
+                'inputSchema': {
+                    'type': 'object',
+                    'properties': {
+                        'session_id': {
+                            'type': 'string',
+                            'description': 'Session ID of an active MQTT connection'
+                        },
+                        'pattern': {
+                            'type': 'string',
+                            'description': 'MQTT topic pattern for discovery (default: "#" for all topics)',
+                            'default': '#'
+                        }
+                    },
+                    'required': ['session_id']
+                }
+            },
+            'subscribe_and_collect': {
+                'name': 'subscribe_and_collect',
+                'description': 'Subscribes to MQTT topic pattern and collects messages for a specified duration',
+                'inputSchema': {
+                    'type': 'object',
+                    'properties': {
+                        'session_id': {
+                            'type': 'string',
+                            'description': 'Session ID of an active MQTT connection'
+                        },
+                        'topic_pattern': {
+                            'type': 'string',
+                            'description': 'MQTT topic pattern to subscribe to'
+                        },
+                        'duration_seconds': {
+                            'type': 'integer',
+                            'description': 'How long to collect messages (10-300 seconds)',
+                            'minimum': 10,
+                            'maximum': 300,
+                            'default': 30
+                        }
+                    },
+                    'required': ['session_id', 'topic_pattern']
+                }
+            },
+            'publish_message': {
+                'name': 'publish_message',
+                'description': 'Publishes a message to an MQTT topic with specified QoS and retain settings',
+                'inputSchema': {
+                    'type': 'object',
+                    'properties': {
+                        'session_id': {
+                            'type': 'string',
+                            'description': 'Session ID of an active MQTT connection'
+                        },
+                        'topic': {
+                            'type': 'string',
+                            'description': 'MQTT topic to publish to (no wildcards allowed)'
+                        },
+                        'payload': {
+                            'type': 'string',
+                            'description': 'Message payload as string'
+                        },
+                        'qos': {
+                            'type': 'integer',
+                            'description': 'Quality of Service level (0, 1, or 2)',
+                            'enum': [0, 1, 2],
+                            'default': 0
+                        },
+                        'retain': {
+                            'type': 'boolean',
+                            'description': 'Whether broker should retain message for new subscribers',
+                            'default': False
+                        }
+                    },
+                    'required': ['session_id', 'topic', 'payload']
+                }
+            },
+            'get_topic_schema': {
+                'name': 'get_topic_schema',
+                'description': 'Analyzes message structures for a topic pattern to detect schema patterns',
+                'inputSchema': {
+                    'type': 'object',
+                    'properties': {
+                        'session_id': {
+                            'type': 'string',
+                            'description': 'Session ID of an active MQTT connection'
+                        },
+                        'topic_pattern': {
+                            'type': 'string',
+                            'description': 'MQTT topic pattern to analyze'
+                        }
+                    },
+                    'required': ['session_id', 'topic_pattern']
+                }
+            },
+            'debug_device': {
+                'name': 'debug_device',
+                'description': 'Device-specific monitoring and debugging for MQTT IoT devices',
+                'inputSchema': {
+                    'type': 'object',
+                    'properties': {
+                        'session_id': {
+                            'type': 'string',
+                            'description': 'Session ID of an active MQTT connection'
+                        },
+                        'device_id': {
+                            'type': 'string',
+                            'description': 'Device identifier to debug'
+                        }
+                    },
+                    'required': ['session_id', 'device_id']
+                }
+            },
+            'monitor_performance': {
+                'name': 'monitor_performance',
+                'description': 'Monitors MQTT connection and broker performance metrics',
+                'inputSchema': {
+                    'type': 'object',
+                    'properties': {
+                        'session_id': {
+                            'type': 'string',
+                            'description': 'Session ID of an active MQTT connection'
+                        }
+                    },
+                    'required': ['session_id']
+                }
+            },
+            'test_connection': {
+                'name': 'test_connection',
+                'description': 'Comprehensive connection health check and diagnostics for MQTT broker',
+                'inputSchema': {
+                    'type': 'object',
+                    'properties': {
+                        'session_id': {
+                            'type': 'string',
+                            'description': 'Session ID of an active MQTT connection'
+                        }
+                    },
+                    'required': ['session_id']
+                }
+            }
+        }
+        
+        logger.info(f"SimpleMCPServer initialized with {len(self.tools)} tools (Phase 4)")
     
     async def handle_request(self, request: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -115,8 +296,47 @@ class SimpleMCPServer:
             if not method:
                 return self._error_response(request_id, -32600, "Invalid Request")
             
-            # Tool execution
-            if method in self.tools:
+            # MCP Protocol methods
+            if method == "tools/list":
+                return {
+                    "jsonrpc": "2.0",
+                    "result": {
+                        "tools": list(self.tool_definitions.values())
+                    },
+                    "id": request_id
+                }
+            
+            elif method == "tools/call":
+                tool_name = params.get("name")
+                tool_arguments = params.get("arguments", {})
+                
+                if tool_name in self.tools:
+                    try:
+                        result = await self.tools[tool_name](**tool_arguments)
+                        return {
+                            "jsonrpc": "2.0",
+                            "result": {
+                                "content": [
+                                    {
+                                        "type": "text",
+                                        "text": json.dumps(result, indent=2)
+                                    }
+                                ]
+                            },
+                            "id": request_id
+                        }
+                    except Exception as e:
+                        logger.error(f"Tool execution error: {e}")
+                        return self._error_response(
+                            request_id, -32000, f"Tool execution failed: {str(e)}"
+                        )
+                else:
+                    return self._error_response(
+                        request_id, -32601, f"Tool not found: {tool_name}"
+                    )
+            
+            # Legacy direct tool calls (backward compatibility)
+            elif method in self.tools:
                 try:
                     result = await self.tools[method](**params)
                     return {
@@ -168,7 +388,7 @@ class SimpleMCPServer:
         
         Liest JSON-RPC requests von STDIN und sendet responses zu STDOUT
         """
-        logger.info("MCP Server starting - Phase 3")
+        logger.info("MCP Server starting - Phase 4")
         
         try:
             while True:
