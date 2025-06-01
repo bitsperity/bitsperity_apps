@@ -18,9 +18,14 @@ import logging
 from typing import Dict, Any, Optional
 from datetime import datetime
 import os
+import time
 
 from mqtt_connection_manager import MQTTConnectionManager
 from mqtt_tools import MQTTTools
+
+# MongoDB für Tool Call Logging (analog zu MongoDB MCP)
+from pymongo import MongoClient
+from pymongo.errors import PyMongoError
 
 # Configure logging für development + production
 log_handlers = [logging.StreamHandler(sys.stderr)]
@@ -50,6 +55,129 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# MongoDB Configuration for logging (reuse existing connection)
+MONGODB_CONNECTION_STRING = "mongodb://umbrel:umbrel@bitsperity-mongodb_mongodb_1:27017/"
+MONGODB_DATABASE = "mqtt_mcp_sessions"  # Same database as sessions
+TOOL_CALLS_COLLECTION = "mcp_tool_calls"
+SYSTEM_LOGS_COLLECTION = "mcp_system_logs"
+PERFORMANCE_METRICS_COLLECTION = "mcp_performance_metrics"
+
+class MQTTMCPLogger:
+    """MongoDB logger for tool calls and system logs"""
+    
+    def __init__(self):
+        self.mongodb_client = None
+        self.db = None
+        self._init_mongodb_connection()
+    
+    def _init_mongodb_connection(self):
+        """Initialize MongoDB connection for logging"""
+        try:
+            self.mongodb_client = MongoClient(
+                MONGODB_CONNECTION_STRING,
+                serverSelectionTimeoutMS=5000,
+                connectTimeoutMS=5000
+            )
+            
+            # Test connection
+            self.mongodb_client.admin.command('ping')
+            
+            # Get database
+            self.db = self.mongodb_client[MONGODB_DATABASE]
+            
+            # Create TTL indexes for automatic cleanup
+            # Tool calls: 24 hours
+            self.db[TOOL_CALLS_COLLECTION].create_index(
+                "timestamp",
+                expireAfterSeconds=86400  # 24 hours
+            )
+            
+            # System logs: 7 days  
+            self.db[SYSTEM_LOGS_COLLECTION].create_index(
+                "timestamp", 
+                expireAfterSeconds=604800  # 7 days
+            )
+            
+            # Performance metrics: 7 days
+            self.db[PERFORMANCE_METRICS_COLLECTION].create_index(
+                "timestamp",
+                expireAfterSeconds=604800  # 7 days
+            )
+            
+            logger.info("MongoDB logging connection established")
+            
+        except PyMongoError as e:
+            logger.warning(f"MongoDB logging failed, tool calls won't be logged: {e}")
+            self.mongodb_client = None
+        except Exception as e:
+            logger.warning(f"Unexpected error with MongoDB logging: {e}")
+            self.mongodb_client = None
+    
+    def log_tool_call(self, tool_name: str, params: dict, success: bool, 
+                     duration: float, result: dict = None, error: str = None):
+        """Log tool call to MongoDB"""
+        if not self.mongodb_client:
+            return
+            
+        try:
+            doc = {
+                'timestamp': datetime.now(),
+                'tool_name': tool_name,
+                'params': params,
+                'success': success,
+                'duration_ms': round(duration * 1000, 2),
+                'result_summary': str(result).get('success', False) if result else False,
+                'error': error,
+                'result_size_kb': round(len(str(result)) / 1024, 2) if result else 0
+            }
+            
+            self.db[TOOL_CALLS_COLLECTION].insert_one(doc)
+            
+        except Exception as e:
+            logger.error(f"Failed to log tool call: {e}")
+    
+    def log_system_event(self, event_type: str, message: str, level: str = "INFO", 
+                        metadata: dict = None):
+        """Log system event to MongoDB"""
+        if not self.mongodb_client:
+            return
+            
+        try:
+            doc = {
+                'timestamp': datetime.now(),
+                'event_type': event_type,
+                'level': level,
+                'message': message,
+                'metadata': metadata or {}
+            }
+            
+            self.db[SYSTEM_LOGS_COLLECTION].insert_one(doc)
+            
+        except Exception as e:
+            logger.error(f"Failed to log system event: {e}")
+    
+    def log_performance_metric(self, metric_name: str, value: float, unit: str = "",
+                              metadata: dict = None):
+        """Log performance metric to MongoDB"""
+        if not self.mongodb_client:
+            return
+            
+        try:
+            doc = {
+                'timestamp': datetime.now(),
+                'metric_name': metric_name,
+                'value': value,
+                'unit': unit,
+                'metadata': metadata or {}
+            }
+            
+            self.db[PERFORMANCE_METRICS_COLLECTION].insert_one(doc)
+            
+        except Exception as e:
+            logger.error(f"Failed to log performance metric: {e}")
+
+# Global logger instance
+mqtt_logger = MQTTMCPLogger()
 
 class SimpleMCPServer:
     """
@@ -269,6 +397,9 @@ class SimpleMCPServer:
         }
         
         logger.info(f"SimpleMCPServer initialized with {len(self.tools)} tools (Phase 4)")
+        
+        # Log server startup
+        mqtt_logger.log_system_event("server_startup", "MQTT MCP Server starting", "INFO")
     
     async def handle_request(self, request: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -295,6 +426,10 @@ class SimpleMCPServer:
             
             if not method:
                 return self._error_response(request_id, -32600, "Invalid Request")
+            
+            # Log API request
+            mqtt_logger.log_system_event("api_request", f"Method: {method}", "INFO", 
+                                       {"method": method, "request_id": request_id})
             
             # MCP Protocol methods
             if method == "initialize":
@@ -335,7 +470,17 @@ class SimpleMCPServer:
                 
                 if tool_name in self.tools:
                     try:
+                        start_time = time.time()
                         result = await self.tools[tool_name](**tool_arguments)
+                        success = result.get('success', False) if result else False
+                        duration = time.time() - start_time
+                        
+                        # Log tool call to MongoDB
+                        mqtt_logger.log_tool_call(tool_name, tool_arguments, success, duration, result)
+                        
+                        # Log performance metric
+                        mqtt_logger.log_performance_metric(f"tool_call_{tool_name}_duration", duration, "seconds")
+                        
                         return {
                             "jsonrpc": "2.0",
                             "result": {
@@ -411,7 +556,8 @@ class SimpleMCPServer:
         
         Liest JSON-RPC requests von STDIN und sendet responses zu STDOUT
         """
-        logger.info("MCP Server starting - Phase 4")
+        logger.info("MCP Server starting - Phase 4 with MongoDB Logging")
+        mqtt_logger.log_system_event("server_start", "MQTT MCP Server started successfully", "INFO")
         
         try:
             while True:
@@ -447,14 +593,17 @@ class SimpleMCPServer:
                     
         except KeyboardInterrupt:
             logger.info("Server shutdown requested")
+            mqtt_logger.log_system_event("server_shutdown", "Server shutdown requested", "INFO")
         except Exception as e:
             logger.error(f"Server error: {e}")
+            mqtt_logger.log_system_event("server_error", f"Server error: {e}", "ERROR")
         finally:
             await self.shutdown()
     
     async def shutdown(self):
         """Graceful shutdown"""
         logger.info("Shutting down MCP Server")
+        mqtt_logger.log_system_event("server_shutdown", "MQTT MCP Server shutting down", "INFO")
         await self.connection_manager.cleanup_all_sessions()
         logger.info("MCP Server shutdown complete")
 

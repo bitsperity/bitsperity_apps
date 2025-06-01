@@ -104,19 +104,9 @@ async function ensureTTLIndexes() {
   }
 }
 
-// API Routes
+// API Routes with real MongoDB data
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'healthy',
-    timestamp: new Date(),
-    mongodb: isConnected,
-    uptime: process.uptime()
-  });
-});
-
-// Get MCP Tool Documentation
+// Get MCP Tool Documentation (static)
 app.get('/api/tools', async (req, res) => {
   try {
     // Static tool definitions based on MCP Server implementation
@@ -229,115 +219,269 @@ app.get('/api/tools', async (req, res) => {
   }
 });
 
-// Get recent tool calls
+// Get tool calls from MongoDB
 app.get('/api/tool-calls', async (req, res) => {
   try {
-    if (!db) {
+    if (!isConnected) {
       return res.status(503).json({ error: 'Database not connected' });
     }
     
     const limit = parseInt(req.query.limit) || 50;
-    const toolFilter = req.query.tool;
-    const statusFilter = req.query.status;
+    const page = parseInt(req.query.page) || 0;
+    const skip = page * limit;
     
-    let query = {};
-    if (toolFilter) query.tool_name = toolFilter;
-    if (statusFilter) query.status = statusFilter;
-    
+    // Query actual tool calls from MCP server
     const toolCalls = await db.collection('mcp_tool_calls')
-      .find(query)
+      .find({})
       .sort({ timestamp: -1 })
+      .skip(skip)
       .limit(limit)
       .toArray();
     
-    res.json(toolCalls);
+    // Transform for frontend
+    const formattedCalls = toolCalls.map(call => ({
+      id: call._id,
+      timestamp: call.timestamp,
+      tool_name: call.tool_name,
+      success: call.success,
+      duration_ms: call.duration_ms,
+      result_size_kb: call.result_size_kb,
+      error: call.error,
+      params: call.params
+    }));
+    
+    res.json({
+      tool_calls: formattedCalls,
+      total: await db.collection('mcp_tool_calls').countDocuments({}),
+      page,
+      limit
+    });
+    
   } catch (error) {
-    logger.error('Failed to get tool calls:', error);
-    res.status(500).json({ error: 'Failed to retrieve tool calls' });
+    logger.error('Error fetching tool calls:', error);
+    res.status(500).json({ error: 'Failed to fetch tool calls' });
   }
 });
 
-// Get system logs
+// Get system logs from MongoDB  
 app.get('/api/system-logs', async (req, res) => {
   try {
-    if (!db) {
+    if (!isConnected) {
       return res.status(503).json({ error: 'Database not connected' });
     }
     
     const limit = parseInt(req.query.limit) || 100;
-    const level = req.query.level;
+    const level = req.query.level; // ERROR, WARN, INFO
+    const page = parseInt(req.query.page) || 0;
+    const skip = page * limit;
     
-    let query = {};
-    if (level) query.level = level;
+    // Build query filter
+    const query = {};
+    if (level && level !== 'ALL') {
+      query.level = level;
+    }
     
+    // Query actual system logs from MCP server
     const logs = await db.collection('mcp_system_logs')
       .find(query)
       .sort({ timestamp: -1 })
+      .skip(skip)
       .limit(limit)
       .toArray();
     
-    res.json(logs);
+    // Transform for frontend
+    const formattedLogs = logs.map(log => ({
+      id: log._id,
+      timestamp: log.timestamp,
+      level: log.level,
+      event_type: log.event_type,
+      message: log.message,
+      metadata: log.metadata
+    }));
+    
+    res.json({
+      logs: formattedLogs,
+      total: await db.collection('mcp_system_logs').countDocuments(query),
+      page,
+      limit
+    });
+    
   } catch (error) {
-    logger.error('Failed to get system logs:', error);
-    res.status(500).json({ error: 'Failed to retrieve system logs' });
+    logger.error('Error fetching system logs:', error);
+    res.status(500).json({ error: 'Failed to fetch system logs' });
   }
 });
 
-// Get performance metrics
+// Get performance metrics from MongoDB
 app.get('/api/performance-metrics', async (req, res) => {
   try {
-    if (!db) {
+    if (!isConnected) {
       return res.status(503).json({ error: 'Database not connected' });
     }
     
     const hours = parseInt(req.query.hours) || 24;
-    const startTime = new Date(Date.now() - hours * 60 * 60 * 1000);
+    const since = new Date(Date.now() - hours * 60 * 60 * 1000);
     
+    // Query actual performance metrics from MCP server
     const metrics = await db.collection('mcp_performance_metrics')
-      .find({ timestamp: { $gte: startTime } })
-      .sort({ timestamp: 1 })
+      .find({ timestamp: { $gte: since } })
+      .sort({ timestamp: -1 })
+      .limit(1000)
       .toArray();
     
-    res.json(metrics);
-  } catch (error) {
-    logger.error('Failed to get performance metrics:', error);
-    res.status(500).json({ error: 'Failed to retrieve performance metrics' });
-  }
-});
-
-// Get connection statistics
-app.get('/api/connections', async (req, res) => {
-  try {
-    // This would typically query the MCP server directly
-    // For now, return mock data based on recent tool calls
-    if (!db) {
-      return res.status(503).json({ error: 'Database not connected' });
-    }
-    
-    const recentCalls = await db.collection('mcp_tool_calls')
-      .find({ timestamp: { $gte: new Date(Date.now() - 60 * 60 * 1000) } })
-      .toArray();
-    
-    // Extract unique sessions
-    const sessions = {};
-    recentCalls.forEach(call => {
-      if (call.session_id && !sessions[call.session_id]) {
-        sessions[call.session_id] = {
-          session_id: call.session_id,
-          status: 'active',
-          last_activity: call.timestamp,
-          tool_calls: 0
+    // Group by metric name and calculate stats
+    const groupedMetrics = {};
+    metrics.forEach(metric => {
+      const name = metric.metric_name;
+      if (!groupedMetrics[name]) {
+        groupedMetrics[name] = {
+          name,
+          unit: metric.unit,
+          values: [],
+          avg: 0,
+          min: Number.MAX_VALUE,
+          max: 0,
+          latest: 0
         };
       }
-      if (call.session_id) {
-        sessions[call.session_id].tool_calls++;
+      
+      const value = metric.value;
+      groupedMetrics[name].values.push({
+        timestamp: metric.timestamp,
+        value: value
+      });
+      groupedMetrics[name].min = Math.min(groupedMetrics[name].min, value);
+      groupedMetrics[name].max = Math.max(groupedMetrics[name].max, value);
+      groupedMetrics[name].latest = value;
+    });
+    
+    // Calculate averages
+    Object.values(groupedMetrics).forEach(metric => {
+      if (metric.values.length > 0) {
+        metric.avg = metric.values.reduce((sum, v) => sum + v.value, 0) / metric.values.length;
+        metric.avg = Math.round(metric.avg * 100) / 100;
       }
     });
     
-    res.json(Object.values(sessions));
+    res.json({
+      metrics: Object.values(groupedMetrics),
+      hours_queried: hours,
+      total_data_points: metrics.length
+    });
+    
   } catch (error) {
-    logger.error('Failed to get connections:', error);
-    res.status(500).json({ error: 'Failed to retrieve connections' });
+    logger.error('Error fetching performance metrics:', error);
+    res.status(500).json({ error: 'Failed to fetch performance metrics' });
+  }
+});
+
+// Get active MQTT connections (from sessions collection)
+app.get('/api/connections', async (req, res) => {
+  try {
+    if (!isConnected) {
+      return res.status(503).json({ error: 'Database not connected' });
+    }
+    
+    // Query active sessions (not expired)
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const activeSessions = await db.collection('sessions')
+      .find({ 
+        created_at: { $gte: oneHourAgo }
+      })
+      .sort({ created_at: -1 })
+      .limit(50)
+      .toArray();
+    
+    // Transform for frontend
+    const connections = activeSessions.map(session => ({
+      session_id: session._id,
+      broker: session.broker,
+      port: session.port,
+      client_id: session.client_id,
+      created_at: session.created_at,
+      last_accessed: session.last_accessed,
+      is_active: true // If in DB and not expired, it's active
+    }));
+    
+    res.json({
+      connections,
+      total_active: connections.length
+    });
+    
+  } catch (error) {
+    logger.error('Error fetching connections:', error);
+    res.status(500).json({ error: 'Failed to fetch connections' });
+  }
+});
+
+// Health check with real data
+app.get('/api/health', async (req, res) => {
+  try {
+    const health = {
+      status: 'healthy',
+      timestamp: new Date(),
+      database: {
+        connected: isConnected,
+        collections: []
+      },
+      mcp_server: {
+        recent_tool_calls: 0,
+        recent_errors: 0,
+        uptime_minutes: 0
+      }
+    };
+    
+    if (isConnected) {
+      // Check collections exist and get counts
+      try {
+        const toolCallsCount = await db.collection('mcp_tool_calls').countDocuments({});
+        const systemLogsCount = await db.collection('mcp_system_logs').countDocuments({});
+        const metricsCount = await db.collection('mcp_performance_metrics').countDocuments({});
+        const sessionsCount = await db.collection('sessions').countDocuments({});
+        
+        health.database.collections = [
+          { name: 'mcp_tool_calls', count: toolCallsCount },
+          { name: 'mcp_system_logs', count: systemLogsCount },
+          { name: 'mcp_performance_metrics', count: metricsCount },
+          { name: 'sessions', count: sessionsCount }
+        ];
+        
+        // Recent activity (last hour)
+        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+        const recentCalls = await db.collection('mcp_tool_calls')
+          .countDocuments({ timestamp: { $gte: oneHourAgo } });
+        const recentErrors = await db.collection('mcp_system_logs')
+          .countDocuments({ 
+            timestamp: { $gte: oneHourAgo },
+            level: 'ERROR'
+          });
+        
+        health.mcp_server.recent_tool_calls = recentCalls;
+        health.mcp_server.recent_errors = recentErrors;
+        
+        // Estimate uptime from first log entry
+        const firstLog = await db.collection('mcp_system_logs')
+          .findOne({ event_type: 'server_start' }, { sort: { timestamp: -1 } });
+        if (firstLog) {
+          health.mcp_server.uptime_minutes = Math.round(
+            (Date.now() - firstLog.timestamp.getTime()) / (1000 * 60)
+          );
+        }
+        
+      } catch (dbError) {
+        health.database.error = dbError.message;
+      }
+    }
+    
+    res.json(health);
+    
+  } catch (error) {
+    logger.error('Error getting health status:', error);
+    res.status(500).json({ 
+      status: 'unhealthy',
+      error: error.message,
+      timestamp: new Date()
+    });
   }
 });
 

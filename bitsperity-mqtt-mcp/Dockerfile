@@ -1,11 +1,13 @@
 # Dockerfile für bitsperity-mqtt-mcp
 # Phase 1: MCP Foundation Development
 
-FROM python:3.11-slim as base
+FROM python:3.11-slim AS base
 
-# System dependencies
+# Install system dependencies + build tools for psutil
 RUN apt-get update && apt-get install -y \
     curl \
+    gcc \
+    python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
