@@ -297,7 +297,28 @@ class SimpleMCPServer:
                 return self._error_response(request_id, -32600, "Invalid Request")
             
             # MCP Protocol methods
-            if method == "tools/list":
+            if method == "initialize":
+                return {
+                    "jsonrpc": "2.0",
+                    "id": request_id,
+                    "result": {
+                        "protocolVersion": "2024-11-05",
+                        "capabilities": {
+                            "experimental": {},
+                            "tools": {"listChanged": False}
+                        },
+                        "serverInfo": {
+                            "name": "simple-mqtt-mcp",
+                            "version": "1.0.0"
+                        }
+                    }
+                }
+            
+            elif method == "notifications/initialized":
+                # No response needed for notifications
+                return None
+                
+            elif method == "tools/list":
                 return {
                     "jsonrpc": "2.0",
                     "result": {
