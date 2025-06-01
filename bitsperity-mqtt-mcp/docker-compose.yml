@@ -7,8 +7,10 @@ services:
     restart: on-failure
     stop_grace_period: 1m
     
-    # Host network mode für SSH + MCP access
-    network_mode: host
+    # Bridge network instead of host network for MongoDB access
+    networks:
+      - default
+      - bitsperity-mongodb_default
     
     # STDIO für MCP communication
     stdin_open: true
@@ -41,4 +43,9 @@ services:
           cpus: '0.5'
         reservations:
           memory: 64M
-          cpus: '0.1' 
+          cpus: '0.1'
+
+# External networks for MongoDB access
+networks:
+  bitsperity-mongodb_default:
+    external: true 

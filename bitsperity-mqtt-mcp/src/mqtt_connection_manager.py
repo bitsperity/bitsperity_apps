@@ -25,7 +25,7 @@ from pymongo.errors import PyMongoError
 logger = logging.getLogger(__name__)
 
 # MongoDB connection for session persistence
-MONGODB_CONNECTION_STRING = "mongodb://umbrel:umbrel@umbrel.local:27017/"
+MONGODB_CONNECTION_STRING = "mongodb://umbrel:umbrel@bitsperity-mongodb_mongodb_1:27017/"
 MONGODB_DATABASE = "mqtt_mcp_sessions"
 MONGODB_COLLECTION = "sessions"
 
