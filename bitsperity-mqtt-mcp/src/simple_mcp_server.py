@@ -315,8 +315,13 @@ class SimpleMCPServer:
                 }
             
             elif method == "notifications/initialized":
-                # No response needed for notifications
-                return None
+                # Notifications don't need a response, but return empty success for compatibility
+                logger.debug("Received initialized notification")
+                return {
+                    "jsonrpc": "2.0",
+                    "result": {},
+                    "id": request_id
+                }
                 
             elif method == "tools/list":
                 return {
