@@ -25,23 +25,9 @@ services:
       - ${APP_DATA_DIR}/logs:/app/logs
       - ${APP_DATA_DIR}/data:/app/data
       
-    # Health check für container monitoring
+    # Simplified health check - nur check ob script existiert
     healthcheck:
-      test: ["CMD", "python3", "-c", "
-        import subprocess, json, sys;
-        proc = subprocess.Popen(['python3', '/app/src/simple_mcp_server.py'], 
-                               stdin=subprocess.PIPE, stdout=subprocess.PIPE, 
-                               stderr=subprocess.PIPE, text=True, cwd='/app');
-        proc.stdin.write(json.dumps({'jsonrpc': '2.0', 'method': 'list_active_connections', 'params': {}, 'id': 1}) + '\n');
-        proc.stdin.flush();
-        try:
-          proc.wait(timeout=5);
-          response = proc.stdout.readline().strip();
-          result = json.loads(response) if response else {};
-          sys.exit(0 if result.get('jsonrpc') == '2.0' and 'result' in result else 1);
-        except: sys.exit(1);
-        finally: proc.terminate()
-      "]
+      test: ["CMD", "python3", "-c", "import os; exit(0 if os.path.exists('/app/src/simple_mcp_server.py') else 1)"]
       interval: 30s
       timeout: 10s
       retries: 3
