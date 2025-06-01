@@ -40,7 +40,7 @@ services:
       -d '{
         "name": "homegrow-v3",
         "type": "iot",
-        "host": "bitsperity-homegrow_web_1",
+        "host": "homegrow",
         "port": 3003,
         "protocol": "http",
         "tags": ["iot", "hydroponic", "esp32", "mqtt", "automation"],
@@ -50,7 +50,7 @@ services:
           "umbrel_app": "bitsperity-homegrow"
         },
         "ttl": 300,
-        "health_check_url": "http://bitsperity-homegrow_web_1:3003/api/v1/health",
+        "health_check_url": "http://homegrow:3003/api/v1/health",
         "health_check_interval": 30,
         "health_check_timeout": 5,
         "health_check_retries": 3
