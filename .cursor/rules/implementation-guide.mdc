@@ -382,6 +382,233 @@ export const POST: RequestHandler = async ({ request }) => {
 </div>
 ```
 
+## 🚨 KRITISCH: Umbrel Deployment Patterns
+
+### 8. Docker Compose für Umbrel (FEST Pattern)
+```yaml
+# docker-compose.yml - Standard Umbrel App Pattern
+services:
+  app_proxy:
+    environment:
+      # ⚠️ KRITISCH: APP_HOST muss exakt dem Container Namen entsprechen!
+      APP_HOST: {container-name}         # Exakt wie container_name definiert
+      APP_PORT: {internal-port}          # Port wo Service lauscht
+      PROXY_AUTH_ADD: "false"            # Meist false für eigene Apps
+
+  web:
+    image: {registry}/{app-name}:latest
+    container_name: {container-name}     # APP_HOST muss das matchen!
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT={internal-port}
+      # Umbrel spezifische Environment Variables:
+      - MONGODB_URL=mongodb://umbrel:umbrel@bitsperity-mongodb_mongodb_1:27017/{db-name}
+      - MQTT_HOST=mosquitto_broker_1
+      - MQTT_PORT=1883
+    volumes:
+      - ${APP_DATA_DIR}/data:/app/data
+      - ${APP_DATA_DIR}/logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:{internal-port}/api/v1/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  # Optional: Service Discovery Registration
+  beacon-registrar:
+    image: curlimages/curl:latest
+    depends_on:
+      web:
+        condition: service_healthy
+    restart: "no"
+    command: >
+      curl -X POST http://bitsperity-beacon_web_1:80/api/v1/services/register
+      -H "Content-Type: application/json"
+      -d '{
+        "name": "{app-name}",
+        "type": "iot",
+        "host": "{container-name}",      # Selber Name wie APP_HOST
+        "port": {internal-port},
+        "protocol": "http",
+        "tags": ["iot", "automation"],
+        "metadata": {
+          "version": "1.0.0",
+          "umbrel_app": "{umbrel-app-id}"
+        },
+        "ttl": 300
+      }'
+```
+
+### 9. Umbrel App Proxy Rules (KRITISCH!)
+
+#### Problem: ERR_CONNECTION_REFUSED
+```
+This site can't be reached
+umbrel.local refused to connect.
+```
+
+#### Root Cause: Container Name Mismatch
+```yaml
+# ❌ FALSCH - App Proxy kann Container nicht finden
+services:
+  app_proxy:
+    environment:
+      APP_HOST: myapp_web_1            # Standard Docker Compose Name
+  web:
+    container_name: myapp              # Anderer Name!
+
+# ✅ KORREKT - Namen müssen identisch sein
+services:
+  app_proxy:
+    environment:
+      APP_HOST: myapp                  # Exakt der Container Name
+  web:
+    container_name: myapp              # APP_HOST muss das matchen!
+```
+
+#### Container Naming Strategien
+```yaml
+# Option A: Standard Docker Compose (ohne container_name)
+services:
+  app_proxy:
+    environment:
+      APP_HOST: myapp_web_1           # Standard Pattern: {app-id}_{service}_1
+  web:
+    image: myapp:latest
+    # Kein container_name -> automatisch: myapp_web_1
+
+# Option B: Custom Namen (empfohlen)
+services:
+  app_proxy:
+    environment:
+      APP_HOST: myapp                 # Einfacher Name
+  web:
+    image: myapp:latest
+    container_name: myapp             # APP_HOST muss exakt matchen!
+```
+
+### 10. Umbrel Deployment Validation (FEST)
+```bash
+# validate-umbrel-deployment.sh - Automatische Validation
+#!/bin/bash
+set -e
+
+APP_ID="your-app-id"
+CONTAINER_NAME="your-container-name"
+APP_PORT="3003"
+
+echo "🔍 Validating Umbrel App Deployment..."
+
+# 1. Validate Container Names Match
+APP_HOST=$(grep "APP_HOST:" docker-compose.yml | awk '{print $2}')
+CONTAINER_NAME_CONFIG=$(grep "container_name:" docker-compose.yml | awk '{print $2}')
+
+if [ "$APP_HOST" != "$CONTAINER_NAME_CONFIG" ]; then
+  echo "❌ FEHLER: APP_HOST ($APP_HOST) != container_name ($CONTAINER_NAME_CONFIG)"
+  echo "App Proxy wird Container nicht finden können!"
+  exit 1
+fi
+echo "✅ Container Namen sind konsistent"
+
+# 2. Deploy App
+echo "🚀 Deploying app..."
+./deploy-dockerhub.sh
+
+# 3. Wait for startup
+echo "⏳ Waiting for app startup..."
+sleep 30
+
+# 4. Check containers running
+echo "🐳 Checking containers..."
+ssh umbrel@umbrel.local "sudo docker ps | grep $CONTAINER_NAME" || {
+  echo "❌ Container $CONTAINER_NAME ist nicht running"
+  exit 1
+}
+echo "✅ Container läuft"
+
+# 5. Check app proxy logs
+echo "📡 Checking app proxy logs..."
+APP_PROXY_ERRORS=$(ssh umbrel@umbrel.local "sudo docker logs ${APP_ID}_app_proxy_1 --tail 10" | grep -c "cannot be found" || true)
+if [ "$APP_PROXY_ERRORS" -gt 0 ]; then
+  echo "❌ App Proxy kann Container nicht finden"
+  exit 1
+fi
+echo "✅ App Proxy Logs sind sauber"
+
+# 6. Test health endpoint
+echo "🏥 Testing health endpoint..."
+ssh umbrel@umbrel.local "curl -f http://localhost:${APP_PORT}/api/v1/health" || {
+  echo "❌ Health Check fehlgeschlagen"
+  exit 1
+}
+echo "✅ Health Check erfolgreich"
+
+# 7. Test external access
+echo "🌐 Testing external access..."
+curl -f "http://umbrel.local:${APP_PORT}/" || {
+  echo "❌ External access fehlgeschlagen"
+  exit 1
+}
+echo "✅ External access funktioniert"
+
+echo ""
+echo "🎉 Deployment erfolgreich validiert!"
+echo "📱 App verfügbar unter: http://umbrel.local:${APP_PORT}/"
+```
+
+### 11. Umbrel Environment Variables (FEST)
+```typescript
+// Umbrel spezifische Environment Configuration
+const config = {
+  // MongoDB mit Authentication (KRITISCH!)
+  mongodb: {
+    url: process.env.MONGODB_URL || 'mongodb://umbrel:umbrel@bitsperity-mongodb_mongodb_1:27017/',
+    database: process.env.DATABASE_NAME || 'app-name'
+  },
+  
+  // MQTT Broker
+  mqtt: {
+    host: process.env.MQTT_HOST || 'mosquitto_broker_1',
+    port: parseInt(process.env.MQTT_PORT || '1883')
+  },
+  
+  // App Configuration
+  app: {
+    port: parseInt(process.env.PORT || '3003'),
+    nodeEnv: process.env.NODE_ENV || 'production'
+  },
+  
+  // Umbrel spezifische Pfade
+  data: {
+    dataDir: process.env.APP_DATA_DIR || '/app/data',
+    logsDir: process.env.APP_DATA_DIR ? `${process.env.APP_DATA_DIR}/logs` : '/app/logs'
+  }
+};
+```
+
+### 12. Umbrel Debugging Commands (FEST)
+```bash
+# Container Status prüfen
+ssh umbrel@umbrel.local "sudo docker ps | grep {app-id}"
+
+# App Proxy Logs
+ssh umbrel@umbrel.local "sudo docker logs {app-id}_app_proxy_1 --tail 20"
+
+# Web Container Logs  
+ssh umbrel@umbrel.local "sudo docker logs {container-name} --tail 20"
+
+# Netzwerk Details
+ssh umbrel@umbrel.local "sudo docker inspect {container-name} | grep -A 10 'Networks'"
+
+# Health Check Test
+ssh umbrel@umbrel.local "curl -f http://localhost:{port}/api/v1/health"
+
+# External Access Test
+curl -f "http://umbrel.local:{port}/"
+```
+
 ## Implementation Documentation
 
 ### 1. Progress Tracking ({APP_ORDNER}/ai_docs/implementation/phase-{X}-progress.md)
@@ -418,6 +645,12 @@ export const POST: RequestHandler = async ({ request }) => {
 - [ ] End-to-end user scenarios
 - [ ] Performance targets met
 - [ ] Error handling works
+
+### Umbrel Deployment Tests
+- [ ] Container Namen synchronisiert
+- [ ] App Proxy findet Web Container
+- [ ] Health Checks funktionieren
+- [ ] External access works
 
 ## Issues & Solutions
 ### Issue 1: {Title}
@@ -597,6 +830,15 @@ interface ComponentProps {
 - [ ] Integration with Umbrel works
 - [ ] Real-time features functional
 
+### Umbrel Deployment (MUSS erfüllt sein)
+- [ ] APP_HOST matches container_name exactly
+- [ ] App Proxy can reach web container
+- [ ] Health endpoints respond correctly
+- [ ] External access works (umbrel.local:port)
+- [ ] MongoDB authentication configured
+- [ ] MQTT integration functional
+- [ ] Service discovery registration works
+
 ## Implementation Workflow
 
 ### 1. Setup Phase
@@ -635,7 +877,6 @@ npm install mongodb mqtt ws
 6. End-to-end scenarios (e2e tests)
 7. Performance benchmarks
 8. Umbrel deployment test
-```
 
 ## Communication mit anderen Rollen
 
@@ -651,4 +892,5 @@ npm install mongodb mqtt ws
 - **Berichte**: Implementation progress gegen Acceptance Criteria (in `ai_docs/implementation/`)
 - **Validiere**: Ob Requirements vollständig implementiert
 
-Nutze diese Rules um vollständige, performante Implementation zu erstellen, die alle Standards und Requirements erfüllt. 
+Nutze diese Rules um vollständige, performante Implementation zu erstellen, die alle Standards und Requirements erfüllt.
+```
