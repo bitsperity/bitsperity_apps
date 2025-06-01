@@ -12,7 +12,7 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
-      - PORT=80
+      - PORT=3003
       - MONGODB_URL=mongodb://umbrel:umbrel@bitsperity-mongodb_mongodb_1:27017/
       - DATABASE_NAME=homegrow
       - MQTT_HOST=mosquitto_broker_1
@@ -21,7 +21,7 @@ services:
       - ${APP_DATA_DIR}/data:/app/data
       - ${APP_DATA_DIR}/logs:/app/logs
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/api/v1/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3003/api/v1/health"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -41,7 +41,7 @@ services:
         "name": "homegrow-v3",
         "type": "iot",
         "host": "bitsperity-homegrow_web_1",
-        "port": 80,
+        "port": 3003,
         "protocol": "http",
         "tags": ["iot", "hydroponic", "esp32", "mqtt", "automation"],
         "metadata": {
@@ -50,7 +50,7 @@ services:
           "umbrel_app": "bitsperity-homegrow"
         },
         "ttl": 300,
-        "health_check_url": "http://bitsperity-homegrow_web_1:80/api/v1/health",
+        "health_check_url": "http://bitsperity-homegrow_web_1:3003/api/v1/health",
         "health_check_interval": 30,
         "health_check_timeout": 5,
         "health_check_retries": 3
