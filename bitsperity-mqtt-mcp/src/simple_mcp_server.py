@@ -25,9 +25,23 @@ from mqtt_tools import MQTTTools
 # Configure logging für development + production
 log_handlers = [logging.StreamHandler(sys.stderr)]
 
-# Only add file handler if directory exists (production)
-if os.path.exists('/app/logs'):
-    log_handlers.append(logging.FileHandler('/app/logs/mcp-server.log'))
+# Optional file handler if directory exists and is writable (production)
+try:
+    if os.path.exists('/app/logs'):
+        # Test if we can write to the logs directory
+        test_file = '/app/logs/.write_test'
+        with open(test_file, 'w') as f:
+            f.write('test')
+        os.remove(test_file)
+        
+        # If we can write, add file handler
+        log_handlers.append(logging.FileHandler('/app/logs/mcp-server.log'))
+        print("File logging enabled: /app/logs/mcp-server.log", file=sys.stderr)
+    else:
+        print("Logs directory not found - using STDERR only", file=sys.stderr)
+except (PermissionError, OSError) as e:
+    print(f"File logging disabled due to permissions: {e}", file=sys.stderr)
+    print("Using STDERR logging only", file=sys.stderr)
 
 logging.basicConfig(
     level=logging.INFO,
