@@ -50,7 +50,7 @@ description: >
 
   • **Integration**: SSH + docker exec for AI assistant access
 
-  • **Optional Web UI**: Port 8090 for monitoring dashboard
+  • **Optional Web UI**: Port 8091 for monitoring dashboard
 
 
   Perfect for developers and system integrators working with IoT devices who need intelligent analysis capabilities powered by AI assistants.
@@ -59,7 +59,7 @@ website: https://github.com/bitsperity/mqtt-mcp
 dependencies: []
 repo: https://github.com/bitsperity/mqtt-mcp
 support: https://github.com/bitsperity/mqtt-mcp/issues
-port: 8090
+port: 8091
 gallery:
   - 1.jpg
   - 2.jpg
@@ -109,7 +109,7 @@ releaseNotes: >
 
   • Direct AI assistant integration via SSH + MCP protocol
 
-  • Optional web monitoring interface on port 8090
+  • Optional web monitoring interface on port 8091
 
   • Compatible with any MQTT broker (mosquitto, HiveMQ, etc.)
 

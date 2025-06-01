@@ -140,8 +140,8 @@ finally:
                 
                 # Teste Web Interface (falls implementiert)
                 echo "🌐 Teste Web Interface..."
-                if curl -s -o /dev/null -w "%{http_code}" http://umbrel.local:8090/health 2>/dev/null | grep -q "200"; then
-                    echo "✅ Web Interface erreichbar auf Port 8090"
+                if curl -s -o /dev/null -w "%{http_code}" http://umbrel.local:8091/health 2>/dev/null | grep -q "200"; then
+                    echo "✅ Web Interface erreichbar auf Port 8091"
                 else
                     echo "⚠️  Web Interface nicht erreichbar (optional in Phase 4)"
                 fi
@@ -184,4 +184,4 @@ echo "🏗️  Unterstützte Architekturen:"
 echo "   - linux/amd64 (x86_64)"
 echo ""
 echo "📱 MCP Server: SSH + docker exec für AI Assistant integration"
-echo "🌐 Web Interface: http://umbrel.local:8090 (optional)" 
+echo "🌐 Web Interface: http://umbrel.local:8091 (optional)" 
