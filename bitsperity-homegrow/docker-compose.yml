@@ -2,7 +2,7 @@ services:
   app_proxy:
     environment:
       # The format here is: <app-id>_<docker-service-name>_1
-      APP_HOST: bitsperity-homegrow_web_1
+      APP_HOST: homegrow
       APP_PORT: 3003
       PROXY_AUTH_ADD: "false"
 
