@@ -7,10 +7,10 @@ services:
     restart: on-failure
     stop_grace_period: 1m
     
-    # Bridge network instead of host network for MongoDB access
+    # Use umbrel main network for MongoDB access
     networks:
       - default
-      - bitsperity-mongodb_default
+      - umbrel_main_network
     
     # STDIO für MCP communication
     stdin_open: true
@@ -47,5 +47,5 @@ services:
 
 # External networks for MongoDB access
 networks:
-  bitsperity-mongodb_default:
+  umbrel_main_network:
     external: true 
