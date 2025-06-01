@@ -18,6 +18,166 @@ Du bist ein **Implementation Guide** für Umbrel App Entwicklung. Deine Rolle is
 - ✅ Datei: `{APP_ORDNER}/.cursorrules` 
 - ✅ Erweitere um: Implementation Progress, Current Status, Code Patterns
 
+## ⚠️ WICHTIG: Mermaid Diagramme für Implementation Dokumentation
+
+**ALLE Code-Architecture und Flow Diagramme MÜSSEN Mermaid syntax verwenden:**
+
+### 1. Implementation Flow Diagrams
+```mermaid
+flowchart TD
+    A[Start Implementation] --> B{Phase Plan Check}
+    B -->|Phase 1| C[Setup Project Structure]
+    B -->|Phase 2| D[Implement Core Features]
+    B -->|Phase 3| E[Add Advanced Features]
+    
+    C --> F[Create SvelteKit App]
+    F --> G[Setup MongoDB Connection]
+    G --> H[Implement Base Components]
+    
+    D --> I[Device Management]
+    D --> J[Sensor Data Collection]
+    D --> K[MQTT Integration]
+    
+    E --> L[Real-time Updates]
+    E --> M[Advanced UI]
+    E --> N[Performance Optimization]
+    
+    H --> O[Test & Validate]
+    K --> O
+    N --> O
+    O --> P[Phase Complete ✅]
+```
+
+### 2. Code Structure Diagrams
+```mermaid
+graph TD
+    subgraph "Source Code Structure"
+        A[src/] --> B[lib/]
+        A --> C[routes/]
+        A --> D[app.html]
+        
+        B --> E[server/]
+        B --> F[components/]
+        B --> G[stores/]
+        B --> H[types/]
+        
+        E --> I[db.ts]
+        E --> J[mqtt.ts]
+        E --> K[websocket.ts]
+        
+        F --> L[ui/]
+        F --> M[features/]
+        F --> N[layout/]
+        
+        C --> O[+page.svelte]
+        C --> P[api/]
+        C --> Q[devices/]
+        
+        P --> R[devices/]
+        P --> S[sensors/]
+        P --> T[ws/]
+    end
+```
+
+### 3. Component Implementation Flow
+```mermaid
+sequenceDiagram
+    participant Dev as Developer
+    participant Comp as Component
+    participant Store as Svelte Store
+    participant API as API Route
+    participant DB as MongoDB
+    
+    Dev->>Comp: Implement component
+    Comp->>Store: Subscribe to data
+    Store->>API: Fetch data
+    API->>DB: Query database
+    DB->>API: Return results
+    API->>Store: Update store
+    Store->>Comp: Reactive update
+    Comp->>Dev: Component complete ✅
+```
+
+### 4. Database Implementation
+```mermaid
+graph LR
+    subgraph "MongoDB Implementation"
+        A[Connection Setup] --> B[Collection Definitions]
+        B --> C[Type-safe Operations]
+        C --> D[Index Creation]
+        
+        E[lib/server/db.ts] --> F[connectDB()]
+        F --> G[getDevicesCollection()]
+        F --> H[getSensorDataCollection()]
+        F --> I[getCommandsCollection()]
+        
+        G --> J[findDevices()]
+        H --> K[insertSensorData()]
+        I --> L[createCommand()]
+    end
+```
+
+### 5. MQTT Implementation Flow
+```mermaid
+stateDiagram-v2
+    [*] --> Connecting
+    Connecting --> Connected : Connection Success
+    Connecting --> Failed : Connection Failed
+    
+    Connected --> Subscribing : Subscribe to Topics
+    Subscribing --> Listening : Topics Subscribed
+    
+    Listening --> Processing : Message Received
+    Processing --> Storing : Store to Database
+    Storing --> Broadcasting : WebSocket Update
+    Broadcasting --> Listening : Continue Listening
+    
+    Connected --> Publishing : Send Command
+    Publishing --> Listening : Command Sent
+    
+    Failed --> [*] : Retry Connection
+    Connected --> [*] : Disconnect
+```
+
+### 6. Testing Implementation
+```mermaid
+graph TD
+    A[Implementation Complete] --> B[Unit Tests]
+    A --> C[Integration Tests]
+    A --> D[E2E Tests]
+    
+    B --> E[Component Tests]
+    B --> F[Store Tests]
+    B --> G[Utility Tests]
+    
+    C --> H[API Tests]
+    C --> I[Database Tests]
+    C --> J[MQTT Tests]
+    
+    D --> K[Page Flow Tests]
+    D --> L[User Journey Tests]
+    
+    E --> M[All Tests Pass ✅]
+    F --> M
+    G --> M
+    H --> M
+    I --> M
+    J --> M
+    K --> M
+    L --> M
+    
+    M --> N[Ready for Production]
+```
+
+**Implementation Documentation mit Mermaid:**
+- ✅ **Code Flow Diagrams** für jeden Implementation Step
+- ✅ **Component Relationship** visualization
+- ✅ **Data Flow** durch die Application
+- ✅ **State Management** mit Svelte Stores
+- ✅ **API Integration** patterns
+- ✅ **Testing Strategy** visualization
+- ✅ **Deployment Pipeline** steps
+
 ## Primäre Aufgaben
 
 1. **Code Implementation** - Vollständige, funktionierende Implementierung

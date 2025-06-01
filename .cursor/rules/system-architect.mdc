@@ -18,6 +18,227 @@ Du bist ein **System Architect** für Umbrel App Entwicklung. Deine Rolle ist es
 - ✅ Datei: `{APP_ORDNER}/.cursorrules` 
 - ✅ Erweitere um: Technical Design, Architecture Decisions, Tech Stack
 
+## ⚠️ WICHTIG: Mermaid Diagramme für alle *.md Dateien
+
+**ALLE Architektur-Diagramme MÜSSEN Mermaid syntax verwenden:**
+
+### 1. High-Level Architecture Diagrams
+```mermaid
+graph TB
+    subgraph "Umbrel Environment"
+        subgraph "App Container"
+            A[SvelteKit App<br/>Port 3000]
+            A --> B[API Routes<br/>/api/*]
+            A --> C[WebSocket<br/>/ws]
+        end
+        
+        subgraph "Umbrel Services"
+            D[MongoDB<br/>bitsperity-mongodb]
+            E[MQTT Broker<br/>mosquitto]
+            F[Beacon Service<br/>bitsperity-beacon]
+        end
+        
+        subgraph "IoT Devices"
+            G[pH Sensor]
+            H[TDS Sensor]
+            I[Temperature]
+            J[Pumps]
+        end
+    end
+    
+    B --> D
+    C --> D
+    B --> E
+    G --> E
+    H --> E
+    I --> E
+    J --> E
+    A --> F
+```
+
+### 2. Component Architecture Diagrams
+```mermaid
+graph TD
+    A[App.svelte] --> B[+layout.svelte]
+    B --> C[Dashboard.svelte]
+    B --> D[DeviceManager.svelte]
+    
+    C --> E[SensorCard.svelte]
+    C --> F[ChartComponent.svelte]
+    C --> G[StatusIndicator.svelte]
+    
+    D --> H[DeviceList.svelte]
+    D --> I[DeviceForm.svelte]
+    D --> J[DeviceDetails.svelte]
+    
+    E --> K[stores/sensors.ts]
+    H --> L[stores/devices.ts]
+    C --> M[stores/websocket.ts]
+    
+    K --> N[lib/api/sensors.ts]
+    L --> O[lib/api/devices.ts]
+    M --> P[lib/websocket.ts]
+```
+
+### 3. Data Flow Diagrams
+```mermaid
+sequenceDiagram
+    participant D as IoT Device
+    participant M as MQTT Broker
+    participant A as App API
+    participant DB as MongoDB
+    participant W as WebSocket
+    participant C as Client
+
+    D->>M: Publish sensor data
+    M->>A: Forward MQTT message
+    A->>DB: Store sensor data
+    A->>W: Broadcast to clients
+    W->>C: Update UI
+    
+    C->>A: Send command
+    A->>DB: Log command
+    A->>M: Publish MQTT command
+    M->>D: Deliver command
+    D->>M: Acknowledge
+    M->>A: Command result
+    A->>W: Status update
+    W->>C: Update UI
+```
+
+### 4. Database Schema Diagrams
+```mermaid
+erDiagram
+    Device {
+        ObjectId _id PK
+        string device_id UK
+        string name
+        enum type
+        enum status
+        object config
+        string location
+        Date created_at
+        Date updated_at
+        Date last_seen
+    }
+    
+    SensorData {
+        ObjectId _id PK
+        string device_id FK
+        enum type
+        number value
+        string unit
+        Date timestamp
+        enum quality
+    }
+    
+    Command {
+        ObjectId _id PK
+        string device_id FK
+        string command
+        object params
+        enum status
+        Date created_at
+        Date executed_at
+        string result
+    }
+    
+    Device ||--o{ SensorData : generates
+    Device ||--o{ Command : receives
+```
+
+### 5. API Flow Diagrams
+```mermaid
+graph LR
+    subgraph "Client"
+        A[Browser]
+        B[WebSocket]
+    end
+    
+    subgraph "SvelteKit App"
+        C[+page.svelte]
+        D[API Routes]
+        E[WebSocket Handler]
+    end
+    
+    subgraph "Services"
+        F[MongoDB]
+        G[MQTT Client]
+    end
+    
+    A -->|HTTP| D
+    A -->|WS| E
+    C -->|fetch| D
+    C -->|WebSocket| E
+    D -->|query| F
+    D -->|publish| G
+    E -->|subscribe| G
+    E -->|query| F
+    B -->|real-time| A
+```
+
+### 6. Deployment Architecture
+```mermaid
+graph TB
+    subgraph "Docker Compose"
+        subgraph "App Container"
+            A[SvelteKit App<br/>Node 18]
+            B[Package.json<br/>Dependencies]
+        end
+        
+        subgraph "Volume Mounts"
+            C[./src:/app/src]
+            D[./static:/app/static]
+        end
+        
+        subgraph "Environment"
+            E[MONGODB_URL]
+            F[MQTT_HOST]
+            G[NODE_ENV]
+        end
+        
+        subgraph "Networks"
+            H[bitsperity-mongodb_default]
+            I[mosquitto_default]
+            J[bitsperity-beacon_default]
+        end
+    end
+    
+    A --> C
+    A --> D
+    A --> E
+    A --> F
+    A --> G
+    A --> H
+    A --> I
+    A --> J
+```
+
+### 7. MQTT Topic Structure
+```mermaid
+graph TD
+    A[homegrow/] --> B[devices/]
+    B --> C[device_id/]
+    C --> D[data]
+    C --> E[status]  
+    C --> F[command]
+    C --> G[config]
+    
+    D --> H["📊 Sensor readings<br/>{type, value, unit, timestamp}"]
+    E --> I["🔌 Device status<br/>{online, battery, signal}"]
+    F --> J["⚡ Commands<br/>{command, params, id}"]
+    G --> K["⚙️ Configuration<br/>{settings, calibration}"]
+```
+
+**Mermaid Diagram Standards:**
+- ✅ **IMMER Mermaid syntax** statt ASCII art
+- ✅ **Konsistente Styling** (graph TD, sequenceDiagram, erDiagram)
+- ✅ **Aussagekräftige Labels** mit Icons (📊, 🔌, ⚡, ⚙️)
+- ✅ **Subgraphs** für logische Gruppierung
+- ✅ **Klare Beziehungen** mit descriptive arrows
+- ✅ **Farbkodierung** wo sinnvoll
+- ✅ **Responsive Design** berücksichtigen
+
 ## Basis: TECH_STACK_SIMPLIFIED.md
 
 **Standard Tech Stack (FEST):**

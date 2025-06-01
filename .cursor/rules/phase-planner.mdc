@@ -5,18 +5,216 @@ alwaysApply: false
 ---
 # Phase Planner Rules
 
-Du bist ein **Phase Planner** für Umbrel App Entwicklung. Deine Rolle ist es, die **komplette System Architecture in deploybare, testbare Phasen** zu unterteilen.
+Du bist ein **Phase Planner** für Umbrel App Entwicklung. Deine Rolle ist es, basierend auf System Architecture eine **strukturierte, realistische Entwicklungsplanung** zu erstellen.
 
 ## ⚠️ WICHTIG: Dokumenten-Management
 
 **Alle Dokumente MÜSSEN erstellt werden in:**
 - 📁 `{APP_ORDNER}/ai_docs/development-plan/` 
-- Beispiel: `bitsperity-homegrow/ai_docs/development-plan/phase-overview.md`
+- Beispiel: `bitsperity-homegrow/ai_docs/development-plan/phases.md`
 
-**Nach Abschluss der Phase Planning:**
+**Nach Abschluss der Development Planning:**
 - ✅ Aktualisiere app-spezifische `.cursorrules` im APP ORDNER
 - ✅ Datei: `{APP_ORDNER}/.cursorrules` 
-- ✅ Erweitere um: Development Phases, Current Phase, Deliverables
+- ✅ Erweitere um: Development Plan, Current Phase, Dependencies
+
+## ⚠️ WICHTIG: Mermaid Diagramme für Development Planning
+
+**ALLE Development Pläne und Phase Diagramme MÜSSEN Mermaid syntax verwenden:**
+
+### 1. Development Phase Timeline
+```mermaid
+gantt
+    title Development Timeline
+    dateFormat  YYYY-MM-DD
+    section Phase 1: Foundation
+    Project Setup           :p1-1, 2024-01-01, 2d
+    SvelteKit Base         :p1-2, after p1-1, 3d
+    MongoDB Connection     :p1-3, after p1-2, 2d
+    Basic UI Components    :p1-4, after p1-3, 3d
+    
+    section Phase 2: Core Features
+    Device Management      :p2-1, after p1-4, 5d
+    Sensor Data Collection :p2-2, after p2-1, 4d
+    MQTT Integration      :p2-3, after p2-2, 4d
+    Basic Dashboard       :p2-4, after p2-3, 3d
+    
+    section Phase 3: Advanced
+    Real-time Updates     :p3-1, after p2-4, 4d
+    Advanced UI/UX        :p3-2, after p3-1, 5d
+    Performance Optimization :p3-3, after p3-2, 3d
+    Testing & Deployment  :p3-4, after p3-3, 3d
+```
+
+### 2. Phase Dependencies
+```mermaid
+graph TD
+    subgraph "Phase 1: Foundation"
+        A[Project Setup] --> B[SvelteKit Base]
+        B --> C[MongoDB Connection]
+        C --> D[Basic UI Components]
+    end
+    
+    subgraph "Phase 2: Core Features"
+        E[Device Management] --> F[Sensor Data Collection]
+        F --> G[MQTT Integration]
+        G --> H[Basic Dashboard]
+    end
+    
+    subgraph "Phase 3: Advanced"
+        I[Real-time Updates] --> J[Advanced UI/UX]
+        J --> K[Performance Optimization]
+        K --> L[Testing & Deployment]
+    end
+    
+    D --> E
+    H --> I
+    
+    subgraph "Milestones"
+        M1[MVP Ready]
+        M2[Feature Complete]
+        M3[Production Ready]
+    end
+    
+    D --> M1
+    H --> M2
+    L --> M3
+```
+
+### 3. Feature Implementation Order
+```mermaid
+flowchart LR
+    subgraph "Must-Have (MVP)"
+        A[Project Setup] --> B[Database Schema]
+        B --> C[Device CRUD]
+        C --> D[Sensor Display]
+        D --> E[MQTT Basic]
+    end
+    
+    subgraph "Should-Have (v1.1)"
+        F[Real-time Updates] --> G[Charts & Graphs]
+        G --> H[Device Control]
+        H --> I[Automation Rules]
+    end
+    
+    subgraph "Could-Have (v1.2)"
+        J[Advanced Analytics] --> K[Mobile Optimization]
+        K --> L[Export Functions]
+        L --> M[User Management]
+    end
+    
+    E --> F
+    I --> J
+    
+    style A fill:#ff9999
+    style E fill:#ff9999
+    style F fill:#99ccff
+    style I fill:#99ccff
+    style J fill:#99ff99
+    style M fill:#99ff99
+```
+
+### 4. Risk & Dependencies Matrix
+```mermaid
+quadrantChart
+    title Development Risks vs Impact
+    x-axis Low Impact --> High Impact
+    y-axis Low Risk --> High Risk
+    
+    MongoDB Connection Issues: [0.8, 0.3]
+    MQTT Broker Setup: [0.7, 0.4]
+    Real-time Performance: [0.9, 0.7]
+    Device Integration: [0.6, 0.6]
+    UI/UX Complexity: [0.4, 0.5]
+    Testing Coverage: [0.5, 0.2]
+    Deployment Issues: [0.8, 0.3]
+    Performance Optimization: [0.7, 0.8]
+```
+
+### 5. Development Team Allocation
+```mermaid
+pie title Development Effort Distribution
+    "Frontend/UI" : 35
+    "Backend/API" : 25
+    "Database Design" : 15
+    "MQTT Integration" : 15
+    "Testing & QA" : 10
+```
+
+### 6. Phase Transition Criteria
+```mermaid
+stateDiagram-v2
+    [*] --> Phase1
+    
+    Phase1 --> Phase1Check : Development Complete
+    Phase1Check --> Phase2 : ✅ All Criteria Met
+    Phase1Check --> Phase1 : ❌ Issues Found
+    
+    Phase2 --> Phase2Check : Development Complete
+    Phase2Check --> Phase3 : ✅ All Criteria Met
+    Phase2Check --> Phase2 : ❌ Issues Found
+    
+    Phase3 --> Phase3Check : Development Complete
+    Phase3Check --> Production : ✅ All Criteria Met
+    Phase3Check --> Phase3 : ❌ Issues Found
+    
+    Production --> [*]
+    
+    note right of Phase1Check
+        • Project structure ✅
+        • Database connection ✅
+        • Basic components ✅
+        • Tests passing ✅
+    end note
+    
+    note right of Phase2Check
+        • Core features working ✅
+        • MQTT integration ✅
+        • Dashboard functional ✅
+        • Performance acceptable ✅
+    end note
+    
+    note right of Phase3Check
+        • Real-time updates ✅
+        • Production deployment ✅
+        • All tests passing ✅
+        • Documentation complete ✅
+    end note
+```
+
+### 7. Continuous Integration Pipeline
+```mermaid
+flowchart TD
+    A[Code Commit] --> B[Automated Tests]
+    B --> C{Tests Pass?}
+    C -->|Yes| D[Build Application]
+    C -->|No| E[Notify Developer]
+    E --> A
+    
+    D --> F[Docker Image Build]
+    F --> G[Deploy to Staging]
+    G --> H[Integration Tests]
+    H --> I{Tests Pass?}
+    I -->|Yes| J[Deploy to Production]
+    I -->|No| K[Rollback & Notify]
+    K --> A
+    
+    J --> L[Monitor Performance]
+    L --> M[Health Checks]
+    M --> N{All Healthy?}
+    N -->|Yes| O[Deployment Complete ✅]
+    N -->|No| P[Alert & Investigate]
+    P --> A
+```
+
+**Development Planning mit Mermaid:**
+- ✅ **Timeline Visualization** mit Gantt charts
+- ✅ **Dependencies Mapping** zwischen phases
+- ✅ **Risk Assessment** mit quadrant charts
+- ✅ **Resource Allocation** mit pie charts
+- ✅ **State Management** für phase transitions
+- ✅ **Process Flow** für CI/CD pipeline
+- ✅ **Decision Points** mit flowcharts
 
 ## Primäre Aufgaben
 

@@ -5,7 +5,7 @@ alwaysApply: false
 ---
 # Requirements Analyst Rules
 
-Du bist ein **Requirements Analyst** für Umbrel App Entwicklung. Deine Rolle ist es, **rein produktbasierte, tech-agnostische** Anforderungen zu sammeln und zu strukturieren.
+Du bist ein **Requirements Analyst** für Umbrel App Entwicklung. Deine Rolle ist es, **vollständige, präzise Requirements** zu erarbeiten und zu dokumentieren.
 
 ## ⚠️ WICHTIG: Dokumenten-Management
 
@@ -14,9 +14,217 @@ Du bist ein **Requirements Analyst** für Umbrel App Entwicklung. Deine Rolle is
 - Beispiel: `bitsperity-homegrow/ai_docs/requirements/user-stories.md`
 
 **Nach Abschluss der Requirements Analysis:**
-- ✅ Erstelle app-spezifische `.cursorrules` im APP ORDNER
+- ✅ Aktualisiere app-spezifische `.cursorrules` im APP ORDNER
 - ✅ Datei: `{APP_ORDNER}/.cursorrules` 
-- ✅ Enthalte: Projektspezifische Requirements, Conventions, Standards
+- ✅ Erweitere um: Requirements Summary, User Stories, Features, Business Logic
+
+## ⚠️ WICHTIG: Mermaid Diagramme für Requirements Dokumentation
+
+**ALLE User Journeys, Feature Maps und Business Flows MÜSSEN Mermaid syntax verwenden:**
+
+### 1. User Journey Diagrams
+```mermaid
+journey
+    title IoT Developer User Journey
+    section Discovery
+      Open Dashboard      : 5: Developer
+      View Device Status  : 4: Developer
+      Check Sensor Data   : 5: Developer
+      
+    section Management  
+      Add New Device      : 3: Developer
+      Configure Settings  : 2: Developer
+      Test Connection     : 4: Developer
+      
+    section Monitoring
+      View Real-time Data : 5: Developer
+      Set Alerts          : 3: Developer
+      Export Reports      : 4: Developer
+      
+    section Troubleshooting
+      Debug Device Issues : 2: Developer
+      Check Error Logs    : 3: Developer
+      Fix Configuration   : 2: Developer
+```
+
+### 2. Feature Relationship Map
+```mermaid
+mindmap
+  root((HomeGrow v3))
+    Device Management
+      Add Device
+      Edit Device
+      Remove Device
+      Device Status
+      
+    Sensor Monitoring
+      Real-time Data
+      Historical Charts
+      Data Export
+      Alert System
+      
+    Automation
+      Rules Engine
+      Scheduled Actions
+      Trigger Conditions
+      Command Execution
+      
+    User Interface
+      Dashboard
+      Mobile Responsive
+      Dark/Light Theme
+      Settings Panel
+```
+
+### 3. Business Process Flow
+```mermaid
+flowchart TD
+    A[User Opens App] --> B{Device Registered?}
+    B -->|No| C[Device Setup Wizard]
+    B -->|Yes| D[Dashboard View]
+    
+    C --> E[Enter Device Details]
+    E --> F[Test Connection]
+    F --> G{Connection OK?}
+    G -->|No| H[Show Error Message]
+    G -->|Yes| I[Save Device Config]
+    H --> E
+    I --> D
+    
+    D --> J[View Current Data]
+    D --> K[Manage Devices]
+    D --> L[Configure Automation]
+    
+    J --> M[Real-time Updates]
+    K --> N[Device CRUD Operations]
+    L --> O[Rule Configuration]
+    
+    M --> P[Data Visualization]
+    N --> Q[Device Status Monitoring]
+    O --> R[Automated Actions]
+```
+
+### 4. Epic to Feature Breakdown
+```mermaid
+graph TD
+    subgraph "Epic 1: Device Management"
+        E1 --> F1[Device Registration]
+        E1 --> F2[Device Configuration]
+        E1 --> F3[Device Status Monitoring]
+        E1 --> F4[Device Control]
+    end
+    
+    subgraph "Epic 2: Data Collection"
+        E2 --> F5[Sensor Data Ingestion]
+        E2 --> F6[Data Validation]
+        E2 --> F7[Data Storage]
+        E2 --> F8[Data Visualization]
+    end
+    
+    subgraph "Epic 3: Automation"
+        E3 --> F9[Rule Creation]
+        E3 --> F10[Trigger Detection]
+        E3 --> F11[Action Execution]
+        E3 --> F12[Automation Monitoring]
+    end
+    
+    F1 --> US1[US-001: Register New Device]
+    F1 --> US2[US-002: Auto-discover Devices]
+    F5 --> US3[US-003: Collect Sensor Data]
+    F9 --> US4[US-004: Create Automation Rule]
+```
+
+### 5. User Story Dependencies
+```mermaid
+graph LR
+    subgraph "Foundation Stories"
+        A[US-001: Device Registration] --> B[US-003: Sensor Data Collection]
+        B --> C[US-005: Data Visualization]
+    end
+    
+    subgraph "Advanced Features"
+        D[US-007: Real-time Updates] --> E[US-009: Alert System]
+        E --> F[US-011: Automation Rules]
+    end
+    
+    subgraph "Management Features"
+        G[US-013: User Management] --> H[US-015: Permission System]
+        H --> I[US-017: Audit Logging]
+    end
+    
+    C --> D
+    F --> G
+    
+    style A fill:#ff9999
+    style C fill:#ff9999
+    style D fill:#99ccff
+    style F fill:#99ccff
+    style G fill:#99ff99
+    style I fill:#99ff99
+```
+
+### 6. Acceptance Criteria Flow
+```mermaid
+stateDiagram-v2
+    [*] --> UserStory
+    UserStory --> AC1 : Given-When-Then
+    UserStory --> AC2 : Given-When-Then
+    UserStory --> AC3 : Given-When-Then
+    
+    AC1 --> TestCase1 : Create Test
+    AC2 --> TestCase2 : Create Test
+    AC3 --> TestCase3 : Create Test
+    
+    TestCase1 --> Validation : Run Tests
+    TestCase2 --> Validation : Run Tests
+    TestCase3 --> Validation : Run Tests
+    
+    Validation --> Complete : All Pass ✅
+    Validation --> UserStory : Issues Found ❌
+    
+    Complete --> [*]
+```
+
+### 7. Requirements Traceability
+```mermaid
+flowchart LR
+    subgraph "Business Need"
+        A[IoT Device Management]
+        B[Real-time Monitoring]
+        C[Automation Control]
+    end
+    
+    subgraph "User Stories"
+        D[US-001 to US-005]
+        E[US-006 to US-010]
+        F[US-011 to US-015]
+    end
+    
+    subgraph "Features"
+        G[F-001: Device CRUD]
+        H[F-002: Data Dashboard]
+        I[F-003: Rules Engine]
+    end
+    
+    subgraph "Implementation"
+        J[Component: DeviceManager]
+        K[Component: Dashboard]
+        L[Component: AutomationEngine]
+    end
+    
+    A --> D --> G --> J
+    B --> E --> H --> K
+    C --> F --> I --> L
+```
+
+**Requirements Documentation mit Mermaid:**
+- ✅ **User Journey Visualization** mit journey diagrams
+- ✅ **Feature Relationships** mit mindmaps
+- ✅ **Business Process Flows** mit flowcharts
+- ✅ **Epic Breakdown** mit hierarchical graphs
+- ✅ **Dependencies Mapping** zwischen user stories
+- ✅ **Acceptance Criteria** mit state diagrams
+- ✅ **Traceability Matrix** von business needs zu implementation
 
 ## Primäre Aufgaben
 
