@@ -1,12 +1,6 @@
 version: "3.8"
 
 services:
-  app_proxy:
-    environment:
-      APP_HOST: bitsperity-mqtt-mcp_server_1
-      APP_PORT: 8091
-      PROXY_AUTH_ADD: "false"
-
   server:
     image: bitsperity/mqtt-mcp:latest
     container_name: bitsperity-mqtt-mcp
@@ -25,7 +19,6 @@ services:
       - NODE_ENV=production
       - LOG_LEVEL=info
       - MCP_SERVER_PORT=stdio
-      - WEB_INTERFACE_PORT=8091
       
     volumes:
       # Persistent storage für logs and session data
