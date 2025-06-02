@@ -52,12 +52,6 @@
                 <button class="nav-item" data-tab="monitor">
                     📊 Live Monitor
                 </button>
-                <button class="nav-item" data-tab="sessions">
-                    🔗 Sessions
-                </button>
-                <button class="nav-item" data-tab="health">
-                    ❤️ Health
-                </button>
                 <button class="nav-item optional" data-tab="logs" id="logsTab" style="display: none;">
                     📝 System Logs
                 </button>
@@ -124,45 +118,6 @@
                 
                 <div class="tool-calls-stream" id="toolCallsStream">
                     <!-- Tool Calls werden hier live angezeigt -->
-                </div>
-            </section>
-
-            <!-- Sessions Tab -->
-            <section class="tab-content" id="sessionsTab">
-                <div class="section-header">
-                    <h2>🔗 MCP Session Management</h2>
-                    <p>Übersicht aller aktiven MQTT Connections und Sessions</p>
-                </div>
-                
-                <div class="sessions-grid" id="sessionsGrid">
-                    <!-- Session Cards werden hier angezeigt -->
-                </div>
-            </section>
-
-            <!-- Health Tab -->
-            <section class="tab-content" id="healthTab">
-                <div class="section-header">
-                    <h2>❤️ Performance & Health Dashboard</h2>
-                    <p>Live Performance Monitoring des MCP Servers</p>
-                </div>
-                
-                <div class="health-overview" id="healthOverview">
-                    <!-- Health Score und Summary -->
-                </div>
-                
-                <div class="charts-container">
-                    <div class="chart-card">
-                        <h3>Response Times (24h)</h3>
-                        <canvas id="responseTimeChart"></canvas>
-                    </div>
-                    <div class="chart-card">
-                        <h3>Error Rate (24h)</h3>
-                        <canvas id="errorRateChart"></canvas>
-                    </div>
-                    <div class="chart-card">
-                        <h3>System Resources</h3>
-                        <canvas id="resourceChart"></canvas>
-                    </div>
                 </div>
             </section>
 

@@ -138,10 +138,8 @@ class MQTTMCPApp {
             // Load initial monitoring data
             await this.loadToolCalls();
             
-            // Load health data
-            await this.loadHealthData();
-            
             // Note: System logs only loaded when explicitly enabled
+            // Note: Sessions and Health tabs removed - not critical for MCP tool usage
             
             DEBUG('Initial data loaded');
         } catch (error) {
@@ -294,49 +292,6 @@ class MQTTMCPApp {
     }
 
     /**
-     * Load health data
-     */
-    async loadHealthData() {
-        try {
-            const health = await API.getHealth();
-            this.renderHealthData(health);
-        } catch (error) {
-            DEBUG('Error loading health data:', error);
-        }
-    }
-
-    /**
-     * Render health data
-     */
-    renderHealthData(health) {
-        const healthOverview = document.getElementById('healthOverview');
-        if (!healthOverview) return;
-
-        const dbConnected = health.database?.connected;
-        const recentCalls = health.mcp_server?.recent_tool_calls || 0;
-        const recentErrors = health.mcp_server?.recent_errors || 0;
-
-        healthOverview.innerHTML = `
-            <div class="health-cards">
-                <div class="health-card ${dbConnected ? 'healthy' : 'unhealthy'}">
-                    <h3>Database</h3>
-                    <div class="health-value">${dbConnected ? 'Connected' : 'Disconnected'}</div>
-                </div>
-                <div class="health-card">
-                    <h3>Recent Tool Calls</h3>
-                    <div class="health-value">${recentCalls}</div>
-                    <div class="health-subtitle">Last hour</div>
-                </div>
-                <div class="health-card ${recentErrors === 0 ? 'healthy' : 'warning'}">
-                    <h3>Recent Errors</h3>
-                    <div class="health-value">${recentErrors}</div>
-                    <div class="health-subtitle">Last hour</div>
-                </div>
-            </div>
-        `;
-    }
-
-    /**
      * Load system logs
      */
     async loadSystemLogs() {
@@ -384,13 +339,6 @@ class MQTTMCPApp {
      * Setup real-time updates
      */
     setupRealTimeUpdates() {
-        // Performance updates every 30 seconds
-        this.updateIntervals.set('health', setInterval(() => {
-            if (!document.hidden) {
-                this.loadHealthData();
-            }
-        }, 30000));
-        
         // Tool calls updates every 10 seconds
         this.updateIntervals.set('toolcalls', setInterval(() => {
             if (!document.hidden && this.currentTab === 'monitor') {
@@ -455,8 +403,6 @@ class MQTTMCPApp {
         // Load data when switching to specific tabs
         if (tabName === 'monitor') {
             this.loadToolCalls();
-        } else if (tabName === 'health') {
-            this.loadHealthData();
         } else if (tabName === 'logs') {
             this.loadSystemLogs();
         }
