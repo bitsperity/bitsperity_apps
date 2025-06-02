@@ -295,7 +295,7 @@ class MQTTMCPApp {
                     <div class="call-result">
                         <details>
                             <summary><strong>🎯 Tool Response (${call.result_summary || 'result'})</strong></summary>
-                            <pre class="result-content">${JSON.stringify(call.result, null, 2)}</pre>
+                            ${this.formatToolResult(call.result)}
                             <div class="result-actions">
                                 <button class="btn-copy" onclick="UI.copyToClipboard('${JSON.stringify(call.result).replace(/'/g, "\\'")}')">📋 Copy Result</button>
                             </div>
@@ -322,6 +322,173 @@ class MQTTMCPApp {
                 resultDetail.open = true;
             }
         });
+    }
+
+    /**
+     * Format tool result for better display, especially for MQTT messages with JSON payloads
+     */
+    formatToolResult(result) {
+        // Check if this is a result from subscribe_and_collect tool with messages
+        if (result.messages && Array.isArray(result.messages)) {
+            return this.formatMessagesResult(result);
+        }
+        
+        // Default formatting for other tool results
+        return `<pre class="result-content">${JSON.stringify(result, null, 2)}</pre>`;
+    }
+
+    /**
+     * Format MQTT messages with enhanced JSON payload display
+     */
+    formatMessagesResult(result) {
+        const messages = result.messages || [];
+        
+        if (messages.length === 0) {
+            return `
+                <div class="messages-result">
+                    <div class="result-summary">
+                        <p>No messages collected during the specified duration.</p>
+                        <pre class="result-metadata">${JSON.stringify(result, null, 2)}</pre>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Create enhanced message display
+        const messagesHtml = messages.map((msg, index) => {
+            const payloadDisplay = this.formatMessagePayload(msg);
+            const topicClass = this.getTopicClass(msg.topic);
+            
+            return `
+                <div class="message-item ${topicClass}">
+                    <div class="message-header">
+                        <span class="message-topic">${msg.topic}</span>
+                        <span class="message-timestamp">${UI.formatTimestamp(msg.timestamp)}</span>
+                        <span class="message-qos">QoS: ${msg.qos}</span>
+                        ${msg.retain ? '<span class="message-retain">📌 Retained</span>' : ''}
+                        ${msg.payload_type ? `<span class="payload-type-badge ${msg.payload_type}">${msg.payload_type.toUpperCase()}</span>` : ''}
+                    </div>
+                    <div class="message-payload">
+                        ${payloadDisplay}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // Create result summary
+        const summary = `
+            <div class="result-summary">
+                <div class="summary-stats">
+                    <span class="stat-item">📊 ${messages.length} messages</span>
+                    <span class="stat-item">⏱️ ${result.collection_duration_seconds}s duration</span>
+                    ${result.pruning_applied ? `<span class="stat-item">✂️ Pruned from ${result.original_message_count}</span>` : ''}
+                </div>
+                <div class="topic-pattern">Pattern: <code>${result.topic_pattern}</code></div>
+            </div>
+        `;
+
+        return `
+            <div class="messages-result">
+                ${summary}
+                <div class="messages-container">
+                    <details open>
+                        <summary><strong>📨 Collected Messages (${messages.length})</strong></summary>
+                        <div class="messages-list">
+                            ${messagesHtml}
+                        </div>
+                    </details>
+                </div>
+                <details>
+                    <summary>🔧 Raw Result Metadata</summary>
+                    <pre class="result-metadata">${JSON.stringify(result, null, 2)}</pre>
+                </details>
+            </div>
+        `;
+    }
+
+    /**
+     * Format message payload based on type
+     */
+    formatMessagePayload(message) {
+        const payload = message.payload;
+        const payloadType = message.payload_type || 'text';
+        const rawPayload = message.payload_raw || payload;
+
+        switch (payloadType) {
+            case 'json':
+                // Beautiful JSON formatting
+                return `
+                    <div class="payload-json">
+                        <div class="payload-actions">
+                            <button class="btn-copy-small" onclick="UI.copyToClipboard('${JSON.stringify(payload).replace(/'/g, "\\'")}')">📋 Copy JSON</button>
+                            <button class="btn-copy-small" onclick="UI.copyToClipboard('${rawPayload.replace(/'/g, "\\'")}')">📋 Copy Raw</button>
+                        </div>
+                        <pre class="json-payload">${JSON.stringify(payload, null, 2)}</pre>
+                    </div>
+                `;
+                
+            case 'number':
+                return `
+                    <div class="payload-number">
+                        <span class="number-value">${payload}</span>
+                        <button class="btn-copy-small" onclick="UI.copyToClipboard('${payload}')">📋</button>
+                    </div>
+                `;
+                
+            case 'text':
+            default:
+                // Regular text with option to show raw
+                const isLongText = rawPayload.length > 100;
+                const displayText = isLongText ? rawPayload.substring(0, 100) + '...' : rawPayload;
+                
+                return `
+                    <div class="payload-text">
+                        <div class="payload-actions">
+                            <button class="btn-copy-small" onclick="UI.copyToClipboard('${rawPayload.replace(/'/g, "\\'")}')">📋 Copy</button>
+                        </div>
+                        <div class="text-payload">
+                            <span class="text-content">${this.escapeHtml(displayText)}</span>
+                            ${isLongText ? `
+                                <details class="text-expand">
+                                    <summary>Show full text (${rawPayload.length} chars)</summary>
+                                    <pre class="full-text">${this.escapeHtml(rawPayload)}</pre>
+                                </details>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+        }
+    }
+
+    /**
+     * Get CSS class for topic styling
+     */
+    getTopicClass(topic) {
+        const topicLower = topic.toLowerCase();
+        
+        if (topicLower.includes('error') || topicLower.includes('alarm') || topicLower.includes('warning')) {
+            return 'topic-error';
+        }
+        if (topicLower.includes('sensor') || topicLower.includes('data')) {
+            return 'topic-sensor';
+        }
+        if (topicLower.includes('command') || topicLower.includes('control')) {
+            return 'topic-command';
+        }
+        if (topicLower.includes('status') || topicLower.includes('heartbeat')) {
+            return 'topic-status';
+        }
+        
+        return 'topic-default';
+    }
+
+    /**
+     * Escape HTML to prevent XSS
+     */
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
     /**

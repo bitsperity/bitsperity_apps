@@ -16,6 +16,7 @@ import asyncio
 from datetime import datetime
 import time  # Add time import for performance measurements
 import aiomqtt
+import json
 
 # Phase 3: Import message optimization classes
 from message_pruner import SimpleMessagePruner, SchemaDetector
@@ -489,10 +490,35 @@ class MQTTTools:
                                 # Handle binary payloads
                                 payload_str = f"<binary data: {len(message.payload)} bytes>"
                             
-                            # Create message record
+                            # Try to parse JSON payload for better display
+                            payload_data = payload_str
+                            payload_type = 'text'
+                            
+                            try:
+                                # Attempt JSON parsing
+                                if payload_str.strip().startswith(('{', '[')):
+                                    parsed_json = json.loads(payload_str)
+                                    payload_data = parsed_json
+                                    payload_type = 'json'
+                            except (json.JSONDecodeError, ValueError):
+                                # Keep as string if not valid JSON
+                                payload_data = payload_str
+                                payload_type = 'text'
+                            
+                            # Check if payload is numeric
+                            if payload_type == 'text':
+                                try:
+                                    float(payload_str.strip())
+                                    payload_type = 'number'
+                                except ValueError:
+                                    pass
+                            
+                            # Create message record with enhanced payload info
                             message_record = {
                                 'topic': message.topic.value,
-                                'payload': payload_str,
+                                'payload': payload_data,  # Parsed JSON or original string
+                                'payload_raw': payload_str,  # Always keep raw string
+                                'payload_type': payload_type,  # json, text, number, or binary
                                 'qos': message.qos.value if hasattr(message.qos, 'value') else int(message.qos),
                                 'retain': message.retain,
                                 'timestamp': datetime.now().isoformat()
@@ -832,10 +858,35 @@ class MQTTTools:
                                 # Handle binary payloads
                                 payload_str = f"<binary data: {len(message.payload)} bytes>"
                             
+                            # Try to parse JSON payload for better display
+                            payload_data = payload_str
+                            payload_type = 'text'
+                            
+                            try:
+                                # Attempt JSON parsing
+                                if payload_str.strip().startswith(('{', '[')):
+                                    parsed_json = json.loads(payload_str)
+                                    payload_data = parsed_json
+                                    payload_type = 'json'
+                            except (json.JSONDecodeError, ValueError):
+                                # Keep as string if not valid JSON
+                                payload_data = payload_str
+                                payload_type = 'text'
+                            
+                            # Check if payload is numeric
+                            if payload_type == 'text':
+                                try:
+                                    float(payload_str.strip())
+                                    payload_type = 'number'
+                                except ValueError:
+                                    pass
+                            
                             # Create message record for analysis
                             message_record = {
                                 'topic': message.topic.value,
-                                'payload': payload_str,
+                                'payload': payload_data,  # Parsed JSON or original string
+                                'payload_raw': payload_str,  # Always keep raw string
+                                'payload_type': payload_type,  # json, text, number, or binary
                                 'qos': message.qos.value if hasattr(message.qos, 'value') else int(message.qos),
                                 'retain': message.retain,
                                 'timestamp': datetime.now().isoformat()
@@ -1037,10 +1088,35 @@ class MQTTTools:
                                 except UnicodeDecodeError:
                                     payload_str = f"<binary data: {len(message.payload)} bytes>"
                                 
+                                # Try to parse JSON payload for better display
+                                payload_data = payload_str
+                                payload_type = 'text'
+                                
+                                try:
+                                    # Attempt JSON parsing
+                                    if payload_str.strip().startswith(('{', '[')):
+                                        parsed_json = json.loads(payload_str)
+                                        payload_data = parsed_json
+                                        payload_type = 'json'
+                                except (json.JSONDecodeError, ValueError):
+                                    # Keep as string if not valid JSON
+                                    payload_data = payload_str
+                                    payload_type = 'text'
+                                
+                                # Check if payload is numeric
+                                if payload_type == 'text':
+                                    try:
+                                        float(payload_str.strip())
+                                        payload_type = 'number'
+                                    except ValueError:
+                                        pass
+                                
                                 # Create message record
                                 message_record = {
                                     'topic': topic,
-                                    'payload': payload_str,
+                                    'payload': payload_data,  # Parsed JSON or original string
+                                    'payload_raw': payload_str,  # Always keep raw string
+                                    'payload_type': payload_type,  # json, text, number, or binary
                                     'qos': message.qos.value if hasattr(message.qos, 'value') else int(message.qos),
                                     'retain': message.retain,
                                     'timestamp': datetime.now().isoformat()
