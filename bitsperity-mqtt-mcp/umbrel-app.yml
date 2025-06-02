@@ -4,6 +4,7 @@ category: developer-tools
 name: Bitsperity MQTT MCP
 version: "1.1.0"
 tagline: MQTT Model Context Protocol Server with Web Frontend for AI-Assisted IoT Analysis
+icon: https://raw.githubusercontent.com/bitsperity/bitsperity_apps/master/bitsperity-mqtt-mcp/applogo.svg
 description: >
   AI-powered MQTT broker integration with web interface for intelligent IoT device monitoring and analysis.
 
