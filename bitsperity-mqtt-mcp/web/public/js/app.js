@@ -617,19 +617,19 @@ class MQTTMCPApp {
      * Setup real-time updates
      */
     setupRealTimeUpdates() {
-        // Tool calls updates every 30 seconds (increased from 10s to give users time to read)
+        // Tool calls updates every 10 seconds (back to original for testing)
         this.updateIntervals.set('toolcalls', setInterval(() => {
             if (!document.hidden && this.currentTab === 'monitor') {
                 this.loadToolCalls();
             }
-        }, 30000));
+        }, 10000));
         
-        // System logs updates every 60 seconds (increased from 20s)
+        // System logs updates every 20 seconds (back to original for testing)
         this.updateIntervals.set('systemlogs', setInterval(() => {
             if (!document.hidden && this.currentTab === 'logs') {
                 this.loadSystemLogs();
             }
-        }, 60000));
+        }, 20000));
         
         DEBUG('Real-time updates setup complete');
     }

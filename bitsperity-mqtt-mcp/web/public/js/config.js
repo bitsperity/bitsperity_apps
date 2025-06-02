@@ -212,8 +212,10 @@ window.CONFIG = {
         COPIED_TO_CLIPBOARD: 'In Zwischenablage kopiert'
     },
     
-    // Development mode (set to false in production)
-    DEBUG: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1',
+    // Development mode (enable debug for localhost, 127.0.0.1, and umbrel.local)
+    DEBUG: window.location.hostname === 'localhost' || 
+           window.location.hostname === '127.0.0.1' ||
+           window.location.hostname.includes('umbrel'),
     
     // Feature flags
     FEATURES: {
