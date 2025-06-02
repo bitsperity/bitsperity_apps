@@ -2,7 +2,8 @@ manifestVersion: 1
 id: "bitsperity-mongodb"
 name: "MongoDB"
 tagline: "A clean MongoDB database for your Umbrel apps"
-icon: "https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/mongodb.svg"
+icon: https://raw.githubusercontent.com/bitsperity/bitsperity_apps/master/bitsperity-mongodb/applogo.svg
+
 category: "Development"
 version: "1.0.0"
 description: >-
