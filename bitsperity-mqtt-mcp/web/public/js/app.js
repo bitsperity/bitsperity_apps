@@ -345,6 +345,9 @@ class MQTTMCPApp {
         streamContainer.querySelectorAll('.messages-container details').forEach(detail => {
             if (openedDetails.has('messages-container')) {
                 detail.open = true;
+            } else {
+                // Explicitly force close if not in openedDetails
+                detail.open = false;
             }
         });
 
@@ -430,7 +433,12 @@ class MQTTMCPApp {
         `;
 
         // Check if messages container should be opened (default: closed)
-        const messagesContainerOpen = openedDetails && openedDetails.has('messages-container') ? true : false;
+        const messagesContainerOpen = openedDetails && openedDetails.has('messages-container');
+
+        // Debug output
+        if (typeof DEBUG === 'function') {
+            DEBUG(`Messages container state - openedDetails size: ${openedDetails ? openedDetails.size : 'null'}, has 'messages-container': ${openedDetails ? openedDetails.has('messages-container') : 'N/A'}, will open: ${messagesContainerOpen}`);
+        }
 
         return `
             <div class="messages-result">
