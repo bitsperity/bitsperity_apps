@@ -1,4 +1,3 @@
-// Main Application Controller for MQTT MCP Frontend
 class MQTTMCPApp {
     constructor() {
         this.initialized = false;
@@ -265,20 +264,31 @@ class MQTTMCPApp {
             if (toolCallItem) {
                 const toolName = toolCallItem.querySelector('.tool-name')?.textContent;
                 const timestamp = toolCallItem.querySelector('.timestamp')?.textContent;
-                const detailType = detail.closest('.call-params') ? 'params' : 
-                                 detail.closest('.call-result') ? 'result' : 'metadata';
-                const identifier = `${toolName}-${timestamp}-${detailType}`;
-                openedDetails.add(identifier);
-                if (typeof DEBUG === 'function') {
-                    DEBUG(`Added tool call detail: ${identifier}`);
-                }
-            } else {
-                // Handle messages container details
+                
+                // Check if this is a messages container detail FIRST (before general result check)
                 const messagesContainer = detail.closest('.messages-container');
                 if (messagesContainer) {
                     openedDetails.add('messages-container');
                     if (typeof DEBUG === 'function') {
-                        DEBUG(`Added messages-container to openedDetails`);
+                        DEBUG(`Added messages-container to openedDetails (within tool call)`);
+                    }
+                } else {
+                    // Then check for other detail types
+                    const detailType = detail.closest('.call-params') ? 'params' : 
+                                     detail.closest('.call-result') ? 'result' : 'metadata';
+                    const identifier = `${toolName}-${timestamp}-${detailType}`;
+                    openedDetails.add(identifier);
+                    if (typeof DEBUG === 'function') {
+                        DEBUG(`Added tool call detail: ${identifier}`);
+                    }
+                }
+            } else {
+                // Handle standalone details (outside tool call items)
+                const messagesContainer = detail.closest('.messages-container');
+                if (messagesContainer) {
+                    openedDetails.add('messages-container');
+                    if (typeof DEBUG === 'function') {
+                        DEBUG(`Added standalone messages-container to openedDetails`);
                     }
                 }
                 
@@ -593,8 +603,7 @@ class MQTTMCPApp {
             return;
         }
 
-        logsContainer.innerHTML = logs.map(log => `
-            <div class="log-entry ${log.level.toLowerCase()}">
+        logsContainer.innerHTML = logs.map(log => `            <div class="log-entry ${log.level.toLowerCase()}">
                 <div class="log-header">
                     <span class="log-level ${log.level.toLowerCase()}">${log.level}</span>
                     <span class="log-event">${log.event_type}</span>
