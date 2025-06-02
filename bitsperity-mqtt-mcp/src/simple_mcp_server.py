@@ -126,7 +126,7 @@ class MQTTMCPLogger:
                 'params': params,
                 'success': success,
                 'duration_ms': round(duration * 1000, 2),
-                'result_summary': str(result).get('success', False) if result else False,
+                'result_summary': result.get('status', 'unknown') if result else 'no_result',
                 'error': error,
                 'result_size_kb': round(len(str(result)) / 1024, 2) if result else 0
             }
@@ -135,6 +135,10 @@ class MQTTMCPLogger:
             
         except Exception as e:
             logger.error(f"Failed to log tool call: {e}")
+            # Log the error details for debugging
+            logger.error(f"Tool: {tool_name}, Success: {success}, Result type: {type(result)}")
+            if result:
+                logger.error(f"Result keys: {list(result.keys()) if isinstance(result, dict) else 'not a dict'}")
     
     def log_system_event(self, event_type: str, message: str, level: str = "INFO", 
                         metadata: dict = None):
