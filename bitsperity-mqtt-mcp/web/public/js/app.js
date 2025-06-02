@@ -118,68 +118,228 @@ class MQTTMCPApp {
      * Initialize tab system
      */
     initializeTabs() {
-        // Register tab modules
-        this.tabs.set('tools', window.ToolDashboard);
-        this.tabs.set('monitor', window.LiveMonitor);
-        this.tabs.set('sessions', window.SessionManager);
-        this.tabs.set('health', window.HealthDashboard);
-        this.tabs.set('logs', window.SystemLogs);
+        // Simple tab system - no modules needed
+        // All functionality is built into the main app
         
         // Show initial tab
         this.showTab(this.currentTab);
         
-        DEBUG('Tab system initialized');
+        DEBUG('Tab system initialized (simplified)');
     }
 
     /**
      * Load initial data for all components
      */
     async loadInitialData() {
-        const loadPromises = [];
+        try {
+            // Load tools documentation directly
+            await this.loadTools();
+            
+            // Load initial monitoring data
+            await this.loadToolCalls();
+            
+            // Load health data
+            await this.loadHealthData();
+            
+            DEBUG('Initial data loaded');
+        } catch (error) {
+            DEBUG('Error loading initial data:', error);
+            UI.showToast('Failed to load initial data: ' + error.message, 'error');
+        }
+    }
+
+    /**
+     * Load tools documentation
+     */
+    async loadTools() {
+        try {
+            DEBUG('Loading tools...');
+            const tools = await API.getTools();
+            
+            this.renderTools(tools);
+            this.setupToolSearch(tools);
+            
+            DEBUG(`Loaded ${tools.length} tools`);
+        } catch (error) {
+            DEBUG('Error loading tools:', error);
+            UI.showToast('Failed to load tools: ' + error.message, 'error');
+        }
+    }
+
+    /**
+     * Render tools in the grid
+     */
+    renderTools(tools) {
+        const toolsGrid = document.getElementById('toolsGrid');
+        if (!toolsGrid) return;
+
+        toolsGrid.innerHTML = tools.map(tool => `
+            <div class="tool-card" data-category="${tool.category}">
+                <div class="tool-header">
+                    <h3>${tool.name}</h3>
+                    <span class="category-badge">${tool.category}</span>
+                </div>
+                <div class="tool-description">
+                    ${tool.description}
+                </div>
+                <div class="tool-parameters">
+                    <h4>Parameters:</h4>
+                    <ul>
+                        ${Object.entries(tool.parameters || {}).map(([key, desc]) => 
+                            `<li><code>${key}</code>: ${desc}</li>`
+                        ).join('')}
+                    </ul>
+                </div>
+                <div class="tool-example">
+                    <h4>Example:</h4>
+                    <code class="example-code">${tool.example}</code>
+                    <button class="btn-copy" onclick="UI.copyToClipboard('${tool.example.replace(/'/g, "\\'")}')">📋 Copy</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    /**
+     * Setup tool search functionality
+     */
+    setupToolSearch(tools) {
+        const searchInput = document.getElementById('toolSearch');
+        const categoryFilter = document.getElementById('categoryFilter');
         
-        // Load tools documentation
-        if (window.ToolDashboard) {
-            loadPromises.push(window.ToolDashboard.loadTools());
+        const filterTools = () => {
+            const searchTerm = searchInput?.value.toLowerCase() || '';
+            const selectedCategory = categoryFilter?.value || '';
+            
+            const toolCards = document.querySelectorAll('.tool-card');
+            toolCards.forEach(card => {
+                const toolName = card.querySelector('h3').textContent.toLowerCase();
+                const toolDescription = card.querySelector('.tool-description').textContent.toLowerCase();
+                const toolCategory = card.getAttribute('data-category');
+                
+                const matchesSearch = toolName.includes(searchTerm) || toolDescription.includes(searchTerm);
+                const matchesCategory = !selectedCategory || toolCategory === selectedCategory;
+                
+                card.style.display = matchesSearch && matchesCategory ? 'block' : 'none';
+            });
+        };
+
+        if (searchInput) {
+            searchInput.addEventListener('input', UI.debounce(filterTools, 300));
         }
         
-        // Load initial monitoring data
-        if (window.LiveMonitor) {
-            loadPromises.push(window.LiveMonitor.loadInitialData());
+        if (categoryFilter) {
+            categoryFilter.addEventListener('change', filterTools);
         }
-        
-        // Load sessions
-        if (window.SessionManager) {
-            loadPromises.push(window.SessionManager.loadSessions());
+    }
+
+    /**
+     * Load tool calls for monitoring
+     */
+    async loadToolCalls() {
+        try {
+            const response = await API.getToolCalls({ limit: 50 });
+            this.renderToolCalls(response.tool_calls || []);
+        } catch (error) {
+            DEBUG('Error loading tool calls:', error);
         }
-        
-        // Load health data
-        if (window.HealthDashboard) {
-            loadPromises.push(window.HealthDashboard.loadInitialData());
+    }
+
+    /**
+     * Render tool calls in monitor tab
+     */
+    renderToolCalls(toolCalls) {
+        const streamContainer = document.getElementById('toolCallsStream');
+        if (!streamContainer) return;
+
+        if (toolCalls.length === 0) {
+            streamContainer.innerHTML = '<p class="no-data">No tool calls yet. Use the MQTT MCP tools to see monitoring data here.</p>';
+            return;
         }
-        
-        // Wait for all initial data to load
-        await Promise.allSettled(loadPromises);
-        
-        DEBUG('Initial data loaded');
+
+        streamContainer.innerHTML = toolCalls.map(call => `
+            <div class="tool-call-item ${call.success ? 'success' : 'error'}">
+                <div class="call-header">
+                    <span class="tool-name">${call.tool_name}</span>
+                    <span class="timestamp">${UI.formatTimestamp(call.timestamp)}</span>
+                    <span class="status ${call.success ? 'success' : 'error'}">
+                        ${call.success ? '✅' : '❌'}
+                    </span>
+                </div>
+                <div class="call-details">
+                    <div class="duration">Duration: ${UI.formatDuration(call.duration_ms)}</div>
+                    <div class="result-size">Size: ${UI.formatFileSize(call.result_size_kb * 1024)}</div>
+                    ${call.error ? `<div class="error-message">Error: ${call.error}</div>` : ''}
+                </div>
+                <div class="call-params">
+                    <details>
+                        <summary>Parameters</summary>
+                        <pre>${JSON.stringify(call.params, null, 2)}</pre>
+                    </details>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    /**
+     * Load health data
+     */
+    async loadHealthData() {
+        try {
+            const health = await API.getHealth();
+            this.renderHealthData(health);
+        } catch (error) {
+            DEBUG('Error loading health data:', error);
+        }
+    }
+
+    /**
+     * Render health data
+     */
+    renderHealthData(health) {
+        const healthOverview = document.getElementById('healthOverview');
+        if (!healthOverview) return;
+
+        const dbConnected = health.database?.connected;
+        const recentCalls = health.mcp_server?.recent_tool_calls || 0;
+        const recentErrors = health.mcp_server?.recent_errors || 0;
+
+        healthOverview.innerHTML = `
+            <div class="health-cards">
+                <div class="health-card ${dbConnected ? 'healthy' : 'unhealthy'}">
+                    <h3>Database</h3>
+                    <div class="health-value">${dbConnected ? 'Connected' : 'Disconnected'}</div>
+                </div>
+                <div class="health-card">
+                    <h3>Recent Tool Calls</h3>
+                    <div class="health-value">${recentCalls}</div>
+                    <div class="health-subtitle">Last hour</div>
+                </div>
+                <div class="health-card ${recentErrors === 0 ? 'healthy' : 'warning'}">
+                    <h3>Recent Errors</h3>
+                    <div class="health-value">${recentErrors}</div>
+                    <div class="health-subtitle">Last hour</div>
+                </div>
+            </div>
+        `;
     }
 
     /**
      * Setup real-time updates
      */
     setupRealTimeUpdates() {
-        // Performance updates every 10 seconds
-        this.updateIntervals.set('performance', setInterval(() => {
-            if (!document.hidden && window.HealthDashboard) {
-                window.HealthDashboard.updatePerformanceMetrics();
-            }
-        }, CONFIG.MONITOR.PERFORMANCE_UPDATE_INTERVAL));
-        
-        // Sessions updates every 30 seconds
-        this.updateIntervals.set('sessions', setInterval(() => {
-            if (!document.hidden && window.SessionManager) {
-                window.SessionManager.refreshSessions();
+        // Performance updates every 30 seconds
+        this.updateIntervals.set('health', setInterval(() => {
+            if (!document.hidden) {
+                this.loadHealthData();
             }
         }, 30000));
+        
+        // Tool calls updates every 10 seconds
+        this.updateIntervals.set('toolcalls', setInterval(() => {
+            if (!document.hidden && this.currentTab === 'monitor') {
+                this.loadToolCalls();
+            }
+        }, 10000));
         
         DEBUG('Real-time updates setup complete');
     }
@@ -221,10 +381,11 @@ class MQTTMCPApp {
             targetContent.classList.add('active');
         }
         
-        // Initialize tab if needed
-        const tabModule = this.tabs.get(tabName);
-        if (tabModule && typeof tabModule.onTabShow === 'function') {
-            tabModule.onTabShow();
+        // Load data when switching to specific tabs
+        if (tabName === 'monitor') {
+            this.loadToolCalls();
+        } else if (tabName === 'health') {
+            this.loadHealthData();
         }
         
         // Update current tab
