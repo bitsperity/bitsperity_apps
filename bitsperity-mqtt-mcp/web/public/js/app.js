@@ -141,8 +141,7 @@ class MQTTMCPApp {
             // Load health data
             await this.loadHealthData();
             
-            // Load system logs
-            await this.loadSystemLogs();
+            // Note: System logs only loaded when explicitly enabled
             
             DEBUG('Initial data loaded');
         } catch (error) {
@@ -440,8 +439,15 @@ class MQTTMCPApp {
             content.classList.remove('active');
         });
         
-        const targetContent = document.getElementById(tabName + 'Tab') || 
-                              document.getElementById(tabName + 'TabContent');
+        // Handle special case for logs tab
+        let targetContent;
+        if (tabName === 'logs') {
+            targetContent = document.getElementById('logsTabContent');
+        } else {
+            targetContent = document.getElementById(tabName + 'Tab') || 
+                          document.getElementById(tabName + 'TabContent');
+        }
+        
         if (targetContent) {
             targetContent.classList.add('active');
         }
@@ -469,6 +475,9 @@ class MQTTMCPApp {
         
         if (enabled) {
             logsTab.style.display = 'block';
+            
+            // Load system logs when enabled
+            this.loadSystemLogs();
             
             // Initialize system logs if needed
             if (window.SystemLogs && typeof window.SystemLogs.init === 'function') {
