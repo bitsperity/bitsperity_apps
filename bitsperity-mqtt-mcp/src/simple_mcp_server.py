@@ -476,7 +476,9 @@ class SimpleMCPServer:
                     try:
                         start_time = time.time()
                         result = await self.tools[tool_name](**tool_arguments)
-                        success = result.get('status') == 'success' if result else False
+                        # Fix: MQTT tools use different status values for success
+                        status = result.get('status', 'unknown') if result else 'no_result'
+                        success = status in ['success', 'connected', 'closed'] if result else False
                         duration = time.time() - start_time
                         
                         # Log tool call to MongoDB
