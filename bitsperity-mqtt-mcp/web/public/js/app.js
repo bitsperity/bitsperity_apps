@@ -353,10 +353,16 @@ class MQTTMCPApp {
             const toolName = toolCallItem.querySelector('.tool-name')?.textContent;
             const timestamp = toolCallItem.querySelector('.timestamp')?.textContent;
             
-            const metadataDetail = toolCallItem.querySelector('details:has(summary:contains("Raw Result Metadata"))');
-            if (metadataDetail && openedDetails.has(`${toolName}-${timestamp}-metadata`)) {
-                metadataDetail.open = true;
-            }
+            // Find metadata details more reliably
+            const allDetails = toolCallItem.querySelectorAll('details');
+            allDetails.forEach(detail => {
+                const summary = detail.querySelector('summary');
+                if (summary && summary.textContent.includes('Raw Result Metadata')) {
+                    if (openedDetails.has(`${toolName}-${timestamp}-metadata`)) {
+                        detail.open = true;
+                    }
+                }
+            });
         });
     }
 
@@ -423,8 +429,8 @@ class MQTTMCPApp {
             </div>
         `;
 
-        // Check if messages container should be opened
-        const messagesContainerOpen = openedDetails && openedDetails.has('messages-container');
+        // Check if messages container should be opened (default: closed)
+        const messagesContainerOpen = openedDetails && openedDetails.has('messages-container') ? true : false;
 
         return `
             <div class="messages-result">
