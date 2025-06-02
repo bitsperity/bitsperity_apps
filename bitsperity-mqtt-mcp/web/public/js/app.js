@@ -166,301 +166,129 @@ class MQTTMCPApp {
     }
 
     /**
-     * Render tools in the grid with modern AI-focused design
+     * Render tools in clean, modern cards
      */
     renderTools(tools) {
         const toolsGrid = document.getElementById('toolsGrid');
         if (!toolsGrid) return;
 
-        // Enhanced tools with AI-focused metadata
-        const enhancedTools = this.enhanceToolsWithAIMetadata(tools);
+        // Clean tool data with correct MQTT MCP information
+        const cleanTools = this.getCleanToolData(tools);
 
-        toolsGrid.innerHTML = enhancedTools.map(tool => `
-            <div class="tool-card modern" data-category="${tool.category}">
+        toolsGrid.innerHTML = cleanTools.map(tool => `
+            <div class="tool-card clean" data-category="${tool.category}">
                 <div class="tool-header">
                     <div class="tool-icon">${tool.icon}</div>
-                    <div class="tool-meta">
+                    <div class="tool-info">
                         <h3 class="tool-name">${tool.name}</h3>
-                        <span class="category-badge ${tool.category}">${tool.categoryLabel}</span>
-                        <p class="tool-description">${tool.aiDescription}</p>
+                        <p class="tool-purpose">${tool.purpose}</p>
                     </div>
                 </div>
                 
-                <div class="ai-prompt-section">
-                    <h4>💬 Ask Your AI:</h4>
-                    <div class="prompt-container">
-                        <div class="prompt-text">"${tool.aiPrompt}"</div>
-                        <button class="btn-copy-prompt" onclick="UI.copyToClipboard('${tool.aiPrompt.replace(/'/g, "\\'")}', 'AI prompt copied!')">
-                            🤖 Copy Prompt
+                <div class="ai-command">
+                    <h4>💬 Tell your AI:</h4>
+                    <div class="command-box">
+                        <code class="command-text">"${tool.aiCommand}"</code>
+                        <button class="btn-copy-cmd" onclick="UI.copyToClipboard('${tool.aiCommand.replace(/'/g, "\\'")}', 'Command copied!')">
+                            📋
                         </button>
                     </div>
                 </div>
                 
-                <div class="tool-details">
-                    <div class="detail-section">
-                        <h4>⚙️ Parameters:</h4>
-                        <div class="params-list">
-                            ${Object.entries(tool.parameters?.properties || {}).map(([key, param]) => `
-                                <div class="param-item">
-                                    <code class="param-name">${key}</code>
-                                    <span class="param-info">
-                                        <span class="param-type">${param.type || 'string'}</span>
-                                        ${tool.parameters?.required?.includes(key) ? 
-                                            '<span class="param-required">required</span>' : 
-                                            '<span class="param-optional">optional</span>'
-                                        }
-                                    </span>
-                                    <div class="param-description">${param.description || 'No description'}</div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                    
-                    <div class="detail-section">
-                        <h4>🎯 Use Cases:</h4>
-                        <ul class="use-cases">
-                            ${tool.useCases.map(useCase => `<li>${useCase}</li>`).join('')}
-                        </ul>
-                    </div>
-                </div>
-                
-                <div class="tool-footer">
-                    <div class="tool-stats">
-                        <span class="stat-item">
-                            <span class="stat-icon">⚡</span>
-                            <span class="stat-value">${tool.complexity}</span>
-                        </span>
-                        <span class="stat-item">
-                            <span class="stat-icon">🔗</span>
-                            <span class="stat-value">${tool.connectionRequired ? 'Needs Connection' : 'Standalone'}</span>
-                        </span>
-                    </div>
-                    <div class="tool-actions">
-                        <button class="btn-secondary" onclick="UI.copyToClipboard('${tool.technicalExample.replace(/'/g, "\\'")}', 'Technical example copied!')">
-                            📋 Copy Technical
-                        </button>
-                    </div>
+                <div class="tool-result">
+                    <strong>Result:</strong> ${tool.result}
                 </div>
             </div>
         `).join('');
-
-        // Apply syntax highlighting after rendering
-        this.applySyntaxHighlighting();
     }
 
     /**
-     * Enhanced tools with AI-focused metadata
+     * Get clean tool data with correct MQTT MCP information
      */
-    enhanceToolsWithAIMetadata(tools) {
-        const aiToolMetadata = {
+    getCleanToolData(tools) {
+        const mqttTools = {
             'mqtt_establish_connection': {
-                category: 'connection',
-                categoryLabel: 'Connection',
                 icon: '🔌',
-                complexity: 'Simple',
-                connectionRequired: false,
-                aiDescription: 'Connect your AI to an MQTT broker to start IoT monitoring',
-                aiPrompt: 'Connect to my MQTT broker at mqtt://192.168.1.100:1883 and save the connection session',
-                technicalExample: 'Use tool: mqtt_establish_connection\nParameters: {"connection_string": "mqtt://192.168.1.100:1883"}',
-                useCases: [
-                    'Connect to local IoT broker',
-                    'Establish secure MQTT connection',
-                    'Start IoT device monitoring session'
-                ]
+                category: 'connection',
+                purpose: 'Connect to MQTT broker',
+                aiCommand: 'Connect to my MQTT broker at mqtt://192.168.1.100:1883',
+                result: 'Session ID for subsequent commands'
             },
             'mqtt_list_active_connections': {
-                category: 'connection',
-                categoryLabel: 'Connection',
                 icon: '📋',
-                complexity: 'Simple',
-                connectionRequired: false,
-                aiDescription: 'Check which MQTT connections are currently active',
-                aiPrompt: 'Show me all active MQTT connections and their status',
-                technicalExample: 'Use tool: mqtt_list_active_connections\nParameters: {"random_string": "status"}',
-                useCases: [
-                    'Check connection health',
-                    'Monitor active sessions',
-                    'Debug connection issues'
-                ]
+                category: 'connection', 
+                purpose: 'Show active MQTT sessions',
+                aiCommand: 'Show me all active MQTT connections',
+                result: 'List of connection sessions with status'
             },
             'mqtt_close_connection': {
-                category: 'connection',
-                categoryLabel: 'Connection',
                 icon: '🔌',
-                complexity: 'Simple',
-                connectionRequired: true,
-                aiDescription: 'Properly close an MQTT connection when finished',
-                aiPrompt: 'Close the MQTT connection with session ID [session_id]',
-                technicalExample: 'Use tool: mqtt_close_connection\nParameters: {"session_id": "your-session-id"}',
-                useCases: [
-                    'Clean up after monitoring',
-                    'Free server resources',
-                    'End IoT session properly'
-                ]
+                category: 'connection',
+                purpose: 'Close MQTT connection',
+                aiCommand: 'Close MQTT connection [session_id]', 
+                result: 'Connection closed and cleaned up'
             },
             'mqtt_list_topics': {
-                category: 'discovery',
-                categoryLabel: 'Discovery',
                 icon: '🔍',
-                complexity: 'Medium',
-                connectionRequired: true,
-                aiDescription: 'Discover what IoT devices and sensors are publishing',
-                aiPrompt: 'Scan my MQTT broker for all available topics and show me what devices are active',
-                technicalExample: 'Use tool: mqtt_list_topics\nParameters: {"session_id": "your-session-id", "pattern": "#"}',
-                useCases: [
-                    'Find IoT devices on network',
-                    'Discover sensor topics',
-                    'Map MQTT topic structure'
-                ]
+                category: 'discovery',
+                purpose: 'Discover MQTT topics',
+                aiCommand: 'Scan for all MQTT topics on my broker',
+                result: 'List of active topics and devices'
             },
             'mqtt_subscribe_and_collect': {
-                category: 'data',
-                categoryLabel: 'Data Collection',
                 icon: '📊',
-                complexity: 'Medium',
-                connectionRequired: true,
-                aiDescription: 'Collect real-time data from IoT sensors and devices',
-                aiPrompt: 'Monitor temperature sensors for 60 seconds and show me the data',
-                technicalExample: 'Use tool: mqtt_subscribe_and_collect\nParameters: {"session_id": "your-session-id", "topic_pattern": "sensor/+/temperature", "duration_seconds": 60}',
-                useCases: [
-                    'Monitor sensor data',
-                    'Collect device telemetry',
-                    'Analyze IoT data patterns'
-                ]
+                category: 'data',
+                purpose: 'Collect sensor data',
+                aiCommand: 'Monitor temperature sensors for 60 seconds',
+                result: 'Real-time sensor data and statistics'
             },
             'mqtt_publish_message': {
-                category: 'data',
-                categoryLabel: 'Data Publishing',
                 icon: '📤',
-                complexity: 'Simple',
-                connectionRequired: true,
-                aiDescription: 'Send commands or data to IoT devices',
-                aiPrompt: 'Send a command to turn on the living room lights via MQTT',
-                technicalExample: 'Use tool: mqtt_publish_message\nParameters: {"session_id": "your-session-id", "topic": "home/lights/living_room", "payload": "ON", "qos": 1}',
-                useCases: [
-                    'Control smart home devices',
-                    'Send commands to IoT devices',
-                    'Publish sensor configurations'
-                ]
+                category: 'data',
+                purpose: 'Send commands to devices', 
+                aiCommand: 'Turn on living room lights via MQTT',
+                result: 'Message published to device'
             },
             'mqtt_get_topic_schema': {
-                category: 'analysis',
-                categoryLabel: 'Analysis',
                 icon: '🔬',
-                complexity: 'Advanced',
-                connectionRequired: true,
-                aiDescription: 'Analyze and understand the structure of IoT device messages',
-                aiPrompt: 'Analyze the data structure of messages from my weather sensors',
-                technicalExample: 'Use tool: mqtt_get_topic_schema\nParameters: {"session_id": "your-session-id", "topic_pattern": "weather/+/data"}',
-                useCases: [
-                    'Understand device data formats',
-                    'Validate sensor data structure',
-                    'Debug message formatting'
-                ]
+                category: 'analysis',
+                purpose: 'Analyze message structure',
+                aiCommand: 'Analyze data format of my weather sensors',
+                result: 'JSON schema and data patterns'
             },
             'mqtt_debug_device': {
-                category: 'debugging',
-                categoryLabel: 'Debugging',
-                icon: '🐛',
-                complexity: 'Advanced',
-                connectionRequired: true,
-                aiDescription: 'Troubleshoot specific IoT device connectivity and performance',
-                aiPrompt: 'Debug connectivity issues with my smart thermostat device',
-                technicalExample: 'Use tool: mqtt_debug_device\nParameters: {"session_id": "your-session-id", "device_id": "thermostat_01"}',
-                useCases: [
-                    'Fix device connectivity issues',
-                    'Troubleshoot sensor problems',
-                    'Monitor device health'
-                ]
+                icon: '🐛', 
+                category: 'debug',
+                purpose: 'Troubleshoot device issues',
+                aiCommand: 'Debug my smart thermostat connectivity',
+                result: 'Device health report and diagnostics'
             },
             'mqtt_monitor_performance': {
-                category: 'monitoring',
-                categoryLabel: 'Monitoring',
                 icon: '📈',
-                complexity: 'Advanced',
-                connectionRequired: true,
-                aiDescription: 'Monitor MQTT broker performance and network health',
-                aiPrompt: 'Check the performance and health of my MQTT broker',
-                technicalExample: 'Use tool: mqtt_monitor_performance\nParameters: {"session_id": "your-session-id"}',
-                useCases: [
-                    'Monitor broker performance',
-                    'Check network latency',
-                    'Optimize IoT infrastructure'
-                ]
+                category: 'monitor',
+                purpose: 'Check broker performance',
+                aiCommand: 'Check MQTT broker performance and health',
+                result: 'Performance metrics and statistics'
             },
             'mqtt_test_connection': {
-                category: 'debugging',
-                categoryLabel: 'Health Check',
                 icon: '🏥',
-                complexity: 'Simple',
-                connectionRequired: true,
-                aiDescription: 'Test MQTT connection health and diagnose issues',
-                aiPrompt: 'Test my MQTT connection and tell me if everything is working properly',
-                technicalExample: 'Use tool: mqtt_test_connection\nParameters: {"session_id": "your-session-id"}',
-                useCases: [
-                    'Verify connection health',
-                    'Diagnose network issues',
-                    'Test broker accessibility'
-                ]
+                category: 'debug',
+                purpose: 'Test connection health',
+                aiCommand: 'Test my MQTT connection and diagnose issues',
+                result: 'Connection health and diagnostic report'
             }
         };
 
         return tools.map(tool => ({
-            ...tool,
-            ...aiToolMetadata[tool.name] || {
-                category: 'other',
-                categoryLabel: 'Other',
+            name: tool.name,
+            ...mqttTools[tool.name] || {
                 icon: '🔧',
-                complexity: 'Unknown',
-                connectionRequired: false,
-                aiDescription: 'Tool description not available',
-                aiPrompt: 'Use this tool for MQTT operations',
-                technicalExample: `Use tool: ${tool.name}`,
-                useCases: ['General MQTT operations']
+                category: 'other',
+                purpose: 'MQTT operation',
+                aiCommand: `Use ${tool.name} for MQTT`,
+                result: 'Operation result'
             }
         }));
-    }
-
-    /**
-     * Format code example for better display
-     */
-    formatCodeExample(example) {
-        // Pretty format the example for syntax highlighting
-        try {
-            // If it's a valid command, format it nicely
-            return example
-                .replace(/^/, '// Use this command in Cursor/Claude:\n')
-                .replace(/"/g, '"')
-                .replace(/'/g, "'");
-        } catch (error) {
-            return example;
-        }
-    }
-
-    /**
-     * Generate Cursor-optimized prompt for a tool
-     */
-    generateCursorPrompt(tool) {
-        return `Verwende das MQTT MCP Tool "${tool.name}":
-
-${tool.example}
-
-Zweck: ${tool.description}
-
-Parameter:
-${Object.entries(tool.parameters?.properties || {}).map(([key, param]) => 
-    `- ${key}: ${param.description || 'No description'}`
-).join('\n')}`;
-    }
-
-    /**
-     * Apply syntax highlighting to code blocks
-     */
-    applySyntaxHighlighting() {
-        // Use Prism.js if available
-        if (typeof Prism !== 'undefined') {
-            Prism.highlightAll();
-        }
     }
 
     /**
