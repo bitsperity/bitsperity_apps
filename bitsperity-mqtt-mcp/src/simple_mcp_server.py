@@ -472,7 +472,7 @@ class SimpleMCPServer:
                     try:
                         start_time = time.time()
                         result = await self.tools[tool_name](**tool_arguments)
-                        success = result.get('success', False) if result else False
+                        success = result.get('status') == 'success' if result else False
                         duration = time.time() - start_time
                         
                         # Log tool call to MongoDB
@@ -495,6 +495,10 @@ class SimpleMCPServer:
                         }
                     except Exception as e:
                         logger.error(f"Tool execution error: {e}")
+                        # Log failed tool call
+                        duration = time.time() - start_time if 'start_time' in locals() else 0
+                        mqtt_logger.log_tool_call(tool_name, tool_arguments, False, duration, None, str(e))
+                        
                         return self._error_response(
                             request_id, -32000, f"Tool execution failed: {str(e)}"
                         )
