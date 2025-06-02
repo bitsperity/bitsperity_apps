@@ -249,8 +249,10 @@ app.get('/api/tool-calls', async (req, res) => {
       success: call.success,
       duration_ms: call.duration_ms,
       result_size_kb: call.result_size_kb,
+      result_summary: call.result_summary,
       error: call.error,
-      params: call.params
+      params: call.params,
+      result: call.result
     }));
     
     res.json({

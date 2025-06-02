@@ -141,6 +141,9 @@ class MQTTMCPApp {
             // Load health data
             await this.loadHealthData();
             
+            // Load system logs
+            await this.loadSystemLogs();
+            
             DEBUG('Initial data loaded');
         } catch (error) {
             DEBUG('Error loading initial data:', error);
@@ -276,6 +279,17 @@ class MQTTMCPApp {
                         <pre>${JSON.stringify(call.params, null, 2)}</pre>
                     </details>
                 </div>
+                ${call.result ? `
+                    <div class="call-result">
+                        <details open>
+                            <summary><strong>🎯 Tool Response (${call.result_summary || 'result'})</strong></summary>
+                            <pre class="result-content">${JSON.stringify(call.result, null, 2)}</pre>
+                            <div class="result-actions">
+                                <button class="btn-copy" onclick="UI.copyToClipboard('${JSON.stringify(call.result).replace(/'/g, "\\'")}')">📋 Copy Result</button>
+                            </div>
+                        </details>
+                    </div>
+                ` : ''}
             </div>
         `).join('');
     }
@@ -324,6 +338,50 @@ class MQTTMCPApp {
     }
 
     /**
+     * Load system logs
+     */
+    async loadSystemLogs() {
+        try {
+            const response = await API.getSystemLogs({ limit: 100 });
+            this.renderSystemLogs(response.logs || []);
+        } catch (error) {
+            DEBUG('Error loading system logs:', error);
+        }
+    }
+
+    /**
+     * Render system logs
+     */
+    renderSystemLogs(logs) {
+        const logsContainer = document.getElementById('logsContainer');
+        if (!logsContainer) return;
+
+        if (logs.length === 0) {
+            logsContainer.innerHTML = '<p class="no-data">No system logs available.</p>';
+            return;
+        }
+
+        logsContainer.innerHTML = logs.map(log => `
+            <div class="log-entry ${log.level.toLowerCase()}">
+                <div class="log-header">
+                    <span class="log-level ${log.level.toLowerCase()}">${log.level}</span>
+                    <span class="log-event">${log.event_type}</span>
+                    <span class="log-timestamp">${UI.formatTimestamp(log.timestamp)}</span>
+                </div>
+                <div class="log-message">${log.message}</div>
+                ${log.metadata && Object.keys(log.metadata).length > 0 ? `
+                    <div class="log-metadata">
+                        <details>
+                            <summary>Metadata</summary>
+                            <pre>${JSON.stringify(log.metadata, null, 2)}</pre>
+                        </details>
+                    </div>
+                ` : ''}
+            </div>
+        `).join('');
+    }
+
+    /**
      * Setup real-time updates
      */
     setupRealTimeUpdates() {
@@ -340,6 +398,13 @@ class MQTTMCPApp {
                 this.loadToolCalls();
             }
         }, 10000));
+        
+        // System logs updates every 20 seconds
+        this.updateIntervals.set('systemlogs', setInterval(() => {
+            if (!document.hidden && this.currentTab === 'logs') {
+                this.loadSystemLogs();
+            }
+        }, 20000));
         
         DEBUG('Real-time updates setup complete');
     }
@@ -386,6 +451,8 @@ class MQTTMCPApp {
             this.loadToolCalls();
         } else if (tabName === 'health') {
             this.loadHealthData();
+        } else if (tabName === 'logs') {
+            this.loadSystemLogs();
         }
         
         // Update current tab

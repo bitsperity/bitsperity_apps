@@ -120,6 +120,13 @@ class MQTTMCPLogger:
             return
             
         try:
+            # Determine result storage strategy based on size
+            result_str = str(result) if result else ""
+            result_size_kb = round(len(result_str) / 1024, 2)
+            
+            # Store full result if reasonable size (<100KB), otherwise store summary
+            store_full_result = result_size_kb < 100 and result is not None
+            
             doc = {
                 'timestamp': datetime.now(),
                 'tool_name': tool_name,
@@ -127,8 +134,16 @@ class MQTTMCPLogger:
                 'success': success,
                 'duration_ms': round(duration * 1000, 2),
                 'result_summary': result.get('status', 'unknown') if result else 'no_result',
+                'result_size_kb': result_size_kb,
                 'error': error,
-                'result_size_kb': round(len(str(result)) / 1024, 2) if result else 0
+                # Store full result if not too large, otherwise store truncated summary
+                'result': result if store_full_result else (
+                    {
+                        'status': result.get('status', 'unknown'),
+                        'summary': str(result)[:1000] + '...' if len(str(result)) > 1000 else str(result),
+                        'truncated': not store_full_result and result is not None
+                    } if result else None
+                )
             }
             
             self.db[TOOL_CALLS_COLLECTION].insert_one(doc)
