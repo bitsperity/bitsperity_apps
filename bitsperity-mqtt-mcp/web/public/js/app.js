@@ -8,7 +8,7 @@ class MQTTMCPApp {
         // Bind methods
         this.handleTabClick = this.handleTabClick.bind(this);
         this.handleLogsToggle = this.handleLogsToggle.bind(this);
-        this.handleTutorialClick = this.handleTutorialClick.bind(this);
+        this.handleSetupClick = this.handleSetupClick.bind(this);
         this.handleVisibilityChange = this.handleVisibilityChange.bind(this);
     }
 
@@ -95,10 +95,10 @@ class MQTTMCPApp {
             logsToggle.addEventListener('change', this.handleLogsToggle);
         }
         
-        // Tutorial button
-        const tutorialBtn = document.getElementById('tutorialBtn');
-        if (tutorialBtn) {
-            tutorialBtn.addEventListener('click', this.handleTutorialClick);
+        // Setup button
+        const setupBtn = document.getElementById('setupBtn');
+        if (setupBtn) {
+            setupBtn.addEventListener('click', this.handleSetupClick);
         }
         
         // Page visibility change (pause updates when not visible)
@@ -166,68 +166,62 @@ class MQTTMCPApp {
     }
 
     /**
-     * Render tools in the grid
+     * Render tools in the grid with modern AI-focused design
      */
     renderTools(tools) {
         const toolsGrid = document.getElementById('toolsGrid');
         if (!toolsGrid) return;
 
-        // Enhance tools with categories and better examples
-        const enhancedTools = this.enhanceToolsWithMetadata(tools);
+        // Enhanced tools with AI-focused metadata
+        const enhancedTools = this.enhanceToolsWithAIMetadata(tools);
 
         toolsGrid.innerHTML = enhancedTools.map(tool => `
-            <div class="tool-card" data-category="${tool.category}">
+            <div class="tool-card modern" data-category="${tool.category}">
                 <div class="tool-header">
                     <div class="tool-icon">${tool.icon}</div>
                     <div class="tool-meta">
                         <h3 class="tool-name">${tool.name}</h3>
                         <span class="category-badge ${tool.category}">${tool.categoryLabel}</span>
+                        <p class="tool-description">${tool.aiDescription}</p>
                     </div>
-                    <div class="tool-actions">
-                        <button class="btn-copy-tool" onclick="UI.copyToClipboard('${tool.example.replace(/'/g, "\\'")}', 'Tool example copied!')" title="Copy example">
-                            📋
+                </div>
+                
+                <div class="ai-prompt-section">
+                    <h4>💬 Ask Your AI:</h4>
+                    <div class="prompt-container">
+                        <div class="prompt-text">"${tool.aiPrompt}"</div>
+                        <button class="btn-copy-prompt" onclick="UI.copyToClipboard('${tool.aiPrompt.replace(/'/g, "\\'")}', 'AI prompt copied!')">
+                            🤖 Copy Prompt
                         </button>
                     </div>
                 </div>
                 
-                <div class="tool-description">
-                    ${tool.description}
-                </div>
-                
-                <div class="tool-parameters">
-                    <h4>📋 Parameters:</h4>
-                    <div class="params-grid">
-                        ${Object.entries(tool.parameters?.properties || {}).map(([key, param]) => `
-                            <div class="param-item">
-                                <code class="param-name">${key}</code>
-                                <span class="param-type">${param.type || 'string'}</span>
-                                <span class="param-required">${tool.parameters?.required?.includes(key) ? '✅ Required' : '🔹 Optional'}</span>
-                                <div class="param-description">${param.description || 'No description'}</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-                
-                <div class="tool-example">
-                    <h4>💡 Example Usage:</h4>
-                    <div class="example-container">
-                        <pre class="example-code language-javascript"><code>${this.formatCodeExample(tool.example)}</code></pre>
-                        <div class="example-actions">
-                            <button class="btn-copy-small" onclick="UI.copyToClipboard('${tool.example.replace(/'/g, "\\'")}', 'Example copied!')">
-                                📋 Copy Example
-                            </button>
-                            <button class="btn-copy-small" onclick="UI.copyToClipboard('${this.generateCursorPrompt(tool).replace(/'/g, "\\'")}', 'Cursor prompt copied!')">
-                                🤖 Copy for Cursor
-                            </button>
+                <div class="tool-details">
+                    <div class="detail-section">
+                        <h4>⚙️ Parameters:</h4>
+                        <div class="params-list">
+                            ${Object.entries(tool.parameters?.properties || {}).map(([key, param]) => `
+                                <div class="param-item">
+                                    <code class="param-name">${key}</code>
+                                    <span class="param-info">
+                                        <span class="param-type">${param.type || 'string'}</span>
+                                        ${tool.parameters?.required?.includes(key) ? 
+                                            '<span class="param-required">required</span>' : 
+                                            '<span class="param-optional">optional</span>'
+                                        }
+                                    </span>
+                                    <div class="param-description">${param.description || 'No description'}</div>
+                                </div>
+                            `).join('')}
                         </div>
                     </div>
-                </div>
-                
-                <div class="tool-usage-tips">
-                    <h4>💡 Usage Tips:</h4>
-                    <ul class="tips-list">
-                        ${tool.usageTips.map(tip => `<li>${tip}</li>`).join('')}
-                    </ul>
+                    
+                    <div class="detail-section">
+                        <h4>🎯 Use Cases:</h4>
+                        <ul class="use-cases">
+                            ${tool.useCases.map(useCase => `<li>${useCase}</li>`).join('')}
+                        </ul>
+                    </div>
                 </div>
                 
                 <div class="tool-footer">
@@ -241,6 +235,11 @@ class MQTTMCPApp {
                             <span class="stat-value">${tool.connectionRequired ? 'Needs Connection' : 'Standalone'}</span>
                         </span>
                     </div>
+                    <div class="tool-actions">
+                        <button class="btn-secondary" onclick="UI.copyToClipboard('${tool.technicalExample.replace(/'/g, "\\'")}', 'Technical example copied!')">
+                            📋 Copy Technical
+                        </button>
+                    </div>
                 </div>
             </div>
         `).join('');
@@ -250,20 +249,23 @@ class MQTTMCPApp {
     }
 
     /**
-     * Enhance tools with additional metadata for better UI
+     * Enhanced tools with AI-focused metadata
      */
-    enhanceToolsWithMetadata(tools) {
-        const toolMetadata = {
+    enhanceToolsWithAIMetadata(tools) {
+        const aiToolMetadata = {
             'mqtt_establish_connection': {
                 category: 'connection',
                 categoryLabel: 'Connection',
                 icon: '🔌',
                 complexity: 'Simple',
                 connectionRequired: false,
-                usageTips: [
-                    'Start here for any MQTT operations',
-                    'Save the session_id for subsequent calls',
-                    'Use meaningful client_id for debugging'
+                aiDescription: 'Connect your AI to an MQTT broker to start IoT monitoring',
+                aiPrompt: 'Connect to my MQTT broker at mqtt://192.168.1.100:1883 and save the connection session',
+                technicalExample: 'Use tool: mqtt_establish_connection\nParameters: {"connection_string": "mqtt://192.168.1.100:1883"}',
+                useCases: [
+                    'Connect to local IoT broker',
+                    'Establish secure MQTT connection',
+                    'Start IoT device monitoring session'
                 ]
             },
             'mqtt_list_active_connections': {
@@ -272,10 +274,13 @@ class MQTTMCPApp {
                 icon: '📋',
                 complexity: 'Simple',
                 connectionRequired: false,
-                usageTips: [
-                    'Check active sessions before creating new ones',
-                    'Use to debug connection issues',
-                    'Monitor session health'
+                aiDescription: 'Check which MQTT connections are currently active',
+                aiPrompt: 'Show me all active MQTT connections and their status',
+                technicalExample: 'Use tool: mqtt_list_active_connections\nParameters: {"random_string": "status"}',
+                useCases: [
+                    'Check connection health',
+                    'Monitor active sessions',
+                    'Debug connection issues'
                 ]
             },
             'mqtt_close_connection': {
@@ -284,10 +289,13 @@ class MQTTMCPApp {
                 icon: '🔌',
                 complexity: 'Simple',
                 connectionRequired: true,
-                usageTips: [
-                    'Always close connections when done',
-                    'Prevents resource leaks',
-                    'Good practice for production use'
+                aiDescription: 'Properly close an MQTT connection when finished',
+                aiPrompt: 'Close the MQTT connection with session ID [session_id]',
+                technicalExample: 'Use tool: mqtt_close_connection\nParameters: {"session_id": "your-session-id"}',
+                useCases: [
+                    'Clean up after monitoring',
+                    'Free server resources',
+                    'End IoT session properly'
                 ]
             },
             'mqtt_list_topics': {
@@ -296,10 +304,13 @@ class MQTTMCPApp {
                 icon: '🔍',
                 complexity: 'Medium',
                 connectionRequired: true,
-                usageTips: [
-                    'Use # for all topics, + for single level',
-                    'Great for IoT device discovery',
-                    'Timeout controls discovery duration'
+                aiDescription: 'Discover what IoT devices and sensors are publishing',
+                aiPrompt: 'Scan my MQTT broker for all available topics and show me what devices are active',
+                technicalExample: 'Use tool: mqtt_list_topics\nParameters: {"session_id": "your-session-id", "pattern": "#"}',
+                useCases: [
+                    'Find IoT devices on network',
+                    'Discover sensor topics',
+                    'Map MQTT topic structure'
                 ]
             },
             'mqtt_subscribe_and_collect': {
@@ -308,10 +319,13 @@ class MQTTMCPApp {
                 icon: '📊',
                 complexity: 'Medium',
                 connectionRequired: true,
-                usageTips: [
-                    'Perfect for sensor data monitoring',
-                    'Duration_seconds controls collection time',
-                    'Use specific topic patterns for efficiency'
+                aiDescription: 'Collect real-time data from IoT sensors and devices',
+                aiPrompt: 'Monitor temperature sensors for 60 seconds and show me the data',
+                technicalExample: 'Use tool: mqtt_subscribe_and_collect\nParameters: {"session_id": "your-session-id", "topic_pattern": "sensor/+/temperature", "duration_seconds": 60}',
+                useCases: [
+                    'Monitor sensor data',
+                    'Collect device telemetry',
+                    'Analyze IoT data patterns'
                 ]
             },
             'mqtt_publish_message': {
@@ -320,10 +334,13 @@ class MQTTMCPApp {
                 icon: '📤',
                 complexity: 'Simple',
                 connectionRequired: true,
-                usageTips: [
-                    'Use QoS 1 for important messages',
-                    'Retain flag keeps last message for new subscribers',
-                    'JSON payloads work great for structured data'
+                aiDescription: 'Send commands or data to IoT devices',
+                aiPrompt: 'Send a command to turn on the living room lights via MQTT',
+                technicalExample: 'Use tool: mqtt_publish_message\nParameters: {"session_id": "your-session-id", "topic": "home/lights/living_room", "payload": "ON", "qos": 1}',
+                useCases: [
+                    'Control smart home devices',
+                    'Send commands to IoT devices',
+                    'Publish sensor configurations'
                 ]
             },
             'mqtt_get_topic_schema': {
@@ -332,10 +349,13 @@ class MQTTMCPApp {
                 icon: '🔬',
                 complexity: 'Advanced',
                 connectionRequired: true,
-                usageTips: [
-                    'Analyzes message patterns automatically',
-                    'Helps understand IoT device data structure',
-                    'Use after collecting some messages'
+                aiDescription: 'Analyze and understand the structure of IoT device messages',
+                aiPrompt: 'Analyze the data structure of messages from my weather sensors',
+                technicalExample: 'Use tool: mqtt_get_topic_schema\nParameters: {"session_id": "your-session-id", "topic_pattern": "weather/+/data"}',
+                useCases: [
+                    'Understand device data formats',
+                    'Validate sensor data structure',
+                    'Debug message formatting'
                 ]
             },
             'mqtt_debug_device': {
@@ -344,10 +364,13 @@ class MQTTMCPApp {
                 icon: '🐛',
                 complexity: 'Advanced',
                 connectionRequired: true,
-                usageTips: [
-                    'Comprehensive device troubleshooting',
-                    'Monitors both pub/sub for specific device',
-                    'Great for IoT device connectivity issues'
+                aiDescription: 'Troubleshoot specific IoT device connectivity and performance',
+                aiPrompt: 'Debug connectivity issues with my smart thermostat device',
+                technicalExample: 'Use tool: mqtt_debug_device\nParameters: {"session_id": "your-session-id", "device_id": "thermostat_01"}',
+                useCases: [
+                    'Fix device connectivity issues',
+                    'Troubleshoot sensor problems',
+                    'Monitor device health'
                 ]
             },
             'mqtt_monitor_performance': {
@@ -356,10 +379,13 @@ class MQTTMCPApp {
                 icon: '📈',
                 complexity: 'Advanced',
                 connectionRequired: true,
-                usageTips: [
-                    'Monitor broker performance in real-time',
-                    'Track throughput and latency',
-                    'Use for production monitoring'
+                aiDescription: 'Monitor MQTT broker performance and network health',
+                aiPrompt: 'Check the performance and health of my MQTT broker',
+                technicalExample: 'Use tool: mqtt_monitor_performance\nParameters: {"session_id": "your-session-id"}',
+                useCases: [
+                    'Monitor broker performance',
+                    'Check network latency',
+                    'Optimize IoT infrastructure'
                 ]
             },
             'mqtt_test_connection': {
@@ -368,23 +394,29 @@ class MQTTMCPApp {
                 icon: '🏥',
                 complexity: 'Simple',
                 connectionRequired: true,
-                usageTips: [
-                    'Comprehensive connection health check',
-                    'Tests all MQTT functionality',
-                    'Great for troubleshooting'
+                aiDescription: 'Test MQTT connection health and diagnose issues',
+                aiPrompt: 'Test my MQTT connection and tell me if everything is working properly',
+                technicalExample: 'Use tool: mqtt_test_connection\nParameters: {"session_id": "your-session-id"}',
+                useCases: [
+                    'Verify connection health',
+                    'Diagnose network issues',
+                    'Test broker accessibility'
                 ]
             }
         };
 
         return tools.map(tool => ({
             ...tool,
-            ...toolMetadata[tool.name] || {
+            ...aiToolMetadata[tool.name] || {
                 category: 'other',
                 categoryLabel: 'Other',
                 icon: '🔧',
                 complexity: 'Unknown',
                 connectionRequired: false,
-                usageTips: ['No specific tips available']
+                aiDescription: 'Tool description not available',
+                aiPrompt: 'Use this tool for MQTT operations',
+                technicalExample: `Use tool: ${tool.name}`,
+                useCases: ['General MQTT operations']
             }
         }));
     }
@@ -907,10 +939,12 @@ ${Object.entries(tool.parameters?.properties || {}).map(([key, param]) =>
             content.classList.remove('active');
         });
         
-        // Handle special case for logs tab
+        // Handle special case for logs tab and setup tab
         let targetContent;
         if (tabName === 'logs') {
             targetContent = document.getElementById('logsTabContent');
+        } else if (tabName === 'setup') {
+            targetContent = document.getElementById('setupTab');
         } else {
             targetContent = document.getElementById(tabName + 'Tab') || 
                           document.getElementById(tabName + 'TabContent');
@@ -963,16 +997,16 @@ ${Object.entries(tool.parameters?.properties || {}).map(([key, param]) =>
     }
 
     /**
-     * Handle tutorial button click
+     * Handle setup button click
      */
-    handleTutorialClick(event) {
+    handleSetupClick(event) {
         event.preventDefault();
         
-        if (window.Tutorial && typeof window.Tutorial.start === 'function') {
-            window.Tutorial.start();
-        } else {
-            UI.showToast('Tutorial system not available', 'warning');
-        }
+        // Switch to setup tab
+        this.showTab('setup');
+        
+        // Show a helpful toast
+        UI.showToast('Follow the setup guide to configure MQTT MCP in Cursor', 'info', 5000);
     }
 
     /**
