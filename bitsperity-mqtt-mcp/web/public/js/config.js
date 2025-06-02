@@ -2,7 +2,11 @@
 window.CONFIG = {
     // API Endpoints
     API_BASE_URL: window.location.origin,
-    WEBSOCKET_URL: `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}`,
+    WEBSOCKET_URL: null, // Disable WebSocket - use polling instead
+    
+    // Enable polling mode when WebSocket is disabled
+    POLLING_MODE: true,
+    POLLING_INTERVAL: 5000, // 5 seconds for polling updates
     
     // MongoDB Collections
     COLLECTIONS: {

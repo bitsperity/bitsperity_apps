@@ -10,6 +10,7 @@ class WebSocketClient {
         this.maxReconnectDelay = 30000; // Max 30 seconds
         this.eventHandlers = new Map();
         this.isReconnecting = false;
+        this.pollingInterval = null;
         
         // Bind methods to preserve context
         this.handleOpen = this.handleOpen.bind(this);
@@ -22,6 +23,13 @@ class WebSocketClient {
      * Connect to WebSocket server
      */
     connect() {
+        // If WebSocket URL is null, use polling mode instead
+        if (!this.url) {
+            DEBUG('WebSocket disabled, using polling mode');
+            this.startPolling();
+            return;
+        }
+        
         if (this.socket && (this.socket.readyState === WebSocket.CONNECTING || this.socket.readyState === WebSocket.OPEN)) {
             DEBUG('WebSocket already connecting or connected');
             return;
@@ -43,10 +51,35 @@ class WebSocketClient {
     }
 
     /**
+     * Start polling mode when WebSocket is not available
+     */
+    startPolling() {
+        this.isConnected = true;
+        this.emit('connected', { timestamp: new Date(), mode: 'polling' });
+        this.updateConnectionStatus('connected');
+        
+        // Simulate connection success for polling mode
+        if (CONFIG.POLLING_MODE && CONFIG.POLLING_INTERVAL) {
+            DEBUG(`Starting polling mode with ${CONFIG.POLLING_INTERVAL}ms interval`);
+            
+            this.pollingInterval = setInterval(() => {
+                // Emit a heartbeat to simulate WebSocket keepalive
+                this.emit('heartbeat', { timestamp: new Date(), mode: 'polling' });
+            }, CONFIG.POLLING_INTERVAL);
+        }
+    }
+
+    /**
      * Disconnect from WebSocket server
      */
     disconnect() {
         this.isReconnecting = false;
+        
+        // Clear polling interval if in polling mode
+        if (this.pollingInterval) {
+            clearInterval(this.pollingInterval);
+            this.pollingInterval = null;
+        }
         
         if (this.socket) {
             this.socket.removeEventListener('open', this.handleOpen);
