@@ -172,30 +172,263 @@ class MQTTMCPApp {
         const toolsGrid = document.getElementById('toolsGrid');
         if (!toolsGrid) return;
 
-        toolsGrid.innerHTML = tools.map(tool => `
+        // Enhance tools with categories and better examples
+        const enhancedTools = this.enhanceToolsWithMetadata(tools);
+
+        toolsGrid.innerHTML = enhancedTools.map(tool => `
             <div class="tool-card" data-category="${tool.category}">
                 <div class="tool-header">
-                    <h3>${tool.name}</h3>
-                    <span class="category-badge">${tool.category}</span>
+                    <div class="tool-icon">${tool.icon}</div>
+                    <div class="tool-meta">
+                        <h3 class="tool-name">${tool.name}</h3>
+                        <span class="category-badge ${tool.category}">${tool.categoryLabel}</span>
+                    </div>
+                    <div class="tool-actions">
+                        <button class="btn-copy-tool" onclick="UI.copyToClipboard('${tool.example.replace(/'/g, "\\'")}', 'Tool example copied!')" title="Copy example">
+                            📋
+                        </button>
+                    </div>
                 </div>
+                
                 <div class="tool-description">
                     ${tool.description}
                 </div>
+                
                 <div class="tool-parameters">
-                    <h4>Parameters:</h4>
-                    <ul>
-                        ${Object.entries(tool.parameters || {}).map(([key, desc]) => 
-                            `<li><code>${key}</code>: ${desc}</li>`
-                        ).join('')}
+                    <h4>📋 Parameters:</h4>
+                    <div class="params-grid">
+                        ${Object.entries(tool.parameters?.properties || {}).map(([key, param]) => `
+                            <div class="param-item">
+                                <code class="param-name">${key}</code>
+                                <span class="param-type">${param.type || 'string'}</span>
+                                <span class="param-required">${tool.parameters?.required?.includes(key) ? '✅ Required' : '🔹 Optional'}</span>
+                                <div class="param-description">${param.description || 'No description'}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div class="tool-example">
+                    <h4>💡 Example Usage:</h4>
+                    <div class="example-container">
+                        <pre class="example-code language-javascript"><code>${this.formatCodeExample(tool.example)}</code></pre>
+                        <div class="example-actions">
+                            <button class="btn-copy-small" onclick="UI.copyToClipboard('${tool.example.replace(/'/g, "\\'")}', 'Example copied!')">
+                                📋 Copy Example
+                            </button>
+                            <button class="btn-copy-small" onclick="UI.copyToClipboard('${this.generateCursorPrompt(tool).replace(/'/g, "\\'")}', 'Cursor prompt copied!')">
+                                🤖 Copy for Cursor
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tool-usage-tips">
+                    <h4>💡 Usage Tips:</h4>
+                    <ul class="tips-list">
+                        ${tool.usageTips.map(tip => `<li>${tip}</li>`).join('')}
                     </ul>
                 </div>
-                <div class="tool-example">
-                    <h4>Example:</h4>
-                    <code class="example-code">${tool.example}</code>
-                    <button class="btn-copy" onclick="UI.copyToClipboard('${tool.example.replace(/'/g, "\\'")}')">📋 Copy</button>
+                
+                <div class="tool-footer">
+                    <div class="tool-stats">
+                        <span class="stat-item">
+                            <span class="stat-icon">⚡</span>
+                            <span class="stat-value">${tool.complexity}</span>
+                        </span>
+                        <span class="stat-item">
+                            <span class="stat-icon">🔗</span>
+                            <span class="stat-value">${tool.connectionRequired ? 'Needs Connection' : 'Standalone'}</span>
+                        </span>
+                    </div>
                 </div>
             </div>
         `).join('');
+
+        // Apply syntax highlighting after rendering
+        this.applySyntaxHighlighting();
+    }
+
+    /**
+     * Enhance tools with additional metadata for better UI
+     */
+    enhanceToolsWithMetadata(tools) {
+        const toolMetadata = {
+            'mqtt_establish_connection': {
+                category: 'connection',
+                categoryLabel: 'Connection',
+                icon: '🔌',
+                complexity: 'Simple',
+                connectionRequired: false,
+                usageTips: [
+                    'Start here for any MQTT operations',
+                    'Save the session_id for subsequent calls',
+                    'Use meaningful client_id for debugging'
+                ]
+            },
+            'mqtt_list_active_connections': {
+                category: 'connection',
+                categoryLabel: 'Connection',
+                icon: '📋',
+                complexity: 'Simple',
+                connectionRequired: false,
+                usageTips: [
+                    'Check active sessions before creating new ones',
+                    'Use to debug connection issues',
+                    'Monitor session health'
+                ]
+            },
+            'mqtt_close_connection': {
+                category: 'connection',
+                categoryLabel: 'Connection',
+                icon: '🔌',
+                complexity: 'Simple',
+                connectionRequired: true,
+                usageTips: [
+                    'Always close connections when done',
+                    'Prevents resource leaks',
+                    'Good practice for production use'
+                ]
+            },
+            'mqtt_list_topics': {
+                category: 'discovery',
+                categoryLabel: 'Discovery',
+                icon: '🔍',
+                complexity: 'Medium',
+                connectionRequired: true,
+                usageTips: [
+                    'Use # for all topics, + for single level',
+                    'Great for IoT device discovery',
+                    'Timeout controls discovery duration'
+                ]
+            },
+            'mqtt_subscribe_and_collect': {
+                category: 'data',
+                categoryLabel: 'Data Collection',
+                icon: '📊',
+                complexity: 'Medium',
+                connectionRequired: true,
+                usageTips: [
+                    'Perfect for sensor data monitoring',
+                    'Duration_seconds controls collection time',
+                    'Use specific topic patterns for efficiency'
+                ]
+            },
+            'mqtt_publish_message': {
+                category: 'data',
+                categoryLabel: 'Data Publishing',
+                icon: '📤',
+                complexity: 'Simple',
+                connectionRequired: true,
+                usageTips: [
+                    'Use QoS 1 for important messages',
+                    'Retain flag keeps last message for new subscribers',
+                    'JSON payloads work great for structured data'
+                ]
+            },
+            'mqtt_get_topic_schema': {
+                category: 'analysis',
+                categoryLabel: 'Analysis',
+                icon: '🔬',
+                complexity: 'Advanced',
+                connectionRequired: true,
+                usageTips: [
+                    'Analyzes message patterns automatically',
+                    'Helps understand IoT device data structure',
+                    'Use after collecting some messages'
+                ]
+            },
+            'mqtt_debug_device': {
+                category: 'debugging',
+                categoryLabel: 'Debugging',
+                icon: '🐛',
+                complexity: 'Advanced',
+                connectionRequired: true,
+                usageTips: [
+                    'Comprehensive device troubleshooting',
+                    'Monitors both pub/sub for specific device',
+                    'Great for IoT device connectivity issues'
+                ]
+            },
+            'mqtt_monitor_performance': {
+                category: 'monitoring',
+                categoryLabel: 'Monitoring',
+                icon: '📈',
+                complexity: 'Advanced',
+                connectionRequired: true,
+                usageTips: [
+                    'Monitor broker performance in real-time',
+                    'Track throughput and latency',
+                    'Use for production monitoring'
+                ]
+            },
+            'mqtt_test_connection': {
+                category: 'debugging',
+                categoryLabel: 'Health Check',
+                icon: '🏥',
+                complexity: 'Simple',
+                connectionRequired: true,
+                usageTips: [
+                    'Comprehensive connection health check',
+                    'Tests all MQTT functionality',
+                    'Great for troubleshooting'
+                ]
+            }
+        };
+
+        return tools.map(tool => ({
+            ...tool,
+            ...toolMetadata[tool.name] || {
+                category: 'other',
+                categoryLabel: 'Other',
+                icon: '🔧',
+                complexity: 'Unknown',
+                connectionRequired: false,
+                usageTips: ['No specific tips available']
+            }
+        }));
+    }
+
+    /**
+     * Format code example for better display
+     */
+    formatCodeExample(example) {
+        // Pretty format the example for syntax highlighting
+        try {
+            // If it's a valid command, format it nicely
+            return example
+                .replace(/^/, '// Use this command in Cursor/Claude:\n')
+                .replace(/"/g, '"')
+                .replace(/'/g, "'");
+        } catch (error) {
+            return example;
+        }
+    }
+
+    /**
+     * Generate Cursor-optimized prompt for a tool
+     */
+    generateCursorPrompt(tool) {
+        return `Verwende das MQTT MCP Tool "${tool.name}":
+
+${tool.example}
+
+Zweck: ${tool.description}
+
+Parameter:
+${Object.entries(tool.parameters?.properties || {}).map(([key, param]) => 
+    `- ${key}: ${param.description || 'No description'}`
+).join('\n')}`;
+    }
+
+    /**
+     * Apply syntax highlighting to code blocks
+     */
+    applySyntaxHighlighting() {
+        // Use Prism.js if available
+        if (typeof Prism !== 'undefined') {
+            Prism.highlightAll();
+        }
     }
 
     /**

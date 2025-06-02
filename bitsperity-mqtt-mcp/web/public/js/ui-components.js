@@ -12,27 +12,46 @@ class UIComponents {
      */
     showToast(message, type = 'info', duration = CONFIG.UI.TOAST_DURATION) {
         const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
+        toast.className = `toast toast-${type}`;
         
         const toastId = Date.now() + Math.random();
         toast.setAttribute('data-toast-id', toastId);
         
         // Create toast content
-        const icon = this.getToastIcon(type);
+        const icons = {
+            success: '✅',
+            error: '❌',
+            warning: '⚠️',
+            info: 'ℹ️'
+        };
+        
         toast.innerHTML = `
-            <span class="toast-icon">${icon}</span>
-            <span class="toast-message">${message}</span>
-            <button class="toast-close" onclick="UI.dismissToast('${toastId}')">✕</button>
+            <div class="toast-content">
+                <span class="toast-icon">${icons[type] || icons.info}</span>
+                <span class="toast-message">${message}</span>
+                <button class="toast-close" onclick="UI.dismissToast('${toastId}')">✕</button>
+            </div>
         `;
         
         // Add to container
         this.toastContainer.appendChild(toast);
         this.activeToasts.set(toastId, toast);
         
+        // Animate in
+        setTimeout(() => toast.classList.add('toast-show'), 10);
+        
         // Auto-dismiss after duration
-        setTimeout(() => {
-            this.dismissToast(toastId);
-        }, duration);
+        if (duration > 0) {
+            setTimeout(() => {
+                toast.classList.add('toast-hide');
+                setTimeout(() => {
+                    if (toast.parentElement) {
+                        toast.parentElement.removeChild(toast);
+                    }
+                    this.activeToasts.delete(toastId);
+                }, 300);
+            }, duration);
+        }
         
         DEBUG(`Toast shown: ${type} - ${message}`);
         return toastId;
@@ -183,33 +202,43 @@ class UIComponents {
     }
 
     /**
-     * Copy text to clipboard
+     * Copy text to clipboard with enhanced feedback
      */
-    async copyToClipboard(text) {
+    async copyToClipboard(text, successMessage = 'Copied to clipboard!') {
         try {
             await navigator.clipboard.writeText(text);
-            this.showToast(CONFIG.SUCCESS.COPIED_TO_CLIPBOARD, 'success', 2000);
+            
+            // Show success toast
+            this.showToast(successMessage, 'success', 3000);
+            
+            DEBUG('Text copied to clipboard:', text.substring(0, 100) + '...');
             return true;
         } catch (error) {
-            DEBUG('Clipboard copy failed:', error);
+            console.error('Failed to copy text:', error);
             
             // Fallback for older browsers
-            const textArea = document.createElement('textarea');
-            textArea.value = text;
-            textArea.style.position = 'fixed';
-            textArea.style.opacity = '0';
-            document.body.appendChild(textArea);
-            textArea.select();
-            
             try {
-                document.execCommand('copy');
-                this.showToast(CONFIG.SUCCESS.COPIED_TO_CLIPBOARD, 'success', 2000);
-                return true;
-            } catch (fallbackError) {
-                this.showToast('Copy to clipboard failed', 'error');
-                return false;
-            } finally {
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                
+                const success = document.execCommand('copy');
                 document.body.removeChild(textArea);
+                
+                if (success) {
+                    this.showToast(successMessage, 'success', 3000);
+                    return true;
+                } else {
+                    throw new Error('Fallback copy failed');
+                }
+            } catch (fallbackError) {
+                this.showToast('Failed to copy to clipboard', 'error');
+                return false;
             }
         }
     }
