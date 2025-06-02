@@ -263,6 +263,24 @@ class MQTTMCPApp {
                                  detail.closest('.call-result') ? 'result' : 'metadata';
                 const identifier = `${toolName}-${timestamp}-${detailType}`;
                 openedDetails.add(identifier);
+            } else {
+                // Handle messages container details
+                const messagesContainer = detail.closest('.messages-container');
+                if (messagesContainer) {
+                    openedDetails.add('messages-container');
+                }
+                
+                // Handle result metadata details
+                const isMetadata = detail.querySelector('summary')?.textContent?.includes('Raw Result Metadata');
+                if (isMetadata) {
+                    // Find parent tool call for unique identifier
+                    const parentToolCall = detail.closest('.tool-call-item');
+                    if (parentToolCall) {
+                        const toolName = parentToolCall.querySelector('.tool-name')?.textContent;
+                        const timestamp = parentToolCall.querySelector('.timestamp')?.textContent;
+                        openedDetails.add(`${toolName}-${timestamp}-metadata`);
+                    }
+                }
             }
         });
 
@@ -295,7 +313,7 @@ class MQTTMCPApp {
                     <div class="call-result">
                         <details>
                             <summary><strong>🎯 Tool Response (${call.result_summary || 'result'})</strong></summary>
-                            ${this.formatToolResult(call.result)}
+                            ${this.formatToolResult(call.result, call.tool_name, call.timestamp, openedDetails)}
                             <div class="result-actions">
                                 <button class="btn-copy" onclick="UI.copyToClipboard('${JSON.stringify(call.result).replace(/'/g, "\\'")}')">📋 Copy Result</button>
                             </div>
@@ -322,15 +340,33 @@ class MQTTMCPApp {
                 resultDetail.open = true;
             }
         });
+
+        // Restore messages container state
+        streamContainer.querySelectorAll('.messages-container details').forEach(detail => {
+            if (openedDetails.has('messages-container')) {
+                detail.open = true;
+            }
+        });
+
+        // Restore metadata details state
+        streamContainer.querySelectorAll('.tool-call-item').forEach(toolCallItem => {
+            const toolName = toolCallItem.querySelector('.tool-name')?.textContent;
+            const timestamp = toolCallItem.querySelector('.timestamp')?.textContent;
+            
+            const metadataDetail = toolCallItem.querySelector('details:has(summary:contains("Raw Result Metadata"))');
+            if (metadataDetail && openedDetails.has(`${toolName}-${timestamp}-metadata`)) {
+                metadataDetail.open = true;
+            }
+        });
     }
 
     /**
      * Format tool result for better display, especially for MQTT messages with JSON payloads
      */
-    formatToolResult(result) {
+    formatToolResult(result, toolName, timestamp, openedDetails) {
         // Check if this is a result from subscribe_and_collect tool with messages
         if (result.messages && Array.isArray(result.messages)) {
-            return this.formatMessagesResult(result);
+            return this.formatMessagesResult(result, openedDetails);
         }
         
         // Default formatting for other tool results
@@ -340,7 +376,7 @@ class MQTTMCPApp {
     /**
      * Format MQTT messages with enhanced JSON payload display
      */
-    formatMessagesResult(result) {
+    formatMessagesResult(result, openedDetails) {
         const messages = result.messages || [];
         
         if (messages.length === 0) {
@@ -387,11 +423,14 @@ class MQTTMCPApp {
             </div>
         `;
 
+        // Check if messages container should be opened
+        const messagesContainerOpen = openedDetails && openedDetails.has('messages-container');
+
         return `
             <div class="messages-result">
                 ${summary}
                 <div class="messages-container">
-                    <details open>
+                    <details${messagesContainerOpen ? ' open' : ''}>
                         <summary><strong>📨 Collected Messages (${messages.length})</strong></summary>
                         <div class="messages-list">
                             ${messagesHtml}
