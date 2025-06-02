@@ -206,71 +206,75 @@ class MQTTMCPApp {
      * Get clean tool data with correct MQTT MCP information
      */
     getCleanToolData(tools) {
+        // Debug: Log actual tool names from API
+        DEBUG('Tools from API:', tools.map(t => t.name));
+        
+        // Use ONLY the short names - that's what the MCP server actually returns
         const mqttTools = {
-            'mqtt_establish_connection': {
+            'establish_connection': {
                 icon: '🔌',
                 category: 'connection',
                 purpose: 'Connect to MQTT broker',
                 aiCommand: 'Connect to my MQTT broker at mqtt://192.168.1.100:1883',
                 result: 'Session ID for subsequent commands'
             },
-            'mqtt_list_active_connections': {
+            'list_active_connections': {
                 icon: '📋',
                 category: 'connection', 
                 purpose: 'Show active MQTT sessions',
                 aiCommand: 'Show me all active MQTT connections',
                 result: 'List of connection sessions with status'
             },
-            'mqtt_close_connection': {
+            'close_connection': {
                 icon: '🔌',
                 category: 'connection',
                 purpose: 'Close MQTT connection',
-                aiCommand: 'Close MQTT connection [session_id]', 
+                aiCommand: 'Close MQTT connection for session',
                 result: 'Connection closed and cleaned up'
             },
-            'mqtt_list_topics': {
+            'list_topics': {
                 icon: '🔍',
                 category: 'discovery',
                 purpose: 'Discover MQTT topics',
                 aiCommand: 'Scan for all MQTT topics on my broker',
                 result: 'List of active topics and devices'
             },
-            'mqtt_subscribe_and_collect': {
+            'subscribe_and_collect': {
                 icon: '📊',
                 category: 'data',
                 purpose: 'Collect sensor data',
                 aiCommand: 'Monitor temperature sensors for 60 seconds',
                 result: 'Real-time sensor data and statistics'
             },
-            'mqtt_publish_message': {
+            'publish_message': {
                 icon: '📤',
                 category: 'data',
                 purpose: 'Send commands to devices', 
                 aiCommand: 'Turn on living room lights via MQTT',
                 result: 'Message published to device'
             },
-            'mqtt_get_topic_schema': {
+            'get_topic_schema': {
                 icon: '🔬',
                 category: 'analysis',
                 purpose: 'Analyze message structure',
                 aiCommand: 'Analyze data format of my weather sensors',
                 result: 'JSON schema and data patterns'
             },
-            'mqtt_debug_device': {
+            'debug_device': {
                 icon: '🐛', 
                 category: 'debug',
                 purpose: 'Troubleshoot device issues',
                 aiCommand: 'Debug my smart thermostat connectivity',
                 result: 'Device health report and diagnostics'
             },
-            'mqtt_monitor_performance': {
+            'monitor_performance': {
                 icon: '📈',
                 category: 'monitor',
                 purpose: 'Check broker performance',
                 aiCommand: 'Check MQTT broker performance and health',
                 result: 'Performance metrics and statistics'
             },
-            'mqtt_test_connection': {
+            'test_connection': {
                 icon: '🏥',
                 category: 'debug',
                 purpose: 'Test connection health',
@@ -279,16 +283,25 @@ class MQTTMCPApp {
             }
         };
 
-        return tools.map(tool => ({
-            name: tool.name,
-            ...mqttTools[tool.name] || {
-                icon: '🔧',
-                category: 'other',
-                purpose: 'MQTT operation',
-                aiCommand: `Use ${tool.name} for MQTT`,
-                result: 'Operation result'
+        return tools.map(tool => {
+            const cleanData = mqttTools[tool.name];
+            if (!cleanData) {
+                DEBUG(`No clean data found for tool: ${tool.name}`);
+                return {
+                    name: tool.name,
+                    icon: '🔧',
+                    category: 'other',
+                    purpose: `MQTT operation: ${tool.description || 'No description'}`,
+                    aiCommand: `Use ${tool.name} for MQTT operations`,
+                    result: 'Operation result'
+                };
             }
-        }));
+            DEBUG(`Found clean data for tool: ${tool.name}`);
+            return {
+                name: tool.name,
+                ...cleanData
+            };
+        });
     }
 
     /**
