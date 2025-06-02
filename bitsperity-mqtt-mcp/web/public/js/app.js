@@ -254,6 +254,12 @@ class MQTTMCPApp {
         // Save current state of opened details before re-render
         const openedDetails = new Set();
         streamContainer.querySelectorAll('details[open]').forEach(detail => {
+            // Debug: Log each open detail we find
+            if (typeof DEBUG === 'function') {
+                const summary = detail.querySelector('summary')?.textContent || 'no summary';
+                DEBUG(`Found open detail: "${summary.substring(0, 50)}..."`);
+            }
+            
             // Create unique identifier for each detail section
             const toolCallItem = detail.closest('.tool-call-item');
             if (toolCallItem) {
@@ -263,11 +269,17 @@ class MQTTMCPApp {
                                  detail.closest('.call-result') ? 'result' : 'metadata';
                 const identifier = `${toolName}-${timestamp}-${detailType}`;
                 openedDetails.add(identifier);
+                if (typeof DEBUG === 'function') {
+                    DEBUG(`Added tool call detail: ${identifier}`);
+                }
             } else {
                 // Handle messages container details
                 const messagesContainer = detail.closest('.messages-container');
                 if (messagesContainer) {
                     openedDetails.add('messages-container');
+                    if (typeof DEBUG === 'function') {
+                        DEBUG(`Added messages-container to openedDetails`);
+                    }
                 }
                 
                 // Handle result metadata details
@@ -279,10 +291,17 @@ class MQTTMCPApp {
                         const toolName = parentToolCall.querySelector('.tool-name')?.textContent;
                         const timestamp = parentToolCall.querySelector('.timestamp')?.textContent;
                         openedDetails.add(`${toolName}-${timestamp}-metadata`);
+                        if (typeof DEBUG === 'function') {
+                            DEBUG(`Added metadata detail: ${toolName}-${timestamp}-metadata`);
+                        }
                     }
                 }
             }
         });
+
+        if (typeof DEBUG === 'function') {
+            DEBUG(`Total openedDetails collected: ${openedDetails.size}, details: [${Array.from(openedDetails).join(', ')}]`);
+        }
 
         if (toolCalls.length === 0) {
             streamContainer.innerHTML = '<p class="no-data">No tool calls yet. Use the MQTT MCP tools to see monitoring data here.</p>';
@@ -345,9 +364,15 @@ class MQTTMCPApp {
         streamContainer.querySelectorAll('.messages-container details').forEach(detail => {
             if (openedDetails.has('messages-container')) {
                 detail.open = true;
+                if (typeof DEBUG === 'function') {
+                    DEBUG(`Restored messages-container to OPEN state`);
+                }
             } else {
                 // Explicitly force close if not in openedDetails
                 detail.open = false;
+                if (typeof DEBUG === 'function') {
+                    DEBUG(`Set messages-container to CLOSED state (not in openedDetails)`);
+                }
             }
         });
 
@@ -592,19 +617,19 @@ class MQTTMCPApp {
      * Setup real-time updates
      */
     setupRealTimeUpdates() {
-        // Tool calls updates every 10 seconds
+        // Tool calls updates every 30 seconds (increased from 10s to give users time to read)
         this.updateIntervals.set('toolcalls', setInterval(() => {
             if (!document.hidden && this.currentTab === 'monitor') {
                 this.loadToolCalls();
             }
-        }, 10000));
+        }, 30000));
         
-        // System logs updates every 20 seconds
+        // System logs updates every 60 seconds (increased from 20s)
         this.updateIntervals.set('systemlogs', setInterval(() => {
             if (!document.hidden && this.currentTab === 'logs') {
                 this.loadSystemLogs();
             }
-        }, 20000));
+        }, 60000));
         
         DEBUG('Real-time updates setup complete');
     }
