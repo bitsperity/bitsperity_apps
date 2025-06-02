@@ -251,6 +251,21 @@ class MQTTMCPApp {
         const streamContainer = document.getElementById('toolCallsStream');
         if (!streamContainer) return;
 
+        // Save current state of opened details before re-render
+        const openedDetails = new Set();
+        streamContainer.querySelectorAll('details[open]').forEach(detail => {
+            // Create unique identifier for each detail section
+            const toolCallItem = detail.closest('.tool-call-item');
+            if (toolCallItem) {
+                const toolName = toolCallItem.querySelector('.tool-name')?.textContent;
+                const timestamp = toolCallItem.querySelector('.timestamp')?.textContent;
+                const detailType = detail.closest('.call-params') ? 'params' : 
+                                 detail.closest('.call-result') ? 'result' : 'metadata';
+                const identifier = `${toolName}-${timestamp}-${detailType}`;
+                openedDetails.add(identifier);
+            }
+        });
+
         if (toolCalls.length === 0) {
             streamContainer.innerHTML = '<p class="no-data">No tool calls yet. Use the MQTT MCP tools to see monitoring data here.</p>';
             return;
@@ -289,6 +304,24 @@ class MQTTMCPApp {
                 ` : ''}
             </div>
         `).join('');
+
+        // Restore opened details state after re-render
+        streamContainer.querySelectorAll('.tool-call-item').forEach(toolCallItem => {
+            const toolName = toolCallItem.querySelector('.tool-name')?.textContent;
+            const timestamp = toolCallItem.querySelector('.timestamp')?.textContent;
+            
+            // Check and restore params details
+            const paramsDetail = toolCallItem.querySelector('.call-params details');
+            if (paramsDetail && openedDetails.has(`${toolName}-${timestamp}-params`)) {
+                paramsDetail.open = true;
+            }
+            
+            // Check and restore result details
+            const resultDetail = toolCallItem.querySelector('.call-result details');
+            if (resultDetail && openedDetails.has(`${toolName}-${timestamp}-result`)) {
+                resultDetail.open = true;
+            }
+        });
     }
 
     /**
