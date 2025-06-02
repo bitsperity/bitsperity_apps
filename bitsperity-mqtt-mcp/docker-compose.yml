@@ -5,7 +5,7 @@ services:
   app_proxy:
     environment:
       # Frontend service name + port (not container name!)
-      APP_HOST: web
+      APP_HOST: bitsperity-mqtt-mcp-frontend
       APP_PORT: 8091
 
   # MCP Server Service (Backend)
