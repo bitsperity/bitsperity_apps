@@ -70,7 +70,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=8091
-      - MONGODB_URL=mongodb://192.168.178.124:27017/mqtt_mcp_sessions
+      - MONGODB_URL=mongodb://umbrel:umbrel@192.168.178.124:27017
       
     volumes:
       # Persistent storage für frontend logs
