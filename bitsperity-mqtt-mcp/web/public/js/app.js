@@ -278,7 +278,7 @@ class MQTTMCPApp {
                 </div>
                 ${call.result ? `
                     <div class="call-result">
-                        <details open>
+                        <details>
                             <summary><strong>🎯 Tool Response (${call.result_summary || 'result'})</strong></summary>
                             <pre class="result-content">${JSON.stringify(call.result, null, 2)}</pre>
                             <div class="result-actions">
