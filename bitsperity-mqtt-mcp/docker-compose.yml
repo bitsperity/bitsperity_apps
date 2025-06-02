@@ -4,8 +4,8 @@ services:
   # App Proxy für Umbrel Web Interface
   app_proxy:
     environment:
-      # Frontend container name + port
-      APP_HOST: bitsperity-mqtt-mcp-frontend
+      # Frontend service name + port (not container name!)
+      APP_HOST: web
       APP_PORT: 8091
 
   # MCP Server Service (Backend)
