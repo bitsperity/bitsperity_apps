@@ -226,28 +226,95 @@
             <!-- Live Activity Monitor Tab -->
             <section class="tab-content" id="monitorTab">
                 <div class="section-header">
-                    <h2>📊 Live AI Tool Activity</h2>
-                    <p>Real-time monitoring of AI assistant tool usage</p>
-                    <div class="monitor-filters">
-                        <select id="toolFilter" class="filter-select">
-                            <option value="">All Tools</option>
-                        </select>
-                        <select id="statusFilter" class="filter-select">
-                            <option value="">All Status</option>
-                            <option value="success">Success</option>
-                            <option value="error">Error</option>
-                        </select>
-                        <button class="btn btn-outline" id="clearMonitor">🗑️ Clear</button>
-                        <button class="btn btn-outline" id="exportCalls">📁 Export</button>
+                    <div class="hero-section">
+                        <h2>📊 Live AI Tool Activity</h2>
+                        <p class="hero-description">
+                            Monitor your AI assistant's real-time usage of MQTT tools. 
+                            See which commands are running, their performance, and results.
+                        </p>
+                        <div class="quick-start">
+                            <div class="quick-start-item">
+                                <span class="step-number">💡</span>
+                                <span>Use tools in AI chat</span>
+                            </div>
+                            <div class="quick-start-item">
+                                <span class="step-number">📊</span>
+                                <span>Watch live activity</span>
+                            </div>
+                            <div class="quick-start-item">
+                                <span class="step-number">🔍</span>
+                                <span>Check results here</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="monitor-controls">
+                        <div class="search-container">
+                            <select id="toolFilter" class="filter-select">
+                                <option value="">All Tools</option>
+                            </select>
+                            <select id="statusFilter" class="filter-select">
+                                <option value="">All Status</option>
+                                <option value="success">✅ Success</option>
+                                <option value="error">❌ Error</option>
+                            </select>
+                            <button class="btn btn-outline" id="clearMonitor">🗑️ Clear History</button>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="performance-stats" id="performanceStats">
-                    <!-- Performance Statistics -->
+                <!-- Quick Stats Cards -->
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card">
+                        <div class="stat-icon">🚀</div>
+                        <div class="stat-content">
+                            <span class="stat-value" id="totalCalls">0</span>
+                            <span class="stat-label">Total Calls</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-content">
+                            <span class="stat-value" id="successCalls">0</span>
+                            <span class="stat-label">Successful</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⚡</div>
+                        <div class="stat-content">
+                            <span class="stat-value" id="avgDuration">0ms</span>
+                            <span class="stat-label">Avg Duration</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🔥</div>
+                        <div class="stat-content">
+                            <span class="stat-value" id="activeSessions">0</span>
+                            <span class="stat-label">Active Sessions</span>
+                        </div>
+                    </div>
                 </div>
                 
-                <div class="tool-calls-stream" id="toolCallsStream">
-                    <!-- Tool calls will be displayed here live -->
+                <!-- Tool Calls Stream -->
+                <div class="activity-section">
+                    <div class="section-title">
+                        <h3>🔄 Recent Activity</h3>
+                        <div class="activity-indicator">
+                            <span class="pulse-dot"></span>
+                            <span>Live Updates</span>
+                        </div>
+                    </div>
+                    
+                    <div class="activity-stream" id="toolCallsStream">
+                        <div class="no-activity">
+                            <div class="no-activity-icon">🤖</div>
+                            <h4>No activity yet</h4>
+                            <p>Start using MQTT tools with your AI assistant to see live activity here.</p>
+                            <button class="btn btn-primary" onclick="window.App.showTab('tools')">
+                                📚 Browse Tools
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </section>
 

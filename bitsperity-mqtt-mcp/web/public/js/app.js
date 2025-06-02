@@ -356,6 +356,9 @@ class MQTTMCPApp {
         const streamContainer = document.getElementById('toolCallsStream');
         if (!streamContainer) return;
 
+        // Update stats cards first
+        this.updateStatsCards(toolCalls);
+
         // Save current state of opened details before re-render
         const openedDetails = new Set();
         streamContainer.querySelectorAll('details[open]').forEach(detail => {
@@ -420,7 +423,16 @@ class MQTTMCPApp {
         }
 
         if (toolCalls.length === 0) {
-            streamContainer.innerHTML = '<p class="no-data">No tool calls yet. Use the MQTT MCP tools to see monitoring data here.</p>';
+            streamContainer.innerHTML = `
+                <div class="no-activity">
+                    <div class="no-activity-icon">🤖</div>
+                    <h4>No activity yet</h4>
+                    <p>Start using MQTT tools with your AI assistant to see live activity here.</p>
+                    <button class="btn btn-primary" onclick="window.App.showTab('tools')">
+                        📚 Browse Tools
+                    </button>
+                </div>
+            `;
             return;
         }
 
@@ -508,6 +520,49 @@ class MQTTMCPApp {
                 }
             });
         });
+    }
+
+    /**
+     * Update stats cards with current data
+     */
+    updateStatsCards(toolCalls) {
+        const totalCalls = toolCalls.length;
+        const successCalls = toolCalls.filter(call => call.success).length;
+        const errorCalls = totalCalls - successCalls;
+        
+        // Calculate average duration
+        const avgDuration = totalCalls > 0 
+            ? Math.round(toolCalls.reduce((sum, call) => sum + (call.duration_ms || 0), 0) / totalCalls)
+            : 0;
+
+        // Get unique session count (simplified - could be enhanced)
+        const activeSessions = new Set(toolCalls.map(call => call.session_id || 'default')).size;
+
+        // Update DOM elements
+        const totalCallsEl = document.getElementById('totalCalls');
+        const successCallsEl = document.getElementById('successCalls');
+        const avgDurationEl = document.getElementById('avgDuration');
+        const activeSessionsEl = document.getElementById('activeSessions');
+
+        if (totalCallsEl) totalCallsEl.textContent = totalCalls;
+        if (successCallsEl) successCallsEl.textContent = successCalls;
+        if (avgDurationEl) avgDurationEl.textContent = `${avgDuration}ms`;
+        if (activeSessionsEl) activeSessionsEl.textContent = activeSessions;
+
+        // Update success rate color
+        if (successCallsEl && totalCalls > 0) {
+            const successRate = successCalls / totalCalls;
+            const parentCard = successCallsEl.closest('.stat-card');
+            if (parentCard) {
+                if (successRate >= 0.9) {
+                    parentCard.style.borderColor = 'var(--success)';
+                } else if (successRate >= 0.7) {
+                    parentCard.style.borderColor = 'var(--warning)';
+                } else {
+                    parentCard.style.borderColor = 'var(--error)';
+                }
+            }
+        }
     }
 
     /**
